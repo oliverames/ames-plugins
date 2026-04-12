@@ -11,6 +11,10 @@
     "command": "npx",
     "args": ["-y", "apple-notifier-mcp@latest"]
   },
+  "docling": {
+    "command": "uvx",
+    "args": ["--from=docling-mcp", "docling-mcp-server"]
+  },
   "drafts": {
     "command": "npx",
     "args": ["-y", "@agiletortoise/drafts-mcp-server@latest"]
