@@ -1,6 +1,6 @@
 ---
 name: swiftui-view-refactor
-description: Refactor and review SwiftUI view files with strong defaults for small dedicated subviews, MV-over-MVVM data flow, stable view trees, explicit dependency injection, and correct Observation usage. Use when cleaning up a SwiftUI view, splitting long bodies, removing inline actions or side effects, reducing computed `some View` helpers, or standardizing `@Observable` and view model initialization patterns.
+description: Refactor and review iOS SwiftUI view files with strong defaults for small dedicated subviews, MV-over-MVVM data flow, stable view trees, and correct Observation usage. Use when cleaning up an iOS SwiftUI view, splitting long bodies, removing inline actions or side effects, or standardizing `@Observable` patterns. For macOS SwiftUI views, use view-refactor instead.
 ---
 
 # SwiftUI View Refactor

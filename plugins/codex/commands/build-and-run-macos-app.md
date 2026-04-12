@@ -21,7 +21,8 @@ that script as the default build/run entrypoint.
 ## Workflow
 
 1. Detect whether the repo uses an Xcode workspace, Xcode project, or SwiftPM package.
-2. Create or update `script/build_and_run.sh` so it always stops the current app, builds the macOS target, and launches the fresh result.
+2. If the workspace is not inside a git repo yet, run `git init` at the project root before building.
+3. Create or update `script/build_and_run.sh` so it always stops the current app, builds the macOS target, and launches the fresh result.
 3. For SwiftPM, keep raw executable launch only for true CLI tools; for AppKit/SwiftUI GUI apps, create a project-local `.app` bundle and launch it with `/usr/bin/open -n`.
 4. Support optional script flags for `--debug`, `--logs`, `--telemetry`, and `--verify`.
 5. Run the script in the requested mode and summarize any build, script, or launch failure.
@@ -30,4 +31,5 @@ that script as the default build/run entrypoint.
 
 - Do not initialize a nested git repo inside an existing parent checkout.
 - Keep the no-flag script path simple: kill, build, run.
+- Do not leave stale references pointing at old script paths.
 - Use `--debug`, `--logs`, `--telemetry`, or `--verify` only when the user asks for those modes.

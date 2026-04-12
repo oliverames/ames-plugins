@@ -8,7 +8,6 @@ description: Build, run, and debug local macOS apps and desktop executables usin
 ## Quick Start
 
 Use this skill to set up one project-local `script/build_and_run.sh` entrypoint,
-wire `.codex/environments/environment.toml` so the Codex app shows a Run button,
 then use that script as the default build/run path.
 
 Prefer shell-first workflows:
@@ -30,7 +29,7 @@ simulator-specific workflows onto pure macOS tasks.
 
 1. Discover the project shape.
    - Check whether the workspace is already inside a git repo with `git rev-parse --is-inside-work-tree`.
-   - If no git repo is present, run `git init` at the project/workspace root before building so Codex app git-backed features are available. Never run `git init` inside a nested subdirectory when the current workspace already belongs to a parent repo.
+   - If no git repo is present, run `git init` at the project/workspace root before building so version history is available from the start. Never run `git init` inside a nested subdirectory when the current workspace already belongs to a parent repo.
    - Look for `.xcworkspace`, `.xcodeproj`, and `Package.swift`.
    - If more than one candidate exists, explain the default choice and the ambiguity.
 
@@ -59,18 +58,10 @@ simulator-specific workflows onto pure macOS tasks.
    - For SwiftPM GUI `--logs` and `--telemetry`, launch the bundle with `/usr/bin/open -n` first, then stream unified logs with `/usr/bin/log stream --info ...`.
    - Do not recommend direct SwiftPM executable launch for AppKit/SwiftUI GUI apps.
    - Use `references/run-button-bootstrap.md` as the canonical source for the
-     script shape and exact environment file format. Do not fork a second
-     authoritative snippet in another skill or command.
+     script shape. Do not fork a second authoritative snippet in another skill or command.
    - Keep the run script outside app source. It belongs in `script/build_and_run.sh`, not in `App/`, `Views/`, `Models/`, `Stores/`, `Services/`, or `Support/`.
 
-4. Write `.codex/environments/environment.toml` at the project root once the script exists.
-   - Use this exact placement: `.codex/environments/environment.toml`.
-   - Use the exact action shape in `references/run-button-bootstrap.md`.
-   - This file is what gives the user a Codex app Run button wired to the script.
-   - If the project already has this file, update the `Run` action command to point at `./script/build_and_run.sh` instead of creating a duplicate action.
-   - Keep this Codex environment config separate from Swift app source files.
-
-5. Build and run through the script.
+4. Build and run through the script.
    - Default to `./script/build_and_run.sh`.
    - Use `./script/build_and_run.sh --debug`, `--logs`, `--telemetry`, or `--verify` when the user asks for debugger/log/telemetry/process verification support.
 
@@ -106,13 +97,13 @@ simulator-specific workflows onto pure macOS tasks.
 
 ## References
 
-- `references/run-button-bootstrap.md`: canonical `build_and_run.sh` and `.codex/environments/environment.toml` contract.
+- `references/run-button-bootstrap.md`: canonical `build_and_run.sh` script shape and flag contract.
 
 ## Guardrails
 
 - Prefer the narrowest command that proves or disproves the current theory.
 - Do not leave the user with a one-off manual command chain once a stable `build_and_run.sh` script can own the workflow.
-- Do not write `.codex/environments/environment.toml` before the run script exists, and do not point the Run action at a stale script path.
+- Do not point any run configuration at a stale script path.
 - Do not launch a SwiftUI/AppKit SwiftPM GUI app as a raw executable unless the user explicitly wants to diagnose that failure mode: it can produce no Dock icon, no foreground activation, and missing bundle identifier warnings. Keep raw executable launch only for true command-line tools.
 - Do not claim UI state you cannot inspect directly.
 - Do not describe mobile or simulator workflows as if they apply to macOS.
@@ -122,7 +113,7 @@ simulator-specific workflows onto pure macOS tasks.
 
 Provide:
 - the detected project type
-- the script path and Codex environment action you configured, if applicable
+- the script path you configured
 - the command you ran
 - whether build and launch succeeded
 - the top blocker if they failed
