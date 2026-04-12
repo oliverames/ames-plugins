@@ -26,6 +26,12 @@
       "version": "2.0.0",
       "description": "YNAB (You Need A Budget) MCP connector built and maintained by Oliver Ames. Installing this plugin activates the ynab-mcp-server MCP, providing full read/write access to YNAB budgets, transactions, categories, scheduled transactions, and payees.",
       "source": "./plugins/ames-ynab"
+    },
+    {
+      "name": "codex",
+      "version": "1.0.0",
+      "description": "Apple platform development skills ported from OpenAI's curated Build iOS Apps and Build macOS Apps Codex plugins. Covers App Intents, SwiftUI patterns, performance audits, AppKit interop, signing, notarization, window management, telemetry, and Xcode workflows.",
+      "source": "./plugins/codex"
     }
   ]
 }
