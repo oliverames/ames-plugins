@@ -26,7 +26,7 @@ bump-and-sync                            — Bumps ames-ynab version + runs sync
 |--------|-------------|------|
 | `ames-ynab` | YNAB (You Need A Budget) MCP connector built and maintained by Oliver | MCP |
 | `ames-preferred-mcps` | Curated third-party MCP servers: apple-docs, apple-notifier, drafts, excel, google-workspace, macos-automator, pandoc, peekaboo, shortcuts, XcodeBuildMCP | MCP |
-| `ames-standalone-skills` | 31 standalone skills covering writing, dev, iOS, finance, automation, and AI | skills |
+| `ames-standalone-skills` | 30 standalone skills covering writing, dev, iOS, finance, automation, and AI | skills |
 
 MCP = has `.mcp.json` (registers MCP servers when plugin is enabled).
 
@@ -43,7 +43,9 @@ MCP = has `.mcp.json` (registers MCP servers when plugin is enabled).
 
 - Each skill is a folder with a `SKILL.md` inside `plugins/ames-standalone-skills/skills/`
 - SKILL.md frontmatter: `name` and `description` are required
-- `./sync` auto-discovers all skill folders and lists them in `marketplace.json`
+- **`name` MUST be kebab-case matching the directory name** (e.g. `name: apple-notes-formatting` for `skills/apple-notes-formatting/`). Display-name style values like `"Apple Notes Formatting"` cause Cowork's marketplace validator to reject the entire plugin with a generic "Failed to update marketplace" error — debugged at length 2026-04-11, see memory `ref_claude_skill_md_schema.md`.
+- `./sync` regenerates `marketplace.json` from plugin.json files. Skills are auto-discovered by Claude Code at install time from the `skills/` directory — do NOT list them explicitly in marketplace.json (causes path resolution issues).
+- Every subdirectory of `skills/` MUST contain a `SKILL.md`. Dev workspaces without a SKILL.md (eval outputs, iteration data) belong elsewhere — Cowork's validator trips on them.
 
 ## Version Bumping
 
