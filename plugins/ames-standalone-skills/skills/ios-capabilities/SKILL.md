@@ -1,5 +1,5 @@
 ---
-name: iOS Capabilities
+name: ios-capabilities
 description: >-
   Reference for iOS/macOS app capabilities, permissions, entitlements, and
   Info.plist keys. Use whenever adding a capability or permission to an iOS or

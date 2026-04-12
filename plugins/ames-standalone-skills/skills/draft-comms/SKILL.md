@@ -1,5 +1,5 @@
 ---
-name: Draft Communications
+name: draft-comms
 description: >-
   Use when the user provides meeting notes, transcripts, emails, or a list of
   action items that require outreach. Triggers for "draft follow-ups", "write

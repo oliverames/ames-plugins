@@ -1,5 +1,5 @@
 ---
-name: Apple Workout Generator
+name: apple-workout-generator
 description: This skill should be used when the user asks to "create a workout",
   "build a workout file", "generate a .workout file", "make an Apple Watch workout",
   "create a running/cycling/swimming/HIIT workout", or needs to generate .workout

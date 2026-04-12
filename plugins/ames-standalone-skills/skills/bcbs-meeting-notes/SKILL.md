@@ -1,5 +1,5 @@
 ---
-name: BCBS Meeting Notes
+name: bcbs-meeting-notes
 description: >
   Use when Oliver provides a SmartTranscribe transcript or recording from a
   BCBS VT meeting and wants it processed into structured notes. Triggers on:

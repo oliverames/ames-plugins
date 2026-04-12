@@ -1,5 +1,5 @@
 ---
-name: File Organization
+name: file-organization
 description: Apply Oliver's file naming and organization conventions. Use this skill whenever you are about to create, rename, move, or organize files and folders — not just when the user explicitly asks. Also trigger for "rename files", "organize files", "reorganize a folder", "fix file names", "clean up file names", "batch rename", "naming conventions", "file naming rules", or when the user asks about folder structure. This skill applies to YOUR file operations too, not just user requests.
 ---
 

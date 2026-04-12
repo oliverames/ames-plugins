@@ -1,5 +1,5 @@
 ---
-name: GMCF Masters Swim
+name: gmcf-masters-swim
 description: This skill should be used when the user asks about "today's swim workout",
   "masters WOD", "GMCF swim", "what's the workout today", "pull the WOD",
   "Steve's workout", "masters swim practice", or wants to fetch, display, or

@@ -1,5 +1,5 @@
 ---
-name: Apple Notes Formatting
+name: apple-notes-formatting
 description: This skill should be used when the user asks to "create an Apple
   Note", "format for Apple Notes", "write to Apple Notes", "save this to Notes",
   "add to my notes", "make a note", "update my note", "edit that note", "search

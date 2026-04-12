@@ -1,5 +1,5 @@
 ---
-name: XcodeGen Project Configuration
+name: xcodegen-project
 description: >-
   Reference for configuring XcodeGen projects using Bitrig's JSON-based
   Project.json format. Use whenever creating, modifying, or debugging a

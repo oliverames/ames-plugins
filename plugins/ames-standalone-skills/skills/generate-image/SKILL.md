@@ -1,5 +1,5 @@
 ---
-name: Generate Image
+name: generate-image
 description: >-
   Use when the user asks to "generate an image", "create an image", "make a picture of",
   "draw", "design", "illustrate", "edit this image", "modify this photo", "change the

@@ -1,5 +1,5 @@
 ---
-name: macOS App Icon Extraction
+name: macos-app-icons
 description: >-
   Extract high-resolution app icons from macOS .app bundles, including from
   Assets.car asset catalogs for icons up to 1024-2048px. Use when the user

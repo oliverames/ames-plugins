@@ -1,5 +1,5 @@
 ---
-name: Claude Code Headless
+name: claude-code-headless
 description: >-
   Use when the user asks to "interact with Claude Code", "check Claude Code
   status", "dispatch a task to Claude Code", "run something in Claude Code",

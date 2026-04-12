@@ -1,5 +1,5 @@
 ---
-name: BCBS VT
+name: bcbs-vt
 description: >
   Use when the user asks anything about Blue Cross and Blue Shield of Vermont (BCBS VT):
   "write something for Blue Cross", "draft BCBS VT content", "check brand voice",

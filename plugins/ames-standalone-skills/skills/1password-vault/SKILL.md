@@ -1,5 +1,5 @@
 ---
-name: 1Password Vault
+name: 1password-vault
 description: >-
   Use when working with API keys, secrets, tokens, credentials, SSH keys, or
   1Password. Triggers for: "vault this key", "store credential", "audit for

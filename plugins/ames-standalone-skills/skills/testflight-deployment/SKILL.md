@@ -1,5 +1,5 @@
 ---
-name: TestFlight Deployment
+name: testflight-deployment
 description: >-
   Use when deploying an iOS app to TestFlight, setting up an iOS CI/CD pipeline,
   distributing a build to beta testers, automating iOS app releases via GitHub
