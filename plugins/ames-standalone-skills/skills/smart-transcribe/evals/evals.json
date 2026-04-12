@@ -1,0 +1,62 @@
+{
+  "skill_name": "smart-transcribe",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have this transcript from my Zoom recording but it's full of errors. Can you fix it? Here is the content: [Speaker 1] So we should definitely use assemblee ai for the demmo next week with the seee-tee-oh. [Speaker 2] Agreed, the BCBS Vermont pilot is going great. [Speaker 1] Yeah, the IAB cat-uh-gories feature has been real helpful for the marketting team.",
+      "expected_output": "A corrected transcript with all transcription errors fixed (assemblee ai -> AssemblyAI, seee-tee-oh -> CEO, cat-uh-gories -> categories, marketting -> marketing, demmo -> demo). With skill: should use fix-transcript pipeline with a structured transparency report listing what was changed.",
+      "files": [],
+      "expectations": [
+        "'assemblee ai' is corrected to 'AssemblyAI'",
+        "'seee-tee-oh' is corrected to 'CEO'",
+        "'cat-uh-gories' is corrected to 'categories'",
+        "'marketting' is corrected to 'marketing'",
+        "'demmo' is corrected to 'demo'",
+        "A corrected transcript file is produced",
+        "The response explains what corrections were made",
+        "Speaker labels are preserved in the output"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need to transcribe a series of 2-hour compliance audit recordings. Each session has 4-6 speakers, decent audio quality with occasional background office noise, and the output will be submitted to legal. Which engines and settings should I use?",
+      "expected_output": "Accurate, specific engine recommendations leveraging the model profiles. Should recommend AssemblyAI Universal-3 Pro for speaker diarization and Scribe v2 for compliance/HIPAA features. With skill: should reference model profiles, mention specific flags (--speakers, --no-diarization not applicable here), and provide the exact --engines command.",
+      "files": [],
+      "expectations": [
+        "AssemblyAI Universal-3 Pro is recommended for speaker diarization",
+        "ElevenLabs Scribe v2 is mentioned for compliance/HIPAA features",
+        "The response addresses the multi-speaker (4-6 speaker) requirement specifically",
+        "Specific command-line flags or invocation syntax are provided",
+        "The compliance/legal submission requirement influences the recommendation",
+        "The 2-hour duration constraint is addressed (file splitting or not)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I just installed smart-transcribe. Walk me through getting it configured and running a quick sanity check to make sure everything is working.",
+      "expected_output": "Step-by-step setup guide covering: running setup.sh, configuring API keys (AssemblyAI, ElevenLabs, HF_TOKEN), and running --doctor to verify. With skill: should reference specific scripts and flags from the SKILL.md.",
+      "files": [],
+      "expectations": [
+        "setup.sh is mentioned as the first step to create Python venvs",
+        "The --doctor flag is mentioned for verifying the installation",
+        "AssemblyAI API key requirement is mentioned",
+        "ElevenLabs API key requirement is mentioned",
+        "HF_TOKEN requirement for Cohere Transcribe is mentioned",
+        "The response gives actionable, ordered steps rather than vague advice"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Transcribe /Users/oliverames/Desktop/Granger Rd.m4a",
+      "expected_output": "Actual transcription of the 7.7-minute audio file using the smart-transcribe pipeline. With skill: runs the default 3-engine pipeline (AssemblyAI U3 + Scribe v2 + Cohere). Produces a transcript markdown file. If engines fail, reports clearly with --doctor output.",
+      "files": ["/Users/oliverames/Desktop/Granger Rd.m4a"],
+      "expectations": [
+        "The smart-transcribe.py script is invoked (or --doctor is run to diagnose setup)",
+        "The audio file path is passed correctly to the script",
+        "A transcript or partial transcript is produced in the outputs directory",
+        "Any engine failures or missing API keys are clearly reported",
+        "The response includes the actual transcript content (not just 'I ran the script')"
+      ]
+    }
+  ]
+}

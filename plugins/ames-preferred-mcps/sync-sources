@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+"""Install and update non-npm MCP dependencies for ames-preferred-mcps.
+
+npm/uvx-based servers self-update via @latest — this script handles
+the remaining dependencies that require explicit installation:
+  - iMCP        (macOS app, Homebrew cask)
+  - shortcuts   (Swift binary, mise + ubi)
+  - pandoc      (system dependency for mcp-pandoc)
+
+Not managed here (no CLI update path):
+  - Sim Genie   (macOS app, direct download — update via the app itself)
+  - Sosumi      (remote HTTP server — always latest, no local install)
+"""
+
+from __future__ import annotations
+
+import os
+import shutil
+import subprocess
+import sys
+
+# ── Terminal styling ───────────────────────────────────────────────────
+_NO_COLOR = os.environ.get("NO_COLOR") is not None or not sys.stdout.isatty()
+_B = "" if _NO_COLOR else "\033[38;5;141m"   # brand purple
+_S = "" if _NO_COLOR else "\033[38;5;114m"   # success green
+_W = "" if _NO_COLOR else "\033[38;5;221m"   # warning amber
+_I = "" if _NO_COLOR else "\033[38;5;117m"   # info blue
+_M = "" if _NO_COLOR else "\033[38;5;244m"   # muted gray
+_R = "" if _NO_COLOR else "\033[0m"
+
+def _success(msg): print(f"  {_S}✓{_R} {_S}{msg}{_R}")
+def _warn(msg):    print(f"  {_W}⚠{_R} {_W}{msg}{_R}", file=sys.stderr)
+def _info(msg):    print(f"  {_I}●{_R} {msg}")
+def _step(msg):    print(f"  {_M}→{_R} {_M}{msg}{_R}")
+def _dim(msg):     print(f"  {_M}{msg}{_R}")
+def _section(title):
+    width = 48
+    print(f"\n{_B}{'━' * width}{_R}")
+    print(f"{_B}  {title}{_R}")
+    print(f"{_B}{'━' * width}{_R}\n")
+def _header(title, sub=""):
+    print(f"\n{_B}{'─' * 48}{_R}\n{_B}  {title}{('  —  ' + sub) if sub else ''}{_R}\n{_B}{'─' * 48}{_R}\n")
+
+
+def run(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
+    _step(" ".join(cmd))
+    return subprocess.run(cmd, check=check)
+
+
+def check_tool(name: str) -> bool:
+    found = shutil.which(name) is not None
+    if not found:
+        _warn(f"{name!r} not found in PATH — skipping")
+    return found
+
+
+def install_brew_cask(cask: str, tap: str | None = None) -> None:
+    if not check_tool("brew"):
+        _warn("Homebrew not installed — install from https://brew.sh")
+        return
+    if tap:
+        run(["brew", "tap", tap], check=False)
+    result = run(["brew", "list", "--cask", cask], check=False)
+    if result.returncode == 0:
+        _step(f"Upgrading {cask}...")
+        run(["brew", "upgrade", "--cask", cask], check=False)
+    else:
+        _step(f"Installing {cask}...")
+        run(["brew", "install", "--cask", cask])
+    _success(cask)
+
+
+def install_pandoc() -> None:
+    if shutil.which("pandoc"):
+        result = subprocess.run(["pandoc", "--version"], capture_output=True, text=True)
+        version = result.stdout.splitlines()[0] if result.stdout else "unknown"
+        _success(f"pandoc already installed: {_M}{version}{_R}")
+        return
+    if not check_tool("brew"):
+        _warn("Install pandoc manually: https://pandoc.org/installing.html")
+        return
+    _step("Installing pandoc...")
+    run(["brew", "install", "pandoc"])
+    _success("pandoc")
+
+
+def install_shortcuts_mcp() -> None:
+    if not check_tool("mise"):
+        _warn("mise not installed — install from https://mise.jdx.dev")
+        return
+    _step("Updating shortcuts-mcp-server via mise...")
+    run(["mise", "install", "ubi:artemnovichkov/shortcuts-mcp-server@latest"], check=False)
+    _success("shortcuts-mcp-server")
+
+
+def check_npm_versions() -> None:
+    if not check_tool("npm"):
+        return
+    packages = [
+        "@kimsungwhee/apple-docs-mcp",
+        "apple-notifier-mcp",
+        "@agiletortoise/drafts-mcp-server",
+        "@aaronsb/google-workspace-mcp",
+        "@steipete/macos-automator-mcp",
+        "@steipete/peekaboo",
+        "xcodebuildmcp",
+    ]
+    for pkg in packages:
+        result = subprocess.run(
+            ["npm", "show", pkg, "version"],
+            capture_output=True, text=True, check=False
+        )
+        version = result.stdout.strip() or "unknown"
+        print(f"  {_M}•{_R} {pkg} {_M}{version}{_R}")
+
+
+def main() -> None:
+    _header("sync-sources", "ames-preferred-mcps")
+
+    _section("iMCP  (Messages, Contacts, Reminders)")
+    install_brew_cask("imcp", tap="mattt/tap")
+
+    _section("pandoc  (required by mcp-pandoc)")
+    install_pandoc()
+
+    _section("shortcuts-mcp-server  (Swift binary via mise)")
+    install_shortcuts_mcp()
+
+    _section("npm package versions  (self-update via @latest)")
+    _dim("These update automatically on next Claude launch:")
+    check_npm_versions()
+
+    print()
+    _success("sync-sources complete")
+
+
+if __name__ == "__main__":
+    sys.exit(main())

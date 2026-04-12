@@ -1,0 +1,14 @@
+node_modules/
+.DS_Store
+open_api_spec.yaml
+.claude/
+
+# Secrets & environment
+.env
+.env.*
+.env.local
+credentials.json
+secrets.json
+*.pem
+*.p12
+*.key

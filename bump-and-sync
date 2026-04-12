@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# bump-and-sync — Bump ames-ynab plugin version and push marketplace update.
+#
+# Called automatically by the postpublish hook in the ynab-mcp-server repo
+# after npm publish succeeds. Bumps the patch version of the plugin,
+# regenerates marketplace.json via ./sync, and pushes — triggering Claude
+# Code auto-update.
+#
+# Usage (automatic):
+#   Invoked by npm postpublish in ynab-mcp-server — no manual call needed.
+#
+# Usage (manual):
+#   ./bump-and-sync
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/style.sh" 2>/dev/null || {
+    success() { echo "  ✓ $1"; }
+    error()   { echo "  ✗ $1"; }
+    step()    { echo "  → $1"; }
+    header()  { echo ""; echo "=== ${1}${2:+ — $2} ==="; echo ""; }
+    banner()  { echo ""; echo "[ $1 ]"; echo ""; }
+}
+
+MARKETPLACE="$SCRIPT_DIR"
+PLUGIN_JSON="$MARKETPLACE/plugins/ames-ynab/.claude-plugin/plugin.json"
+
+header "bump-and-sync" "ames-ynab"
+
+if [ ! -f "$PLUGIN_JSON" ]; then
+    error "plugin.json not found at $PLUGIN_JSON"
+    exit 1
+fi
+
+# Bump patch version and capture the new value
+NEW_VERSION=$(python3 -c "
+import json, pathlib, sys
+p = pathlib.Path(sys.argv[1])
+d = json.loads(p.read_text())
+parts = d['version'].split('.')
+parts[-1] = str(int(parts[-1]) + 1)
+d['version'] = '.'.join(parts)
+p.write_text(json.dumps(d, indent=2) + '\n')
+print(d['version'])
+" "$PLUGIN_JSON")
+
+success "ames-ynab → v$NEW_VERSION"
+
+# Regenerate marketplace.json
+step "Syncing marketplace..."
+cd "$MARKETPLACE"
+python3 sync
+
+# Commit and push if there are changes
+git add plugins/ames-ynab/.claude-plugin/plugin.json .claude-plugin/marketplace.json
+if git diff --cached --quiet; then
+    step "Nothing changed, skipping commit"
+    exit 0
+fi
+
+git commit -m "sync: ames-ynab $NEW_VERSION" >/dev/null
+if git push 2>/dev/null; then
+    banner "Marketplace updated — Claude Code will auto-update on next startup"
+else
+    warn "Committed locally, push failed"
+fi

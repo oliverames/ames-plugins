@@ -1,0 +1,22 @@
+.DS_Store
+firebase-debug.log
+logs/
+__pycache__/
+.a5c/
+
+# Secrets & environment
+.env
+.env.*
+.env.local
+credentials.json
+secrets.json
+*.pem
+*.p12
+*.key
+
+# Skill development artifacts (not for distribution)
+**/evals/workspace/
+**/smart-transcribe-workspace/
+
+# iCloud conflict files
+.!*.md

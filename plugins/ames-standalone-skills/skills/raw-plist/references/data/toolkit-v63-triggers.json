@@ -1,0 +1,2350 @@
+[
+  {
+    "id": "com.apple.shortcuts.WFWifiTrigger.connect",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Wi-Fi",
+    "localized_description_summary": "\u201cWhen my Mac joins the Home network\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "selectedNetworks",
+        "type_id": "string",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 8,
+        "relationships_bytes": 0,
+        "type_instance_b64": "EgYKBAoCMAA=",
+        "relationships_b64": "",
+        "localized_name": "selectedNetworks",
+        "localized_description": null
+      },
+      {
+        "key": "runAfterConnectionInterruption",
+        "type_id": "bool",
+        "sort_order": 2,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "runAfterConnectionInterruption",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFWifiTrigger.disconnect",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Wi-Fi",
+    "localized_description_summary": "\u201cWhen my Mac joins the Home network\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "selectedNetworks",
+        "type_id": "string",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 8,
+        "relationships_bytes": 0,
+        "type_instance_b64": "EgYKBAoCMAA=",
+        "relationships_b64": "",
+        "localized_name": "selectedNetworks",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFBluetoothTrigger.connect",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Bluetooth",
+    "localized_description_summary": "\u201cWhen my Mac connects to AirPods\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFBluetoothTrigger.disconnect",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Bluetooth",
+    "localized_description_summary": "\u201cWhen my Mac connects to AirPods\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFBluetoothTrigger.toggle",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Bluetooth",
+    "localized_description_summary": "\u201cWhen my Mac connects to AirPods\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFCarPlayConnectionTrigger.connect",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "CarPlay",
+    "localized_description_summary": "\u201cWhen CarPlay is connected\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFCarPlayConnectionTrigger.disconnect",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "CarPlay",
+    "localized_description_summary": "\u201cWhen CarPlay is connected\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFCarPlayConnectionTrigger.toggle",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "CarPlay",
+    "localized_description_summary": "\u201cWhen CarPlay is connected\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFExternalDisplayTrigger.connect",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 47,
+    "output_type_instance_b64": "Ci0SKwoTY29tLmFwcGxlLnNob3J0Y3V0cxIUV0ZEaXNwbGF5Q29udGVudEl0ZW0=",
+    "localized_name": "Display",
+    "localized_description_summary": "\u201cWhen my display is connected\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "com.apple.shortcuts.WFDisplayContentItem"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFExternalDisplayTrigger.disconnect",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 47,
+    "output_type_instance_b64": "Ci0SKwoTY29tLmFwcGxlLnNob3J0Y3V0cxIUV0ZEaXNwbGF5Q29udGVudEl0ZW0=",
+    "localized_name": "Display",
+    "localized_description_summary": "\u201cWhen my display is connected\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "com.apple.shortcuts.WFDisplayContentItem"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFExternalDisplayTrigger.toggle",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 47,
+    "output_type_instance_b64": "Ci0SKwoTY29tLmFwcGxlLnNob3J0Y3V0cxIUV0ZEaXNwbGF5Q29udGVudEl0ZW0=",
+    "localized_name": "Display",
+    "localized_description_summary": "\u201cWhen my display is connected\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "com.apple.shortcuts.WFDisplayContentItem"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFPlugInTrigger.connect",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Charger",
+    "localized_description_summary": "\u201cWhen my Mac connects to power\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFPlugInTrigger.disconnect",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Charger",
+    "localized_description_summary": "\u201cWhen my Mac connects to power\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFPlugInTrigger.toggle",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Charger",
+    "localized_description_summary": "\u201cWhen my Mac connects to power\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFLowPowerModeTrigger.on",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Low Power Mode",
+    "localized_description_summary": "\u201cWhen Low Power Mode is turned off\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFLowPowerModeTrigger.off",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Low Power Mode",
+    "localized_description_summary": "\u201cWhen Low Power Mode is turned off\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFLowPowerModeTrigger.toggle",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Low Power Mode",
+    "localized_description_summary": "\u201cWhen Low Power Mode is turned off\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFAirplaneModeTrigger.on",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Airplane Mode",
+    "localized_description_summary": "\u201cWhen Airplane Mode is turned on\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFAirplaneModeTrigger.off",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Airplane Mode",
+    "localized_description_summary": "\u201cWhen Airplane Mode is turned on\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFAirplaneModeTrigger.toggle",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Airplane Mode",
+    "localized_description_summary": "\u201cWhen Airplane Mode is turned on\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFStageManagerTrigger.on",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Stage Manager",
+    "localized_description_summary": "\u201cWhen Stage Manager is turned on\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFStageManagerTrigger.off",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Stage Manager",
+    "localized_description_summary": "\u201cWhen Stage Manager is turned on\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFStageManagerTrigger.toggle",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Stage Manager",
+    "localized_description_summary": "\u201cWhen Stage Manager is turned on\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFDNDTrigger.on",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Do Not Disturb",
+    "localized_description_summary": "\u201cWhen Do Not Disturb is turned on\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFDNDTrigger.off",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Do Not Disturb",
+    "localized_description_summary": "\u201cWhen Do Not Disturb is turned on\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFDNDTrigger.toggle",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Do Not Disturb",
+    "localized_description_summary": "\u201cWhen Do Not Disturb is turned on\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFAppInFocusTrigger.on",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "App",
+    "localized_description_summary": "\u201cWhen Weather is opened or closed\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "selectedApps",
+        "type_id": "app",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 9,
+        "relationships_bytes": 0,
+        "type_instance_b64": "EgcKBQoDkAEA",
+        "relationships_b64": "",
+        "localized_name": "selectedApps",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFAppInFocusTrigger.off",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "App",
+    "localized_description_summary": "\u201cWhen Weather is opened or closed\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "selectedApps",
+        "type_id": "app",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 9,
+        "relationships_bytes": 0,
+        "type_instance_b64": "EgcKBQoDkAEA",
+        "relationships_b64": "",
+        "localized_name": "selectedApps",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFAppInFocusTrigger.toggle",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "App",
+    "localized_description_summary": "\u201cWhen Weather is opened or closed\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "selectedApps",
+        "type_id": "app",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 9,
+        "relationships_bytes": 0,
+        "type_instance_b64": "EgcKBQoDkAEA",
+        "relationships_b64": "",
+        "localized_name": "selectedApps",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFLocationTrigger.enter_location",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "",
+    "localized_description_summary": "",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "location",
+        "type_id": "placemark",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAngA",
+        "relationships_b64": "",
+        "localized_name": "location",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFLocationTrigger.enter_location_between",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "",
+    "localized_description_summary": "",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "location",
+        "type_id": "placemark",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAngA",
+        "relationships_b64": "",
+        "localized_name": "location",
+        "localized_description": null
+      },
+      {
+        "key": "startTime",
+        "type_id": "dateComponents",
+        "sort_order": 2,
+        "flags": 0,
+        "type_instance_bytes": 12,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KgoKBAoCQAASAiAC",
+        "relationships_b64": "",
+        "localized_name": "startTime",
+        "localized_description": null
+      },
+      {
+        "key": "endTime",
+        "type_id": "dateComponents",
+        "sort_order": 3,
+        "flags": 0,
+        "type_instance_bytes": 12,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KgoKBAoCQAASAiAC",
+        "relationships_b64": "",
+        "localized_name": "endTime",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFLocationTrigger.leave_location",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "",
+    "localized_description_summary": "",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "location",
+        "type_id": "placemark",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAngA",
+        "relationships_b64": "",
+        "localized_name": "location",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFLocationTrigger.leave_location_between",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "",
+    "localized_description_summary": "",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "location",
+        "type_id": "placemark",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAngA",
+        "relationships_b64": "",
+        "localized_name": "location",
+        "localized_description": null
+      },
+      {
+        "key": "startTime",
+        "type_id": "dateComponents",
+        "sort_order": 2,
+        "flags": 0,
+        "type_instance_bytes": 12,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KgoKBAoCQAASAiAC",
+        "relationships_b64": "",
+        "localized_name": "startTime",
+        "localized_description": null
+      },
+      {
+        "key": "endTime",
+        "type_id": "dateComponents",
+        "sort_order": 3,
+        "flags": 0,
+        "type_instance_bytes": 12,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KgoKBAoCQAASAiAC",
+        "relationships_b64": "",
+        "localized_name": "endTime",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFMessageTrigger.senders_are",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 47,
+    "output_type_instance_b64": "Ci0SKwoTY29tLmFwcGxlLnNob3J0Y3V0cxIUV0ZNZXNzYWdlQ29udGVudEl0ZW0=",
+    "localized_name": "Message",
+    "localized_description_summary": "\u201cWhen I get a message from Mom\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "com.apple.shortcuts.WFMessageContentItem"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "senders",
+        "type_id": "person",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 9,
+        "relationships_bytes": 0,
+        "type_instance_b64": "EgcKBQoDgAEA",
+        "relationships_b64": "",
+        "localized_name": "senders",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFMessageTrigger.message_contains",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 47,
+    "output_type_instance_b64": "Ci0SKwoTY29tLmFwcGxlLnNob3J0Y3V0cxIUV0ZNZXNzYWdlQ29udGVudEl0ZW0=",
+    "localized_name": "Message",
+    "localized_description_summary": "\u201cWhen I get a message from Mom\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "com.apple.shortcuts.WFMessageContentItem"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "searchTerm",
+        "type_id": "string",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 10,
+        "relationships_bytes": 0,
+        "type_instance_b64": "GggKBgoECgIwAA==",
+        "relationships_b64": "",
+        "localized_name": "searchTerm",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFMessageTrigger.senders_are_and_message_contains",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 47,
+    "output_type_instance_b64": "Ci0SKwoTY29tLmFwcGxlLnNob3J0Y3V0cxIUV0ZNZXNzYWdlQ29udGVudEl0ZW0=",
+    "localized_name": "Message",
+    "localized_description_summary": "\u201cWhen I get a message from Mom\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "com.apple.shortcuts.WFMessageContentItem"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "senders",
+        "type_id": "person",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 9,
+        "relationships_bytes": 0,
+        "type_instance_b64": "EgcKBQoDgAEA",
+        "relationships_b64": "",
+        "localized_name": "senders",
+        "localized_description": null
+      },
+      {
+        "key": "searchTerm",
+        "type_id": "string",
+        "sort_order": 2,
+        "flags": 0,
+        "type_instance_bytes": 10,
+        "relationships_bytes": 0,
+        "type_instance_b64": "GggKBgoECgIwAA==",
+        "relationships_b64": "",
+        "localized_name": "searchTerm",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFEmailTrigger.senders_are",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 45,
+    "output_type_instance_b64": "CisSKQoTY29tLmFwcGxlLnNob3J0Y3V0cxISV0ZFbWFpbENvbnRlbnRJdGVt",
+    "localized_name": "Email",
+    "localized_description_summary": "\u201cWhen I get an email from Jane\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "com.apple.shortcuts.WFEmailContentItem"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "senders",
+        "type_id": "person",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 9,
+        "relationships_bytes": 0,
+        "type_instance_b64": "EgcKBQoDgAEA",
+        "relationships_b64": "",
+        "localized_name": "senders",
+        "localized_description": null
+      },
+      {
+        "key": "accounts",
+        "type_id": "com.apple.shortcuts.WFEmailTrigger.WFEmailTriggerMailAccount",
+        "sort_order": 2,
+        "flags": 0,
+        "type_instance_bytes": 128,
+        "relationships_bytes": 0,
+        "type_instance_b64": "Kn4KQRI/ChNjb20uYXBwbGUuc2hvcnRjdXRzEihXRkVtYWlsVHJpZ2dlci5XRkVtYWlsVHJpZ2dlck1haWxBY2NvdW50EjkKNwoxChNjb20uYXBwbGUuc2hvcnRjdXRzOhoKDldGRW1haWxUcmlnZ2VyEghhY2NvdW50cxICIgA=",
+        "relationships_b64": "",
+        "localized_name": "accounts",
+        "localized_description": null
+      },
+      {
+        "key": "recipients",
+        "type_id": "person",
+        "sort_order": 3,
+        "flags": 0,
+        "type_instance_bytes": 9,
+        "relationships_bytes": 0,
+        "type_instance_b64": "EgcKBQoDgAEA",
+        "relationships_b64": "",
+        "localized_name": "recipients",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFEmailTrigger.subject_contains",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 45,
+    "output_type_instance_b64": "CisSKQoTY29tLmFwcGxlLnNob3J0Y3V0cxISV0ZFbWFpbENvbnRlbnRJdGVt",
+    "localized_name": "Email",
+    "localized_description_summary": "\u201cWhen I get an email from Jane\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "com.apple.shortcuts.WFEmailContentItem"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "searchTerm",
+        "type_id": "string",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 10,
+        "relationships_bytes": 0,
+        "type_instance_b64": "GggKBgoECgIwAA==",
+        "relationships_b64": "",
+        "localized_name": "searchTerm",
+        "localized_description": null
+      },
+      {
+        "key": "accounts",
+        "type_id": "com.apple.shortcuts.WFEmailTrigger.WFEmailTriggerMailAccount",
+        "sort_order": 2,
+        "flags": 0,
+        "type_instance_bytes": 128,
+        "relationships_bytes": 0,
+        "type_instance_b64": "Kn4KQRI/ChNjb20uYXBwbGUuc2hvcnRjdXRzEihXRkVtYWlsVHJpZ2dlci5XRkVtYWlsVHJpZ2dlck1haWxBY2NvdW50EjkKNwoxChNjb20uYXBwbGUuc2hvcnRjdXRzOhoKDldGRW1haWxUcmlnZ2VyEghhY2NvdW50cxICIgA=",
+        "relationships_b64": "",
+        "localized_name": "accounts",
+        "localized_description": null
+      },
+      {
+        "key": "recipients",
+        "type_id": "person",
+        "sort_order": 3,
+        "flags": 0,
+        "type_instance_bytes": 9,
+        "relationships_bytes": 0,
+        "type_instance_b64": "EgcKBQoDgAEA",
+        "relationships_b64": "",
+        "localized_name": "recipients",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFEmailTrigger.senders_are_and_subject_contains",
+    "flags": 3,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 45,
+    "output_type_instance_b64": "CisSKQoTY29tLmFwcGxlLnNob3J0Y3V0cxISV0ZFbWFpbENvbnRlbnRJdGVt",
+    "localized_name": "Email",
+    "localized_description_summary": "\u201cWhen I get an email from Jane\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "com.apple.shortcuts.WFEmailContentItem"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "senders",
+        "type_id": "person",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 9,
+        "relationships_bytes": 0,
+        "type_instance_b64": "EgcKBQoDgAEA",
+        "relationships_b64": "",
+        "localized_name": "senders",
+        "localized_description": null
+      },
+      {
+        "key": "searchTerm",
+        "type_id": "string",
+        "sort_order": 2,
+        "flags": 0,
+        "type_instance_bytes": 10,
+        "relationships_bytes": 0,
+        "type_instance_b64": "GggKBgoECgIwAA==",
+        "relationships_b64": "",
+        "localized_name": "searchTerm",
+        "localized_description": null
+      },
+      {
+        "key": "accounts",
+        "type_id": "com.apple.shortcuts.WFEmailTrigger.WFEmailTriggerMailAccount",
+        "sort_order": 3,
+        "flags": 0,
+        "type_instance_bytes": 128,
+        "relationships_bytes": 0,
+        "type_instance_b64": "Kn4KQRI/ChNjb20uYXBwbGUuc2hvcnRjdXRzEihXRkVtYWlsVHJpZ2dlci5XRkVtYWlsVHJpZ2dlck1haWxBY2NvdW50EjkKNwoxChNjb20uYXBwbGUuc2hvcnRjdXRzOhoKDldGRW1haWxUcmlnZ2VyEghhY2NvdW50cxICIgA=",
+        "relationships_b64": "",
+        "localized_name": "accounts",
+        "localized_description": null
+      },
+      {
+        "key": "recipients",
+        "type_id": "person",
+        "sort_order": 4,
+        "flags": 0,
+        "type_instance_bytes": 9,
+        "relationships_bytes": 0,
+        "type_instance_b64": "EgcKBQoDgAEA",
+        "relationships_b64": "",
+        "localized_name": "recipients",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFWorkoutTrigger.start",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Apple Watch Workout",
+    "localized_description_summary": "\u201cWhen I start a workout\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "workoutTypes",
+        "type_id": "com.apple.shortcuts.WFWorkoutTrigger.WFWorkoutTriggerWorkoutType",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 139,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KogBCkUSQwoTY29tLmFwcGxlLnNob3J0Y3V0cxIsV0ZXb3Jrb3V0VHJpZ2dlci5XRldvcmtvdXRUcmlnZ2VyV29ya291dFR5cGUSPwo9CjcKE2NvbS5hcHBsZS5zaG9ydGN1dHM6IAoQV0ZXb3Jrb3V0VHJpZ2dlchIMd29ya291dFR5cGVzEgIiAA==",
+        "relationships_b64": "",
+        "localized_name": "workoutTypes",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFWorkoutTrigger.stop",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Apple Watch Workout",
+    "localized_description_summary": "\u201cWhen I start a workout\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "workoutTypes",
+        "type_id": "com.apple.shortcuts.WFWorkoutTrigger.WFWorkoutTriggerWorkoutType",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 139,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KogBCkUSQwoTY29tLmFwcGxlLnNob3J0Y3V0cxIsV0ZXb3Jrb3V0VHJpZ2dlci5XRldvcmtvdXRUcmlnZ2VyV29ya291dFR5cGUSPwo9CjcKE2NvbS5hcHBsZS5zaG9ydGN1dHM6IAoQV0ZXb3Jrb3V0VHJpZ2dlchIMd29ya291dFR5cGVzEgIiAA==",
+        "relationships_b64": "",
+        "localized_name": "workoutTypes",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFWorkoutTrigger.toggle",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Apple Watch Workout",
+    "localized_description_summary": "\u201cWhen I start a workout\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "workoutTypes",
+        "type_id": "com.apple.shortcuts.WFWorkoutTrigger.WFWorkoutTriggerWorkoutType",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 139,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KogBCkUSQwoTY29tLmFwcGxlLnNob3J0Y3V0cxIsV0ZXb3Jrb3V0VHJpZ2dlci5XRldvcmtvdXRUcmlnZ2VyV29ya291dFR5cGUSPwo9CjcKE2NvbS5hcHBsZS5zaG9ydGN1dHM6IAoQV0ZXb3Jrb3V0VHJpZ2dlchIMd29ya291dFR5cGVzEgIiAA==",
+        "relationships_b64": "",
+        "localized_name": "workoutTypes",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFPredictedLocationTransitionTrigger.Default",
+    "flags": 0,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Before I Commute",
+    "localized_description_summary": "\u201c15 minutes before I leave for work\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "triggerHeadsUp",
+        "type_id": "dateComponents",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAkAA",
+        "relationships_b64": "",
+        "localized_name": "triggerHeadsUp",
+        "localized_description": null
+      },
+      {
+        "key": "destinationType",
+        "type_id": "com.apple.shortcuts.WFPredictedLocationTransitionTrigger.WFPredictedLocationTransitionDestinationType",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 108,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CmoSaAoTY29tLmFwcGxlLnNob3J0Y3V0cxJRV0ZQcmVkaWN0ZWRMb2NhdGlvblRyYW5zaXRpb25UcmlnZ2VyLldGUHJlZGljdGVkTG9jYXRpb25UcmFuc2l0aW9uRGVzdGluYXRpb25UeXBl",
+        "relationships_b64": "",
+        "localized_name": "destinationType",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFBatteryLevelTrigger.equal",
+    "flags": 1,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Battery Level",
+    "localized_description_summary": "\u201cWhen battery level rises above 50%\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "level",
+        "type_id": "number",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAiAA",
+        "relationships_b64": "",
+        "localized_name": "level",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFBatteryLevelTrigger.above",
+    "flags": 1,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Battery Level",
+    "localized_description_summary": "\u201cWhen battery level rises above 50%\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "level",
+        "type_id": "number",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAiAA",
+        "relationships_b64": "",
+        "localized_name": "level",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFBatteryLevelTrigger.below",
+    "flags": 1,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Battery Level",
+    "localized_description_summary": "\u201cWhen battery level rises above 50%\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "level",
+        "type_id": "number",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAiAA",
+        "relationships_b64": "",
+        "localized_name": "level",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFSleepTrigger.wind_down_begins",
+    "flags": 1,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Sleep",
+    "localized_description_summary": "\u201cWhen Wind Down starts\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFSleepTrigger.bedtime_begins",
+    "flags": 1,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Sleep",
+    "localized_description_summary": "\u201cWhen Wind Down starts\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFSleepTrigger.waking_up",
+    "flags": 1,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Sleep",
+    "localized_description_summary": "\u201cWhen Wind Down starts\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFNFCTrigger.scan",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "NFC",
+    "localized_description_summary": "\u201cWhen I tap an NFC tag\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "tagIdentifier",
+        "type_id": "string",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAjAA",
+        "relationships_b64": "",
+        "localized_name": "tagIdentifier",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFSoundRecognitionTrigger.on",
+    "flags": 1,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Sound Recognition",
+    "localized_description_summary": "\u201cWhen my Mac recognizes a doorbell sound\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "sounds",
+        "type_id": "com.apple.shortcuts.WFSoundRecognitionTrigger.WFSoundRecognitionTriggerSound",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 154,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KpcBClESTwoTY29tLmFwcGxlLnNob3J0Y3V0cxI4V0ZTb3VuZFJlY29nbml0aW9uVHJpZ2dlci5XRlNvdW5kUmVjb2duaXRpb25UcmlnZ2VyU291bmQSQgpACjoKE2NvbS5hcHBsZS5zaG9ydGN1dHM6IwoZV0ZTb3VuZFJlY29nbml0aW9uVHJpZ2dlchIGc291bmRzEgIiAA==",
+        "relationships_b64": "",
+        "localized_name": "sounds",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFAlarmTrigger.any_alarm",
+    "flags": 1,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Alarm",
+    "localized_description_summary": "\u201cWhen my alarm is stopped\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "alarmState",
+        "type_id": "com.apple.shortcuts.WFAlarmTrigger.WFAlarmState",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 117,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KnMKNBIyChNjb20uYXBwbGUuc2hvcnRjdXRzEhtXRkFsYXJtVHJpZ2dlci5XRkFsYXJtU3RhdGUSOwo5CjMKE2NvbS5hcHBsZS5zaG9ydGN1dHM6HAoOV0ZBbGFybVRyaWdnZXISCmFsYXJtU3RhdGUSAiIA",
+        "relationships_b64": "",
+        "localized_name": "alarmState",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFAlarmTrigger.wake_up_alarm",
+    "flags": 1,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Alarm",
+    "localized_description_summary": "\u201cWhen my alarm is stopped\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "alarmState",
+        "type_id": "com.apple.shortcuts.WFAlarmTrigger.WFAlarmState",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 117,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KnMKNBIyChNjb20uYXBwbGUuc2hvcnRjdXRzEhtXRkFsYXJtVHJpZ2dlci5XRkFsYXJtU3RhdGUSOwo5CjMKE2NvbS5hcHBsZS5zaG9ydGN1dHM6HAoOV0ZBbGFybVRyaWdnZXISCmFsYXJtU3RhdGUSAiIA",
+        "relationships_b64": "",
+        "localized_name": "alarmState",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFAlarmTrigger.specfic_alarm",
+    "flags": 1,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Alarm",
+    "localized_description_summary": "\u201cWhen my alarm is stopped\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "alarmState",
+        "type_id": "com.apple.shortcuts.WFAlarmTrigger.WFAlarmState",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 117,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KnMKNBIyChNjb20uYXBwbGUuc2hvcnRjdXRzEhtXRkFsYXJtVHJpZ2dlci5XRkFsYXJtU3RhdGUSOwo5CjMKE2NvbS5hcHBsZS5zaG9ydGN1dHM6HAoOV0ZBbGFybVRyaWdnZXISCmFsYXJtU3RhdGUSAiIA",
+        "relationships_b64": "",
+        "localized_name": "alarmState",
+        "localized_description": null
+      },
+      {
+        "key": "alarmIDs",
+        "type_id": "com.apple.shortcuts.WFAlarmTrigger.WFSpecificAlarm",
+        "sort_order": 2,
+        "flags": 0,
+        "type_instance_bytes": 118,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KnQKNxI1ChNjb20uYXBwbGUuc2hvcnRjdXRzEh5XRkFsYXJtVHJpZ2dlci5XRlNwZWNpZmljQWxhcm0SOQo3CjEKE2NvbS5hcHBsZS5zaG9ydGN1dHM6GgoOV0ZBbGFybVRyaWdnZXISCGFsYXJtSURzEgIiAA==",
+        "relationships_b64": "",
+        "localized_name": "alarmIDs",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFWalletTransactionTrigger.tap",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 57,
+    "output_type_instance_b64": "CjcSNQoTY29tLmFwcGxlLnNob3J0Y3V0cxIeV0ZXYWxsZXRUcmFuc2FjdGlvbkNvbnRlbnRJdGVt",
+    "localized_name": "Wallet",
+    "localized_description_summary": "\u201cWhen I tap a Wallet Card or Pass\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "com.apple.shortcuts.WFWalletTransactionContentItem"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "selectedCards",
+        "type_id": "com.apple.shortcuts.WFWalletTransactionTrigger.WFWalletTriggerCard",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 152,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KpUBCkcSRQoTY29tLmFwcGxlLnNob3J0Y3V0cxIuV0ZXYWxsZXRUcmFuc2FjdGlvblRyaWdnZXIuV0ZXYWxsZXRUcmlnZ2VyQ2FyZBJKCkgKQgoTY29tLmFwcGxlLnNob3J0Y3V0czorChpXRldhbGxldFRyYW5zYWN0aW9uVHJpZ2dlchINc2VsZWN0ZWRDYXJkcxICIgA=",
+        "relationships_b64": "",
+        "localized_name": "selectedCards",
+        "localized_description": null
+      },
+      {
+        "key": "selectedMerchants",
+        "type_id": "com.apple.shortcuts.WFWalletTransactionTrigger.WFWalletTriggerMerchant",
+        "sort_order": 2,
+        "flags": 0,
+        "type_instance_bytes": 160,
+        "relationships_bytes": 0,
+        "type_instance_b64": "Kp0BCksSSQoTY29tLmFwcGxlLnNob3J0Y3V0cxIyV0ZXYWxsZXRUcmFuc2FjdGlvblRyaWdnZXIuV0ZXYWxsZXRUcmlnZ2VyTWVyY2hhbnQSTgpMCkYKE2NvbS5hcHBsZS5zaG9ydGN1dHM6LwoaV0ZXYWxsZXRUcmFuc2FjdGlvblRyaWdnZXISEXNlbGVjdGVkTWVyY2hhbnRzEgIiAA==",
+        "relationships_b64": "",
+        "localized_name": "selectedMerchants",
+        "localized_description": null
+      },
+      {
+        "key": "selectedMerchantTypes",
+        "type_id": "com.apple.shortcuts.WFWalletTransactionTrigger.WFWalletTriggerMerchantType",
+        "sort_order": 3,
+        "flags": 0,
+        "type_instance_bytes": 168,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KqUBCk8STQoTY29tLmFwcGxlLnNob3J0Y3V0cxI2V0ZXYWxsZXRUcmFuc2FjdGlvblRyaWdnZXIuV0ZXYWxsZXRUcmlnZ2VyTWVyY2hhbnRUeXBlElIKUApKChNjb20uYXBwbGUuc2hvcnRjdXRzOjMKGldGV2FsbGV0VHJhbnNhY3Rpb25UcmlnZ2VyEhVzZWxlY3RlZE1lcmNoYW50VHlwZXMSAiIA",
+        "relationships_b64": "",
+        "localized_name": "selectedMerchantTypes",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFUserFocusActivityTrigger.on",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Focus",
+    "localized_description_summary": "\u201cWhen turning on Work\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "focusMode",
+        "type_id": "com.apple.shortcuts.WFUserFocusActivityTrigger.Focus",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 134,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KoMBCjkSNwoTY29tLmFwcGxlLnNob3J0Y3V0cxIgV0ZVc2VyRm9jdXNBY3Rpdml0eVRyaWdnZXIuRm9jdXMSRgpECj4KE2NvbS5hcHBsZS5zaG9ydGN1dHM6JwoaV0ZVc2VyRm9jdXNBY3Rpdml0eVRyaWdnZXISCWZvY3VzTW9kZRICIgA=",
+        "relationships_b64": "",
+        "localized_name": "focusMode",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFUserFocusActivityTrigger.off",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Focus",
+    "localized_description_summary": "\u201cWhen turning on Work\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "focusMode",
+        "type_id": "com.apple.shortcuts.WFUserFocusActivityTrigger.Focus",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 134,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KoMBCjkSNwoTY29tLmFwcGxlLnNob3J0Y3V0cxIgV0ZVc2VyRm9jdXNBY3Rpdml0eVRyaWdnZXIuRm9jdXMSRgpECj4KE2NvbS5hcHBsZS5zaG9ydGN1dHM6JwoaV0ZVc2VyRm9jdXNBY3Rpdml0eVRyaWdnZXISCWZvY3VzTW9kZRICIgA=",
+        "relationships_b64": "",
+        "localized_name": "focusMode",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFUserFocusActivityTrigger.toggle",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 6,
+    "output_type_instance_b64": "CgQKAggA",
+    "localized_name": "Focus",
+    "localized_description_summary": "\u201cWhen turning on Work\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "none"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "focusMode",
+        "type_id": "com.apple.shortcuts.WFUserFocusActivityTrigger.Focus",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 134,
+        "relationships_bytes": 0,
+        "type_instance_b64": "KoMBCjkSNwoTY29tLmFwcGxlLnNob3J0Y3V0cxIgV0ZVc2VyRm9jdXNBY3Rpdml0eVRyaWdnZXIuRm9jdXMSRgpECj4KE2NvbS5hcHBsZS5zaG9ydGN1dHM6JwoaV0ZVc2VyRm9jdXNBY3Rpdml0eVRyaWdnZXISCWZvY3VzTW9kZRICIgA=",
+        "relationships_b64": "",
+        "localized_name": "focusMode",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFFolderTrigger.added",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 7,
+    "output_type_instance_b64": "CgUKA4gBAA==",
+    "localized_name": "Folder",
+    "localized_description_summary": "\u201cWhen files are added to my Documents folder\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "file"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "folder",
+        "type_id": "file",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 7,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgUKA4gBAA==",
+        "relationships_b64": "",
+        "localized_name": "folder",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFFolderTrigger.modified",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 7,
+    "output_type_instance_b64": "CgUKA4gBAA==",
+    "localized_name": "Folder",
+    "localized_description_summary": "\u201cWhen files are added to my Documents folder\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "file"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "folder",
+        "type_id": "file",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 7,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgUKA4gBAA==",
+        "relationships_b64": "",
+        "localized_name": "folder",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFFolderTrigger.removed",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 7,
+    "output_type_instance_b64": "CgUKA4gBAA==",
+    "localized_name": "Folder",
+    "localized_description_summary": "\u201cWhen files are added to my Documents folder\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "file"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "folder",
+        "type_id": "file",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 7,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgUKA4gBAA==",
+        "relationships_b64": "",
+        "localized_name": "folder",
+        "localized_description": null
+      }
+    ]
+  },
+  {
+    "id": "com.apple.shortcuts.WFFileTrigger.Default",
+    "flags": 5,
+    "requirements_bytes": 0,
+    "requirements_b64": "",
+    "output_type_instance_bytes": 7,
+    "output_type_instance_b64": "CgUKA4gBAA==",
+    "localized_name": "File",
+    "localized_description_summary": "\u201cWhen my Budget spreadsheet is modified\u201d",
+    "localized_output_result_name": null,
+    "output_types": [
+      "file"
+    ],
+    "parameters": [
+      {
+        "key": "requiresConfirmation",
+        "type_id": "bool",
+        "sort_order": 0,
+        "flags": 0,
+        "type_instance_bytes": 6,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgQKAhAA",
+        "relationships_b64": "",
+        "localized_name": "requiresConfirmation",
+        "localized_description": null
+      },
+      {
+        "key": "file",
+        "type_id": "file",
+        "sort_order": 1,
+        "flags": 0,
+        "type_instance_bytes": 7,
+        "relationships_bytes": 0,
+        "type_instance_b64": "CgUKA4gBAA==",
+        "relationships_b64": "",
+        "localized_name": "file",
+        "localized_description": null
+      }
+    ]
+  }
+]

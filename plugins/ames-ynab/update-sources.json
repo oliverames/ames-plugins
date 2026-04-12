@@ -1,0 +1,7 @@
+{
+  "ynab-mcp-server": {
+    "project": "ynab-mcp-server",
+    "package": "@oliverames/ynab-mcp-server",
+    "repo": "https://github.com/oliverames/ynab-mcp-server.git"
+  }
+}

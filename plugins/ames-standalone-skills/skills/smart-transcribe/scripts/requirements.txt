@@ -1,0 +1,23 @@
+# Cloud API clients
+assemblyai
+elevenlabs
+mistralai>=1.0.0,<2.0.0
+google-genai
+anthropic
+openai
+httpx
+
+# Local model runtimes
+mlx-audio
+transformers>=5.4.0
+torch
+accelerate
+soundfile
+librosa
+sentencepiece
+protobuf
+
+# Utilities
+pydub
+ffmpeg-python
+rich

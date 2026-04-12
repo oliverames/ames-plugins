@@ -1,0 +1,31 @@
+{
+  "name": "ames-claude",
+  "owner": {
+    "name": "Oliver Ames",
+    "email": "oliverames@users.noreply.github.com"
+  },
+  "metadata": {
+    "description": "Oliver's personal Claude Code plugins and skills",
+    "version": "3.1.0"
+  },
+  "plugins": [
+    {
+      "name": "ames-preferred-mcps",
+      "version": "1.2.0",
+      "description": "Preferred third-party MCP servers curated by Oliver Ames. Includes 1Password, Apple Docs, Apple Notifier, Drafts, Excel, Google Workspace, macOS Automator, Pandoc, Peekaboo, Shortcuts, XcodeBuild, iMCP, Sim Genie, and Sosumi integrations. Run sync-sources to install or update non-npm dependencies.",
+      "source": "./plugins/ames-preferred-mcps"
+    },
+    {
+      "name": "ames-standalone-skills",
+      "version": "2.8.1",
+      "description": "Oliver's personal Claude Code skills \u2014 writing, development, automation, finance, and AI tools",
+      "source": "./plugins/ames-standalone-skills"
+    },
+    {
+      "name": "ames-ynab",
+      "version": "2.0.0",
+      "description": "YNAB (You Need A Budget) MCP connector built and maintained by Oliver Ames. Installing this plugin activates the ynab-mcp-server MCP, providing full read/write access to YNAB budgets, transactions, categories, scheduled transactions, and payees.",
+      "source": "./plugins/ames-ynab"
+    }
+  ]
+}

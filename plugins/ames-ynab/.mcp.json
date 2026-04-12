@@ -1,0 +1,9 @@
+{
+  "ynab-mcp-server": {
+    "command": "bash",
+    "args": ["-c", "cd /tmp && npx -y @oliverames/ynab-mcp-server@latest"],
+    "env": {
+      "YNAB_API_TOKEN": "${YNAB_API_TOKEN}"
+    }
+  }
+}

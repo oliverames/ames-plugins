@@ -1,0 +1,60 @@
+{
+  "1password": {
+    "command": "npx",
+    "args": ["-y", "@takescake/1password-mcp"]
+  },
+  "apple-docs": {
+    "command": "npx",
+    "args": ["-y", "@kimsungwhee/apple-docs-mcp@latest"]
+  },
+  "apple-notifier": {
+    "command": "npx",
+    "args": ["-y", "apple-notifier-mcp@latest"]
+  },
+  "drafts": {
+    "command": "npx",
+    "args": ["-y", "@agiletortoise/drafts-mcp-server@latest"]
+  },
+  "excel": {
+    "command": "uvx",
+    "args": ["excel-mcp-server", "stdio"]
+  },
+  "google-workspace": {
+    "command": "npx",
+    "args": ["-y", "@aaronsb/google-workspace-mcp@latest"],
+    "env": {
+      "GOOGLE_CLIENT_ID": "${GOOGLE_WORKSPACE_OAUTH_CLIENT_ID}",
+      "GOOGLE_CLIENT_SECRET": "${GOOGLE_WORKSPACE_OAUTH_CLIENT_SECRET}"
+    }
+  },
+  "macos-automator": {
+    "command": "npx",
+    "args": ["-y", "@steipete/macos-automator-mcp@latest"]
+  },
+  "pandoc": {
+    "command": "uvx",
+    "args": ["mcp-pandoc"]
+  },
+  "peekaboo": {
+    "command": "npx",
+    "args": ["-y", "@steipete/peekaboo@latest", "mcp"]
+  },
+  "shortcuts": {
+    "command": "mise",
+    "args": ["x", "ubi:artemnovichkov/shortcuts-mcp-server@latest", "--", "shortcuts-mcp-server"]
+  },
+  "XcodeBuildMCP": {
+    "command": "npx",
+    "args": ["-y", "xcodebuildmcp@latest", "mcp"]
+  },
+  "iMCP": {
+    "command": "/Applications/iMCP.app/Contents/MacOS/imcp-server"
+  },
+  "SimGenie": {
+    "command": "/Applications/Sim Genie.app/Contents/MacOS/simgenie-mcp"
+  },
+  "sosumi": {
+    "type": "http",
+    "url": "https://sosumi.ai/mcp"
+  }
+}

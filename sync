@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+"""sync — Regenerate marketplace.json from plugin.json files.
+
+Run before pushing to GitHub. Claude Code polls the marketplace manifest
+and auto-updates installed plugins when versions change.
+
+Usage:
+    ./sync
+"""
+
+import json
+import os
+import sys
+from pathlib import Path
+
+# ── Terminal styling ───────────────────────────────────────────────────
+_NO_COLOR = os.environ.get("NO_COLOR") is not None or not sys.stdout.isatty()
+_B = "" if _NO_COLOR else "\033[38;5;141m"   # brand purple
+_S = "" if _NO_COLOR else "\033[38;5;114m"   # success green
+_M = "" if _NO_COLOR else "\033[38;5;244m"   # muted gray
+_R = "" if _NO_COLOR else "\033[0m"
+
+def _success(msg): print(f"  {_S}✓{_R} {_S}{msg}{_R}")
+def _dim(msg):     print(f"  {_M}{msg}{_R}")
+def _header(title, sub=""): print(f"\n{_B}{'─' * 48}{_R}\n{_B}  {title}{('  —  ' + sub) if sub else ''}{_R}\n{_B}{'─' * 48}{_R}\n")
+
+HERE = Path(__file__).parent
+PLUGINS_DIR = HERE / "plugins"
+MARKETPLACE = HERE / ".claude-plugin" / "marketplace.json"
+
+_header("sync", "ames-claude marketplace")
+
+with open(MARKETPLACE) as f:
+    current = json.load(f)
+
+plugins = []
+for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
+    plugin_json = plugin_dir / ".claude-plugin" / "plugin.json"
+    if not plugin_json.exists():
+        continue
+
+    with open(plugin_json) as f:
+        meta = json.load(f)
+
+    entry = {
+        "name": meta["name"],
+        "version": meta["version"],
+        "description": meta.get("description", ""),
+        "source": f"./plugins/{plugin_dir.name}",
+    }
+
+    plugins.append(entry)
+
+output = {
+    "name": current["name"],
+    "owner": current["owner"],
+    "metadata": current["metadata"],
+    "plugins": plugins,
+}
+
+with open(MARKETPLACE, "w") as f:
+    json.dump(output, f, indent=2)
+    f.write("\n")
+
+_success(f"marketplace.json — {len(plugins)} plugin(s)")
+for p in plugins:
+    print(f"  {_M}•{_R} {p['name']} {_M}v{p['version']}{_R}")
