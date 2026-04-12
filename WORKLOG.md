@@ -1,5 +1,40 @@
 # Worklog
 
+## 2026-04-11 — Cowork marketplace fix: SKILL.md kebab-case + git history flatten
+
+**What changed**: Debugged and fixed the "Failed to update marketplace" / "Marketplace sync failed" errors that had been preventing `ames-standalone-skills` from loading in Cowork. Root cause was 15 of 30 SKILL.md frontmatters having `name: "1Password Vault"` style display names instead of `name: 1password-vault` kebab-case matching directory — Cowork's marketplace validator rejects the entire plugin with a generic error in this case. Also cleaned up a lot of cruft along the way: removed orphaned `smart-transcribe-workspace/` directory (had no SKILL.md, was a stray eval output workspace), removed tracked `evals/workspace/` run outputs and `.a5c/cache/` AI cache files from smart-transcribe, removed 2 empty iCloud conflict files (`.!*.md`). Flattened git history via orphan branch + force push: GitHub pack went from 85.60 MiB → 1.47 MiB (58× reduction) by purging blobs from renamed/deleted plugins (`ames-preferred-connectors`, `plugins/smart-transcribe` old path, `ames-desktop-extensions`). Bumped `ames-standalone-skills` 2.7.0 → 2.8.2 across the fix commits. Updated CLAUDE.md with the kebab-case requirement and other Cowork validator gotchas so this doesn't recur. Saved two memories: `feedback_validate_schemas_first.md` (validate field values against docs BEFORE chasing theories) and `ref_claude_skill_md_schema.md` (the actual Cowork validator rules). Note: commit `92d9682` adding docling to ames-preferred-mcps came from a parallel Opus session, not this one.
+
+**Decisions made**:
+- **Kept toolkit-v63-tools.json and toolkit-v63-types.json (9.5MB) in the distributed plugin** despite their size, per the design intent documented in `TOOLKIT_SNAPSHOT.md` — the raw-plist skill bundles a precomputed ToolKit metadata snapshot so users don't need to extract it from their own SQLite. Confirmed size wasn't the issue (Cowork failed even without them).
+- **Flattened git history via orphan branch rather than `git filter-repo`** — simpler, more destructive, but appropriate for a personal marketplace where commit history isn't load-bearing (WORKLOG.md serves as the narrative history). Trade-off: lost `git log` / `git blame` on all files.
+- **Kept safety tag `pre-orphan-backup` locally but deleted it from GitHub**. Local reflog + local tag give 90-day recovery window; remote tag was keeping old unreferenced blobs alive on GitHub, defeating the point of the flatten.
+- **Fixed the `name` fields rather than removing them** — both approaches work (directory name is canonical), but kebab-case matching is what the docs example shows and what 15 of our already-correct skills use.
+- **Removed `strict: true` + explicit `skills` array from sync script output** even though it turned out not to be the validator trigger — it's still redundant with auto-discovery and was generating noise in marketplace.json.
+- Process lesson worth internalizing: parse field values against the documented schema with a real parser BEFORE proposing theories about size, auth, network, or structural issues. Spent hours on the wrong theories because "frontmatter starts with `---`" was treated as validation. It's a presence check.
+
+**Left off at**:
+- ✅ **Resolved**: `ames-standalone-skills` now loads cleanly in Cowork; all 3 plugins visible with no error banner
+- Still open (carried): `publish` script untested end-to-end
+- Still open (carried): postpublish hooks in meta/sprout/imagerelay/unifi still call bump-and-sync for removed plugin entry
+- Still open (carried): disable ames-original-connectors / enable ames-ynab in plugin UI
+- Still open (carried): ImageRelay 1Password fallback verification
+- Still open (carried): UniFi — create 1Password item to bring online
+- Still open (carried): verify iMCP/SimGenie/Sosumi appear in `claude mcp list` under `plugin:ames-preferred-mcps:*`
+- Still open (carried): `backup-claude` blind spot on `~/.claude.json`
+- Still open (carried): bcbs-meeting-notes first real-world run with actual SmartTranscribe output
+- Still open (carried): smart-transcribe description optimization loop (skill-creator Phase 4) not yet run
+- Still open (carried): Duplicate chrome-devtools MCP registration — disable one
+- **NEW**: Repo is private and Cowork does work with it now, but if Cowork ever breaks private-repo support again, consider making public after redacting `oliverames@gmail.com` in 2 plugin.json files + Tailscale IP `100.79.211.138` in this WORKLOG
+- **NEW**: Consider running the kebab-case validator as a pre-commit hook on `plugins/ames-standalone-skills/skills/*/SKILL.md` to catch regressions on new skills
+
+**Open questions**:
+- Are inline credential tokens in settings.json (GITHUB, YNAB, Telegram, Google OAuth) worth migrating to op:// references? (Carried — no progress)
+- MLX path (mlx_audio 0.4.2 quantized conv bug): worth filing upstream? (Carried — no progress)
+- Parakeet subsampling bug: worth filing against huggingface/transformers? (Carried — no progress)
+- What other Cowork validator rules are undocumented? The kebab-case requirement wasn't explicitly spelled out in the docs — there may be others lurking.
+
+---
+
 ## 2026-04-10 — config hardening: new CLAUDE.md rules, hooks fixed, draft-comms skill added
 
 **What changed**: Added 5 new global CLAUDE.md rule sections (Safety & Conventions, Problem-Solving Principles, Writing & Communications, Workflow Conventions, Credentials & Secrets). Added PreToolUse/PostToolUse hooks to settings.json with correct Claude Code event names and stdin-JSON input format. Created draft-comms skill under ames-standalone-skills v2.7.0. Ran /doctor: cleared 3 stale babysitter session files, confirmed stop hook healthy (72 invocations, all clean). MCP audit: all 24 servers reachable, one duplicate chrome-devtools registration noted (not fixed).
