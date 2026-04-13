@@ -1,7 +1,7 @@
 {
   "name": "ames-standalone-skills",
-  "version": "2.11.0",
-  "description": "Oliver's personal Claude Code skills \u2014 writing, development, automation, finance, and AI tools",
+  "version": "3.0.0",
+  "description": "Oliver's original Claude Code skills \u2014 writing, development, automation, finance, and AI tools (24 skills)",
   "author": {
     "name": "Oliver Ames"
   }

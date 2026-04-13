@@ -10,6 +10,12 @@
   },
   "plugins": [
     {
+      "name": "ames-community-skills",
+      "version": "1.0.0",
+      "description": "Third-party Claude Code skills curated by Oliver Ames. Includes humanizer (blader), SwiftUI Pro (Paul Hudson/twostraws), and Apple platform dev skills from OpenAI's Codex plugins.",
+      "source": "./plugins/ames-community-skills"
+    },
+    {
       "name": "ames-preferred-mcps",
       "version": "1.4.0",
       "description": "Preferred third-party MCP servers curated by Oliver Ames. Includes 1Password, Apple Docs, Apple Notifier, Docling, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, Shortcuts, XcodeBuild, iMCP, Sim Genie, and Sosumi integrations. Run sync-sources to install or update non-npm dependencies.",
@@ -17,8 +23,8 @@
     },
     {
       "name": "ames-standalone-skills",
-      "version": "2.11.0",
-      "description": "Oliver's personal Claude Code skills \u2014 writing, development, automation, finance, and AI tools",
+      "version": "3.0.0",
+      "description": "Oliver's original Claude Code skills \u2014 writing, development, automation, finance, and AI tools (24 skills)",
       "source": "./plugins/ames-standalone-skills"
     },
     {
@@ -26,12 +32,6 @@
       "version": "2.0.0",
       "description": "YNAB (You Need A Budget) MCP connector built and maintained by Oliver Ames. Installing this plugin activates the ynab-mcp-server MCP, providing full read/write access to YNAB budgets, transactions, categories, scheduled transactions, and payees.",
       "source": "./plugins/ames-ynab"
-    },
-    {
-      "name": "codex",
-      "version": "1.0.1",
-      "description": "Apple platform development skills ported from OpenAI's curated Build iOS Apps and Build macOS Apps Codex plugins. Covers App Intents, SwiftUI patterns, performance audits, AppKit interop, signing, notarization, window management, telemetry, and Xcode workflows.",
-      "source": "./plugins/codex"
     }
   ]
 }
