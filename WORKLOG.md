@@ -1,5 +1,38 @@
 # Worklog
 
+## 2026-04-13 — Plugin split: originals vs community skills, skill cleanup
+
+**What changed**: Split `ames-standalone-skills` into two plugins: `ames-standalone-skills` (26 original skills, v3.0.0) and `ames-community-skills` (4 third-party skills, v1.0.0). Moved humanizer (blader/humanizer by Siqi Chen), swiftui-pro (twostraws), build-ios-apps-codex and build-macos-apps-codex (OpenAI Codex) to the new community plugin. Deleted 6 skills total: jelly (unused), ai-pattern-remover (stale duplicate of humanizer v2.1.1), raw-plist (unused Shortcuts plist generator), xcodegen-project (unused Bitrig XcodeGen reference). Removed the redundant `codex` plugin (v1.0.1, 17 sub-skills) since its content was duplicated by the two codex skills in ames-standalone-skills (now community). Updated CLAUDE.md (structure section, plugin table, skill conventions). Ran `./sync`. Updated Apple Notes "My Tech Stack" to reflect new plugin lineup.
+
+**Decisions made**:
+- **Major version bump to 3.0.0** for ames-standalone-skills because skills were removed (breaking change for anyone depending on them).
+- **Named the new plugin `ames-community-skills`** rather than `ames-third-party-skills` to match the established naming pattern and because "community" better reflects that these are curated picks from the ecosystem.
+- **Kept humanizer in community** despite heavy local customization (v2.5.1 rewrite on Apr 10). Origin is blader/humanizer; the skill arrived pre-versioned at v2.1.1 in the initial commit.
+- **ai-pattern-remover was NOT an original** despite initial assumption. It was a frozen copy of humanizer v2.1.1 with the name field changed. Fully redundant.
+- **Deleted raw-plist and xcodegen-project** after user review. raw-plist was the Shortcuts plist backend (companion to create-shortcut) but unused. xcodegen-project referenced "Bitrig" JSON format that the user didn't recognize.
+
+**Left off at**:
+- Still open: `publish` script untested end-to-end
+- Still open: postpublish hooks in meta/sprout/imagerelay/unifi still call bump-and-sync for removed plugin entry
+- Still open: disable ames-original-connectors / enable ames-ynab in plugin UI
+- Still open: ImageRelay 1Password fallback verification
+- Still open: UniFi -- create 1Password item to bring online
+- Still open: verify iMCP/SimGenie/Sosumi appear in `claude mcp list` under `plugin:ames-preferred-mcps:*`
+- Still open: `backup-claude` blind spot on `~/.claude.json`
+- Still open: bcbs-meeting-notes first real-world run with actual SmartTranscribe output
+- Still open: smart-transcribe description optimization loop (skill-creator Phase 4) not yet run
+- Still open: Duplicate chrome-devtools MCP registration -- disable one
+- Still open: Consider running the kebab-case validator as a pre-commit hook
+- Still open: Axiom marketplace is registered but no plugins installed yet
+- RESOLVED: Redundant `codex` plugin removed (was listed as NEW item last session)
+- **NEW**: humanizer has no `update.sh` -- manual sync only. Consider adding one that pulls from blader/humanizer.
+- **NEW**: `create-shortcut` skill lost its `raw-plist` backend. It still works via Jelly... wait, Jelly was also deleted. Verify `create-shortcut` still functions or update its routing logic.
+
+**Open questions**:
+- Should `create-shortcut` be removed too, now that both its backends (jelly, raw-plist) are gone?
+
+---
+
 ## 2026-04-12 — Skill consolidation: swiftui-pro upstream sync, codex skills, renames
 
 **What changed**: Updated `swiftui-pro` skill to upstream v1.0 from `twostraws/SwiftUI-Agent-Skill` (Paul Hudson), replacing the local v1.1 customizations (`coding-rules.md`, extended description) with the canonical source. Added `update.sh` scripts to three skills for ongoing sync. Created two new standalone skills from OpenAI's curated Codex plugins: `build-ios-apps-codex` (6 iOS workflows: App Intents, Liquid Glass, performance audit, UI patterns, view refactor, debugger) and `build-macos-apps-codex` (11 macOS workflows + 3 commands: build/run/debug, AppKit interop, signing, notarization, SwiftPM, telemetry, test triage, window management). Renamed three skills: `shokz-rip` -> `apple-music-rip` (hardware-agnostic), `cmux` -> `cmux-workflows` (descriptive), `humanizer-ames` -> `ai-pattern-remover` (accurate). Cleaned up `.a5c`/`.remember` dev artifacts from `swiftui-pro/` and `smart-transcribe/`. Updated `filesystem-map.md`, CLAUDE.md (30->32 skills), and Apple Notes "My Claude Code Setup" tech note. Ran two rounds of 5-agent Opus review; fixed Shokz body content and stale skill count caught by reviewers. Bumped `ames-standalone-skills` 2.8.2 -> 2.9.0.
