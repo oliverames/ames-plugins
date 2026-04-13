@@ -1,5 +1,5 @@
 ---
-name: cmux
+name: cmux-workflows
 description: >-
   Use when running inside cmux and performing tasks that benefit from workspace management,
   progress tracking, browser automation, or multi-pane workflows. Triggers when the user

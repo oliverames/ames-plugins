@@ -1,17 +1,16 @@
 ---
 name: swiftui-pro
-description: Comprehensively reviews and writes SwiftUI code for best practices on modern APIs, maintainability, and performance. Use when reading, writing, or reviewing SwiftUI projects — including iOS 26 APIs (Liquid Glass, Foundation Models, on-device LLM), Swift code style, SF Symbols, SwiftUI controls, and SwiftUI styling. Also covers state management, navigation, accessibility, animation, performance, and deprecated API migration.
+description: Comprehensively reviews SwiftUI code for best practices on modern APIs, maintainability, and performance. Use when reading, writing, or reviewing SwiftUI projects.
 license: MIT
 metadata:
   author: Paul Hudson
-  version: "1.1"
+  version: "1.0"
 ---
 
 Review Swift and SwiftUI code for correctness, modern API usage, and adherence to project conventions. Report only genuine problems - do not nitpick or invent issues.
 
 Review process:
 
-1. Apply coding rules and iOS 26 conventions using `references/coding-rules.md`.
 1. Check for deprecated API using `references/api.md`.
 1. Check that views, modifiers, and animations have been written optimally using `references/views.md`.
 1. Validate that data flow is configured correctly using `references/data.md`.
@@ -98,7 +97,6 @@ End of example.
 
 ## References
 
-- `references/coding-rules.md` - Swift code style, UI design, controls, iOS 26 APIs (Liquid Glass, Foundation Models), and purpose strings.
 - `references/accessibility.md` - Dynamic Type, VoiceOver, Reduce Motion, and other accessibility requirements.
 - `references/api.md` - updating code for modern API, and the deprecated code it replaces.
 - `references/design.md` - guidance for building accessible apps that meet Apple’s Human Interface Guidelines.

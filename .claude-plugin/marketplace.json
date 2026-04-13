@@ -17,7 +17,7 @@
     },
     {
       "name": "ames-standalone-skills",
-      "version": "2.8.2",
+      "version": "2.9.0",
       "description": "Oliver's personal Claude Code skills \u2014 writing, development, automation, finance, and AI tools",
       "source": "./plugins/ames-standalone-skills"
     },

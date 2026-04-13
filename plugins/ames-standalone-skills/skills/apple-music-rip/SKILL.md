@@ -1,12 +1,12 @@
 ---
-name: shokz-rip
+name: apple-music-rip
 version: 0.2.3
-description: This skill should be used when the user asks to "download Apple Music tracks", "add music to my Shokz", "download songs for swimming", "rip Apple Music for OpenSwim", "get swimming music", "download music for my headphones", or asks anything about the shokz-rip plugin workflow or Apple Music AAC downloads.
+description: This skill should be used when the user asks to "download Apple Music tracks", "rip Apple Music", "download songs", "get DRM-free music", "download music for my headphones", or asks anything about the apple-music-rip workflow or Apple Music AAC downloads.
 ---
 
 ## Overview
 
-The shokz-rip plugin downloads Apple Music content as 256kbps AAC files compatible with the Shokz OpenSwim Pro headphones using gamdl.
+The apple-music-rip skill downloads Apple Music content as DRM-free 256kbps AAC files using gamdl. Output is compatible with any device that plays AAC/M4A.
 
 **Workflow:** Apple Music URL → gamdl (256kbps AAC download) → `~/Music/Swimming Files/`
 
@@ -23,8 +23,8 @@ The shokz-rip plugin downloads Apple Music content as 256kbps AAC files compatib
 
 | Command | Description |
 |---------|-------------|
-| `/shokz-rip:setup` | One-time setup (install gamdl, configure, export cookies) |
-| `/shokz-rip:download <url>` | Download a song, album, or playlist |
+| `/apple-music-rip:setup` | One-time setup (install gamdl, configure, export cookies) |
+| `/apple-music-rip:download <url>` | Download a song, album, or playlist |
 
 ## Shokz OpenSwim Pro Format Support
 

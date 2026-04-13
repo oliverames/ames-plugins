@@ -1,5 +1,5 @@
 ---
-name: humanizer-ames
+name: ai-pattern-remover
 version: 2.1.1
 description: This skill should be used when the user asks to "humanize text",
   "make this sound less AI", "remove AI patterns", "edit for voice", "make

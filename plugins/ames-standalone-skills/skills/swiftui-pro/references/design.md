@@ -22,19 +22,6 @@ Prefer to place standard fonts, sizes, colors, stack spacing, padding, rounding,
 - When using `RoundedRectangle`, the default rounding style is `.continuous` – there is no need to specify it explicitly.
 
 
-## iOS 26 design patterns
-
-- Use Liquid Glass for elevated surfaces and toolbar backgrounds. Do not combine glass with manual blur materials.
-- For controls in toolbars, avoid SF Symbols ending in `.circle` — they already have a platter background from the system.
-- Group related toolbar items with `ToolbarItemGroup`. Do not group text items with symbol items.
-- Choose control types based on semantics:
-  - `Toggle` with `.toggleStyle(.button)` for persistent on/off state
-  - `Button` with alternating labels for actions
-  - `Picker` with `.pickerStyle(.menu)` for one-of-many selection (not `Menu` of `Button`s)
-- For `Slider`, always provide `label`, `minimumValueLabel`, and `maximumValueLabel` as view builder closures.
-- Most controls accepting a string label also accept `systemImage:` — prefer that over a trailing `Label` closure.
-
-
 ## Ensuring designs work for everyone
 
 - Use `bold()` instead of `fontWeight(.bold)`, because using `bold()` allows the system to choose the correct weight for the current context.

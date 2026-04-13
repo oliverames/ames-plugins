@@ -34,15 +34,6 @@ Text("\(red)\(blue)")
 ```
 
 
-## iOS 26 API changes
-
-- When targeting iOS 26, use `.glassEffect()` for frosted glass backgrounds instead of `.background(.ultraThinMaterial)` or custom blur effects. Flag manual glass reimplementations — use `.buttonStyle(.glass)` or `.buttonStyle(.glassProminent)` for glass-styled buttons.
-- Flag `.background(.ultraThinMaterial)` combined with `.glassEffect()` — they must never be used together.
-- For overlapping glass elements, wrap them in `GlassEffectContainer(spacing:)`.
-- `confirmationDialog()` must be attached to the triggering UI element so Liquid Glass animations originate correctly.
-- The `FoundationModels` framework enables on-device LLM. Check `SystemLanguageModel.default.availability` before using it, and always provide fallback UI for unsupported devices. Use `@Generable` and `@Guide` macros for structured output.
-
-
 ## Using ObservableObject
 
 If using `ObservableObject` is absolutely required – for example if you are trying to create a debouncer using a Combine publisher – you should always make sure `import Combine` is added. This was previously provided through SwiftUI, but that is no longer the case.
