@@ -26,9 +26,9 @@ The apple-music-rip skill downloads Apple Music content as DRM-free 256kbps AAC 
 | `/apple-music-rip:setup` | One-time setup (install gamdl, configure, export cookies) |
 | `/apple-music-rip:download <url>` | Download a song, album, or playlist |
 
-## Shokz OpenSwim Pro Format Support
+## Output Format
 
-The OpenSwim Pro supports MP3, AAC, FLAC, and WAV. gamdl downloads 256kbps AAC (.m4a) which plays natively — no conversion needed.
+gamdl downloads 256kbps AAC (.m4a) files. Compatible with most devices and players that support AAC, including MP3 players, swim headphones, car stereos, and any standard media app.
 
 ## Running Downloads
 
