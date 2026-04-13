@@ -1,5 +1,36 @@
 # Worklog
 
+## 2026-04-13 — Add ames-lytho plugin (Lytho Workflow MCP connector)
+
+**What changed**: Added `ames-lytho` plugin to the marketplace. Plugin connects to `@oliverames/lytho-mcp-server` via `npx -y @oliverames/lytho-mcp-server@latest`. Full plugin structure: `.claude-plugin/plugin.json`, `.mcp.json` with three `${LYTHO_*}` env var templates, `update-sources.json`, `sources/lytho-mcp-server/` snapshot. Part of a broader session that also built `oliverames/lytho-mcp-server` from scratch and published it to npm.
+
+**Decisions made**:
+- Three env vars required (`LYTHO_CLIENT_ID`, `LYTHO_CLIENT_SECRET`, `LYTHO_TOKEN_URL`) because Lytho uses OAuth 2.0 client credentials (Keycloak), not a simple API key. This differs from ames-ynab which needs only `YNAB_API_TOKEN`.
+- Sources snapshot is a manual copy (no `update.sh`) -- consistent with ames-ynab pattern.
+
+**Left off at**:
+- Still open: `publish` script untested end-to-end
+- Still open: postpublish hooks in meta/sprout/imagerelay/unifi still call bump-and-sync for removed plugin entry
+- Still open: disable ames-original-connectors / enable ames-ynab in plugin UI
+- Still open: ImageRelay 1Password fallback verification
+- Still open: UniFi -- create 1Password item to bring online
+- Still open: verify iMCP/SimGenie/Sosumi appear in `claude mcp list` under `plugin:ames-preferred-mcps:*`
+- Still open: `backup-claude` blind spot on `~/.claude.json`
+- Still open: bcbs-meeting-notes first real-world run with actual SmartTranscribe output
+- Still open: smart-transcribe description optimization loop (skill-creator Phase 4) not yet run
+- Still open: Duplicate chrome-devtools MCP registration -- disable one
+- Still open: Consider running the kebab-case validator as a pre-commit hook
+- Still open: Axiom marketplace is registered but no plugins installed yet
+- Still open: humanizer has no `update.sh` -- manual sync only
+- Still open: verify `create-shortcut` still functions (jelly + raw-plist backends both deleted)
+- **NEW**: ames-lytho needs `LYTHO_CLIENT_SECRET` entered in 1Password and real credentials tested end-to-end
+- **NEW**: npm versions 1.0.0 and 1.0.1 of lytho-mcp-server have broken bin entries -- consider deprecating with `npm deprecate`
+
+**Open questions**:
+- Should `create-shortcut` be removed too, now that both its backends (jelly, raw-plist) are gone?
+
+---
+
 ## 2026-04-13 — Plugin split: originals vs community skills, skill cleanup
 
 **What changed**: Split `ames-standalone-skills` into two plugins: `ames-standalone-skills` (26 original skills, v3.0.0) and `ames-community-skills` (4 third-party skills, v1.0.0). Moved humanizer (blader/humanizer by Siqi Chen), swiftui-pro (twostraws), build-ios-apps-codex and build-macos-apps-codex (OpenAI Codex) to the new community plugin. Deleted 6 skills total: jelly (unused), ai-pattern-remover (stale duplicate of humanizer v2.1.1), raw-plist (unused Shortcuts plist generator), xcodegen-project (unused Bitrig XcodeGen reference). Removed the redundant `codex` plugin (v1.0.1, 17 sub-skills) since its content was duplicated by the two codex skills in ames-standalone-skills (now community). Updated CLAUDE.md (structure section, plugin table, skill conventions). Ran `./sync`. Updated Apple Notes "My Tech Stack" to reflect new plugin lineup.
