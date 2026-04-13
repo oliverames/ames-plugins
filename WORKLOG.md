@@ -1,5 +1,41 @@
 # Worklog
 
+## 2026-04-12 — Skill consolidation: swiftui-pro upstream sync, codex skills, renames
+
+**What changed**: Updated `swiftui-pro` skill to upstream v1.0 from `twostraws/SwiftUI-Agent-Skill` (Paul Hudson), replacing the local v1.1 customizations (`coding-rules.md`, extended description) with the canonical source. Added `update.sh` scripts to three skills for ongoing sync. Created two new standalone skills from OpenAI's curated Codex plugins: `build-ios-apps-codex` (6 iOS workflows: App Intents, Liquid Glass, performance audit, UI patterns, view refactor, debugger) and `build-macos-apps-codex` (11 macOS workflows + 3 commands: build/run/debug, AppKit interop, signing, notarization, SwiftPM, telemetry, test triage, window management). Renamed three skills: `shokz-rip` -> `apple-music-rip` (hardware-agnostic), `cmux` -> `cmux-workflows` (descriptive), `humanizer-ames` -> `ai-pattern-remover` (accurate). Cleaned up `.a5c`/`.remember` dev artifacts from `swiftui-pro/` and `smart-transcribe/`. Updated `filesystem-map.md`, CLAUDE.md (30->32 skills), and Apple Notes "My Claude Code Setup" tech note. Ran two rounds of 5-agent Opus review; fixed Shokz body content and stale skill count caught by reviewers. Bumped `ames-standalone-skills` 2.8.2 -> 2.9.0.
+
+**Decisions made**:
+- **Replaced local swiftui-pro v1.1 with upstream v1.0** rather than merging. The local `coding-rules.md` addition was custom but upstream is the authoritative source. The `update.sh` script makes re-syncing trivial going forward.
+- **Created codex skills as router SKILL.md files** with sub-skills in nested `skills/` directories rather than 17 separate top-level skills. This keeps the skill list clean (2 entries vs 17) while preserving all the Codex content and references.
+- **Codex update scripts sync from the local Codex cache** (`~/.codex/plugins/cache/openai-curated/`) rather than cloning from GitHub. This means the user runs `codex plugins update` in Codex first, then runs `./update.sh` to sync to Claude format. Clean separation of concerns.
+- **Kept `cmux` in the new name** (`cmux-workflows`) because cmux is the app name; dropping it would obscure what the skill is for.
+- **Named `ai-pattern-remover`** (not `writing-naturalizer`) because the skill is generic Wikipedia-based AI pattern detection, not personalized to Oliver's voice. The separate `humanizer` skill (v2.5.1, from another repo) is the more advanced version with voice calibration.
+
+**Left off at**:
+- Still open (carried): `publish` script untested end-to-end
+- Still open (carried): postpublish hooks in meta/sprout/imagerelay/unifi still call bump-and-sync for removed plugin entry
+- Still open (carried): disable ames-original-connectors / enable ames-ynab in plugin UI
+- Still open (carried): ImageRelay 1Password fallback verification
+- Still open (carried): UniFi -- create 1Password item to bring online
+- Still open (carried): verify iMCP/SimGenie/Sosumi appear in `claude mcp list` under `plugin:ames-preferred-mcps:*`
+- Still open (carried): `backup-claude` blind spot on `~/.claude.json`
+- Still open (carried): bcbs-meeting-notes first real-world run with actual SmartTranscribe output
+- Still open (carried): smart-transcribe description optimization loop (skill-creator Phase 4) not yet run
+- Still open (carried): Duplicate chrome-devtools MCP registration -- disable one
+- Still open (carried): Consider running the kebab-case validator as a pre-commit hook
+- **NEW**: Axiom marketplace is registered but no plugins installed yet. Evaluate which Axiom plugins to enable.
+- **NEW**: The `codex` plugin (v1.0.1, all 17 skills merged) is redundant now that `build-ios-apps-codex` and `build-macos-apps-codex` exist as standalone skills. Consider removing the `codex` plugin or keeping it for users who want the merged version.
+- **NEW**: Paul Hudson's `swiftui-pro` is at v1.0 upstream. Monitor for v1.1+ releases; `update.sh` handles sync.
+
+**Open questions**:
+- Are inline credential tokens in settings.json worth migrating to op:// references? (Carried -- no progress)
+- MLX path (mlx_audio 0.4.2 quantized conv bug): worth filing upstream? (Carried -- no progress)
+- Parakeet subsampling bug: worth filing against huggingface/transformers? (Carried -- no progress)
+- What other Cowork validator rules are undocumented? (Carried -- no progress)
+- Should `ai-pattern-remover` be consolidated into `humanizer` since they overlap significantly? The generic one may be redundant now that `humanizer` has voice calibration.
+
+---
+
 ## 2026-04-11 — Cowork marketplace fix: SKILL.md kebab-case + git history flatten
 
 **What changed**: Debugged and fixed the "Failed to update marketplace" / "Marketplace sync failed" errors that had been preventing `ames-standalone-skills` from loading in Cowork. Root cause was 15 of 30 SKILL.md frontmatters having `name: "1Password Vault"` style display names instead of `name: 1password-vault` kebab-case matching directory — Cowork's marketplace validator rejects the entire plugin with a generic error in this case. Also cleaned up a lot of cruft along the way: removed orphaned `smart-transcribe-workspace/` directory (had no SKILL.md, was a stray eval output workspace), removed tracked `evals/workspace/` run outputs and `.a5c/cache/` AI cache files from smart-transcribe, removed 2 empty iCloud conflict files (`.!*.md`). Flattened git history via orphan branch + force push: GitHub pack went from 85.60 MiB → 1.47 MiB (58× reduction) by purging blobs from renamed/deleted plugins (`ames-preferred-connectors`, `plugins/smart-transcribe` old path, `ames-desktop-extensions`). Bumped `ames-standalone-skills` 2.7.0 → 2.8.2 across the fix commits. Updated CLAUDE.md with the kebab-case requirement and other Cowork validator gotchas so this doesn't recur. Saved two memories: `feedback_validate_schemas_first.md` (validate field values against docs BEFORE chasing theories) and `ref_claude_skill_md_schema.md` (the actual Cowork validator rules). Note: commit `92d9682` adding docling to ames-preferred-mcps came from a parallel Opus session, not this one.
