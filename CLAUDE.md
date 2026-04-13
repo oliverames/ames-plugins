@@ -26,7 +26,7 @@ bump-and-sync                            — Bumps ames-ynab version + runs sync
 |--------|-------------|------|
 | `ames-ynab` | YNAB (You Need A Budget) MCP connector built and maintained by Oliver | MCP |
 | `ames-preferred-mcps` | Curated third-party MCP servers: apple-docs, apple-notifier, drafts, excel, google-workspace, macos-automator, pandoc, peekaboo, shortcuts, XcodeBuildMCP | MCP |
-| `ames-standalone-skills` | 24 original skills covering writing, dev, iOS, finance, automation, and AI | skills |
+| `ames-standalone-skills` | 26 original skills covering writing, dev, iOS, finance, automation, and AI | skills |
 | `ames-community-skills` | 4 third-party skills: humanizer (blader), SwiftUI Pro (twostraws), Codex iOS/macOS (OpenAI) | skills |
 
 MCP = has `.mcp.json` (registers MCP servers when plugin is enabled).
