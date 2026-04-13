@@ -1,0 +1,7 @@
+{
+  "lytho-mcp-server": {
+    "project": "lytho-mcp-server",
+    "package": "@oliverames/lytho-mcp-server",
+    "repo": "https://github.com/oliverames/lytho-mcp-server.git"
+  }
+}

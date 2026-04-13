@@ -1,0 +1,17 @@
+{
+  "name": "ames-lytho",
+  "version": "1.0.0",
+  "description": "Lytho Workflow MCP connector built and maintained by Oliver Ames. Installing this plugin activates the lytho-mcp-server MCP, providing full read/write access to Lytho work requests, tasks, proofs, projects, campaigns, and preferences via the Lytho Open API.",
+  "author": {
+    "name": "Oliver Ames",
+    "email": "oliverames@gmail.com"
+  },
+  "keywords": [
+    "mcp",
+    "lytho",
+    "workflow",
+    "project-management",
+    "creative-operations"
+  ],
+  "mcpServers": "./.mcp.json"
+}
