@@ -16,6 +16,12 @@
       "source": "./plugins/ames-community-skills"
     },
     {
+      "name": "ames-lytho",
+      "version": "1.0.0",
+      "description": "Lytho Workflow MCP connector built and maintained by Oliver Ames. Installing this plugin activates the lytho-mcp-server MCP, providing full read/write access to Lytho work requests, tasks, proofs, projects, campaigns, and preferences via the Lytho Open API.",
+      "source": "./plugins/ames-lytho"
+    },
+    {
       "name": "ames-preferred-mcps",
       "version": "1.4.0",
       "description": "Preferred third-party MCP servers curated by Oliver Ames. Includes 1Password, Apple Docs, Apple Notifier, Docling, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, Shortcuts, XcodeBuild, iMCP, Sim Genie, and Sosumi integrations. Run sync-sources to install or update non-npm dependencies.",
