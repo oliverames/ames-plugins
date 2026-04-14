@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""Refresh local source snapshots for Oliver-authored connector repos."""
+
+from __future__ import annotations
+
+import json
+import re
+import shutil
+import subprocess
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+MANIFEST = HERE / "update-sources.json"
+DEST_ROOT = HERE / "sources"
+PROJECTS_ROOT = (
+    Path.home()
+    / "Library"
+    / "Mobile Documents"
+    / "com~apple~CloudDocs"
+    / "Developer"
+    / "Projects"
+)
+EXCLUDES = [
+    ".DS_Store",
+    ".git",
+    ".claude",
+    ".firecrawl",
+    "node_modules",
+    "__pycache__",
+    ".venv",
+    "venv",
+]
+ICLOUD_DUPLICATE_RE = re.compile(r".+ (?:[2-9]|[1-9][0-9]+)(?:\.[^/]+)?$")
+
+
+def rsync_copy(src: Path, dest: Path) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    cmd = ["rsync", "-a", "--delete", "--delete-excluded"]
+    for pattern in EXCLUDES:
+        cmd.append(f"--exclude={pattern}")
+    cmd.extend([f"{src}/", f"{dest}/"])
+    subprocess.run(cmd, check=True)
+
+
+def prune_duplicate_conflicts(root: Path) -> int:
+    candidates = sorted(
+        (
+            path
+            for path in root.rglob("*")
+            if ICLOUD_DUPLICATE_RE.fullmatch(path.name)
+        ),
+        key=lambda path: (len(path.parts), str(path)),
+        reverse=True,
+    )
+    cleaned = 0
+    for path in candidates:
+        if not path.exists():
+            continue
+        if path.is_dir():
+            shutil.rmtree(path, ignore_errors=True)
+        else:
+            path.unlink(missing_ok=True)
+        cleaned += 1
+    return cleaned
+
+
+def write_source_metadata(dest: Path, name: str, spec: dict, source_dir: Path) -> None:
+    payload = {
+        "name": name,
+        "project": spec["project"],
+        "package": spec.get("package"),
+        "repo": spec.get("repo"),
+        "source_dir": str(source_dir),
+    }
+    (dest / "_source.json").write_text(json.dumps(payload, indent=2) + "\n")
+
+
+def main() -> None:
+    specs = json.loads(MANIFEST.read_text())
+    DEST_ROOT.mkdir(parents=True, exist_ok=True)
+    wanted = set()
+
+    for name, spec in specs.items():
+        if name.startswith("_"):
+            continue
+        project = spec.get("project")
+        if not project:
+            raise KeyError(f"{name} is missing a project mapping")
+        source_dir = PROJECTS_ROOT / project
+        if not source_dir.is_dir():
+            raise FileNotFoundError(f"missing local repo: {source_dir}")
+        dest_dir = DEST_ROOT / name
+        rsync_copy(source_dir, dest_dir)
+        prune_duplicate_conflicts(dest_dir)
+        write_source_metadata(dest_dir, name, spec, source_dir)
+        wanted.add(name)
+        print(f"synced source: {name}")
+
+    for entry in DEST_ROOT.iterdir():
+        if entry.is_dir() and entry.name not in wanted:
+            shutil.rmtree(entry)
+            print(f"removed stale source: {entry.name}")
+
+
+if __name__ == "__main__":
+    main()
