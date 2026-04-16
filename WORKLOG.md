@@ -1,5 +1,47 @@
 # Worklog
 
+## 2026-04-16 — SSH key audit + rotation; 1password-vault skill rewrite; new shared-terminal-tmux skill
+
+**What changed**: In this repo, `ames-standalone-skills` bumped 3.0.0 → 3.1.1. The `1password-vault` skill got three new sections (SSH Key Handling Caveats, SSH Agent Configuration, Headless SSH Pattern as default for automation, Git Commit Signing via op-ssh-sign) plus a reworded SSH-key vaulting section that replaces the broken JSON-template pattern with `--ssh-generate-key` for fresh keys and GUI-only for imports. A new skill `shared-terminal-tmux` was added for bridging Claude's Bash tool with a Terminal.app session via tmux (covers local setup, remote attach via ttyd/SSH/jumphost, coordination protocol). `./sync` regenerated `marketplace.json`. Part of a broader session that also rotated all SSH keys across MBP, home-server, and UDM Pro; archived 6 obsolete 1P items; configured git commit signing via 1P's op-ssh-sign; decommissioned the reminders-web stack on home-server; updated 2 Tech notes in Apple Notes; and wrote/updated 3 memory files (`feedback_headless_ssh_first.md` new, `feedback_ssh_headless_pattern.md` rewritten, `ref_udm_pro.md` new).
+
+**Decisions made**:
+- **Option Y (fresh keys for both MBP and home-server)** over Option X (reassign existing K6Po... key). Extra 5 minutes of work for clean per-machine identity and no residual material across two machines.
+- **Additive-then-cleanup rotation** over swap-in-place. New keys added alongside old, verify, then remove old. Prevents lockout and is the pattern to use for any credential rotation.
+- **Per-item UUID scoping in `agent.toml`** as the always-correct default. Vault-wide scoping is a MaxAuthTries time bomb. Documented in the skill so this doesn't regress.
+- **Headless SSH pattern (temp-key-file from `op read`) is the primary path for Claude Code Bash, not a fallback.** Saved to memory and elevated to a top-level section in the skill. The 1P agent's Touch ID requirement makes it unreliable in non-interactive contexts.
+- **UDM Pro `authorized_keys` at `/mnt/data/ssh/` with symlink from `/root/.ssh/`** for firmware-update persistence. Lightweight alternative to installing the full `unifios-utilities` on_boot.d framework.
+- **home-server keeps its private key on disk for now** (no 1P desktop installed there yet). Apple Note tracks the pending 1P-on-home-server migration.
+- `op item create --category=ssh --ssh-generate-key=ed25519` is the only CLI path that produces correctly-schema'd SSH Key items. JSON template creation produces items that are `op read` / `op item get` unreadable.
+
+**Left off at**:
+- Still open: `publish` script untested end-to-end
+- Still open: postpublish hooks in meta/sprout/imagerelay/unifi still call bump-and-sync for removed plugin entry
+- Still open: disable ames-original-connectors / enable ames-ynab in plugin UI
+- Still open: ImageRelay 1Password fallback verification
+- Still open: UniFi, create 1Password item to bring online
+- Still open: verify iMCP/SimGenie/Sosumi appear in `claude mcp list` under `plugin:ames-preferred-mcps:*`
+- Still open: `backup-claude` blind spot on `~/.claude.json`
+- Still open: bcbs-meeting-notes first real-world run with actual SmartTranscribe output
+- Still open: smart-transcribe description optimization loop (skill-creator Phase 4) not yet run
+- Still open: Duplicate chrome-devtools MCP registration, disable one
+- Still open: Consider running the kebab-case validator as a pre-commit hook
+- Still open: Axiom marketplace is registered but no plugins installed yet
+- Still open: humanizer has no `update.sh`, manual sync only
+- Still open: verify `create-shortcut` still functions (jelly + raw-plist backends both deleted)
+- Still open: ames-lytho needs `LYTHO_CLIENT_SECRET` entered in 1Password and real credentials tested end-to-end
+- Still open: npm versions 1.0.0 and 1.0.1 of lytho-mcp-server have broken bin entries, consider deprecating with `npm deprecate`
+- **NEW**: Task #47, UDM Pro 1P item `lumhg5afbvusqgdcx33jfdaf5e` GUI schema-fix (CLI-unreadable due to custom-section fields). Delete via GUI, recreate via New Item → SSH Key with pasted material.
+- **NEW**: 1P desktop install on home-server, then migrate its on-disk private key into a 1P-agent-served item. Apple Note "Home Server — Pending 1Password Setup Steps" (p8803) has the full checklist.
+- **NEW**: Clean up backup files when convenient. `~/.config/1Password/ssh/agent.toml.{bak,pre-A5,pre-A7c}-2026-04-16`, `~/.gitconfig.pre-signing-2026-04-16`, home-server `~/.ssh/id_ed25519.{bak,retired}-2026-04-16`, memory `feedback_ssh_headless_pattern.md.pre-2026-04-16`, home-server `~/Developer/projects/docker-config/reminders-web.decommissioned-2026-04-16/`. None are urgent; all small; all named clearly.
+- **NEW**: Consider installing `unifios-utilities` on_boot.d/ on UDM Pro for durable SSH config persistence across firmware updates. Today's symlink in `/root/.ssh/` will get wiped by the next UniFi firmware update.
+- **NEW**: Remove the stale `ts-reminders` Tailscale node from the Tailscale admin console (tailnet listing will show it offline since the container was removed).
+
+**Open questions**:
+- Should `create-shortcut` be removed too, now that both its backends (jelly, raw-plist) are gone?
+- Should the `~/.gitconfig` signing settings also be added to the credentials repo's dotfiles backup? Not automated today.
+
+---
+
 ## 2026-04-13 — Add ames-lytho plugin (Lytho Workflow MCP connector)
 
 **What changed**: Added `ames-lytho` plugin to the marketplace. Plugin connects to `@oliverames/lytho-mcp-server` via `npx -y @oliverames/lytho-mcp-server@latest`. Full plugin structure: `.claude-plugin/plugin.json`, `.mcp.json` with three `${LYTHO_*}` env var templates, `update-sources.json`, `sources/lytho-mcp-server/` snapshot. Part of a broader session that also built `oliverames/lytho-mcp-server` from scratch and published it to npm.
