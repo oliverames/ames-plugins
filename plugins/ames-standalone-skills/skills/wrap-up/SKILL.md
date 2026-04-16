@@ -1,6 +1,6 @@
 ---
 name: wrap-up
-version: 4.1.0
+version: 4.2.0
 description: This skill should be used when the user says "wrap up", "close
   session", "end session", "wrap things up", "close out this task", or invokes
   /wrap-up, "done for the day", or "session complete". Runs an end-of-session
@@ -84,9 +84,14 @@ documents. Auto-apply all actions without asking.
     - Config values, paths, or commands that have changed?
     - Gotchas or workarounds that have been resolved?
     - New gotchas or learnings that aren't yet captured?
-13. If a note needs updating, use `apple-notes` to update it directly
+13. If a note needs updating, **invoke the `apple-notes-formatting` skill
+    first** to produce correctly-styled content (headings, checklists,
+    code blocks, spacing per the user's canonical rules), then use
+    `apple-notes` to write the update. Never write raw markdown or
+    model-default formatting — always route through the formatting skill
 14. If a new topic was covered that warrants a new note (e.g. a tool or
-    workflow not yet documented), create it in the "💻 Tech" folder
+    workflow not yet documented), draft the body through
+    `apple-notes-formatting` first, then create it in the "💻 Tech" folder
 15. Report what was found and changed (or "No matching Tech notes")
 16. Skip this step for trivial sessions (Phase 0 triage)
 
