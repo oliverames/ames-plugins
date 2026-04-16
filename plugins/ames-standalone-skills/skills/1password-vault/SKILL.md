@@ -211,18 +211,17 @@ op item create --vault Development --category "API Credential" \
   "notesPlain=Purpose, where it's used, when it was created"
 ```
 
-**SSH keys** (use JSON template — assignment statements don't support SSHKEY type):
+**SSH keys** have category-specific handling. See "SSH Key Handling Caveats" below for details.
+
+For **freshly generated** keys (1P generates the keypair internally and populates all fields correctly):
+
 ```bash
-op item template get "SSH Key" | python3 -c "
-import json, sys
-template = json.load(sys.stdin)
-with open('PATH_TO_PRIVATE_KEY') as f:
-    template['fields'][1]['value'] = f.read().strip()  # private_key field
-template['title'] = 'SSH Key - DESCRIPTION (TYPE)'
-template['fields'][0]['value'] = 'Notes about this key'
-print(json.dumps(template))
-" | op item create --vault Development --format json -
+op item create --category=ssh --vault=Development \
+  --title "SSH Key - ServerName (ED25519)" \
+  --ssh-generate-key=ed25519
 ```
+
+For **importing existing key material** (key already on disk), use the 1Password desktop GUI. The CLI has no import path, and the JSON template approach silently produces broken items that `op read` cannot address.
 
 **Certificates (.p12, .p8):**
 ```bash
@@ -246,23 +245,136 @@ rm -f /tmp/temp-credential-file
 
 ### Vault SSH Keys from Remote Servers
 
+The CLI cannot import existing key material into an SSH Key item (see "SSH Key Handling Caveats" below). The working approach is GUI-assisted.
+
 ```bash
-# Copy key to temp location (hooks block direct cat)
-scp home-server:~/.ssh/id_ed25519 /tmp/temp-ssh-key
+# Retrieve the key material to clipboard (hooks block direct cat; use ssh + pbcopy)
+ssh home-server 'cat ~/.ssh/id_ed25519' | pbcopy
+```
 
-# Vault using JSON template pipe
-op item template get "SSH Key" | python3 -c "
-import json, sys
-template = json.load(sys.stdin)
-with open('/tmp/temp-ssh-key') as f:
-    template['fields'][1]['value'] = f.read().strip()
-template['title'] = 'SSH Key - ServerName (ED25519)'
-template['fields'][0]['value'] = 'Key from server-name, comment: user@host'
-print(json.dumps(template))
-" | op item create --vault Development --format json -
+Then in 1Password desktop: New Item, SSH Key, paste the private key. 1P derives public key, fingerprint, and key type from the pasted material. After save, verify the item is CLI-readable:
 
-# Clean up immediately
-rm -f /tmp/temp-ssh-key
+```bash
+op item get <new-uuid> --vault Development
+# All four fields (public key, fingerprint, private key, key type) should show.
+# If any are missing, the item is broken and must be recreated via the GUI.
+```
+
+Clear the clipboard when done:
+
+```bash
+pbcopy < /dev/null
+```
+
+### SSH Key Handling Caveats
+
+The `op` CLI has three hard limitations on SSH Key (`SSH_KEY`) category items, all confirmed 2026-04-16:
+
+1. **Creation with existing key material fails silently.** `op item create --category=ssh` with a JSON template containing a `private_key[SSHKEY]` field accepts the input and returns a new item ID, but the resulting item is malformed. Derived fields (public key, fingerprint, key type) are not populated, and `op item get` / `op read` on any field returns `"private_key" isn't a field in the ... item`. Only `--ssh-generate-key=<type>` produces a valid CLI-readable item. To import an existing key, use the 1P desktop GUI (New Item, SSH Key, paste private key).
+
+2. **Editing is not supported.** `op item edit <ssh-key-id>` returns `SSH Key item editing in the CLI is not yet supported`. Broken items must be deleted and recreated via GUI.
+
+3. **Service accounts require `--vault` explicitly on every SSH Key operation.** Even when the item UUID is globally unique, service accounts otherwise fail with `a vault query must be provided when this command is called by a service account`. Pass `--vault Development` on `op item get`, `op read`, and `op item delete`.
+
+### SSH Agent Configuration
+
+The 1Password SSH agent reads `~/.config/1Password/ssh/agent.toml`. Two scoping modes exist:
+
+- Vault-wide: `[[ssh-keys]] vault = "<vault-uuid>"` serves every SSH Key item in that vault.
+- Per-item: `[[ssh-keys]] item = "<item-uuid>"` serves only that item.
+
+**Always use per-item scoping.** OpenSSH's default `MaxAuthTries=6` means offering too many keys exhausts the budget before the right one is tried. A vault-wide scope on a vault with any non-client-auth keys (such as sshd host keys) will cause silent SSH auth failures that look like "Too many authentication failures" or "signing failed ... communication with agent failed".
+
+**Never serve host keys via the agent.** Files from `/etc/ssh/ssh_host_*` are sshd identities, not client identities; sshd on any remote will reject them. If these accidentally end up in the vault, either delete them or exclude them from agent.toml.
+
+**Reload behavior is inconsistent.** Adding items to agent.toml hot-reloads cleanly. Removing items, and especially transitions between vault-wide and per-item scope, often do not hot-reload. After a scope-type change or removal, quit 1Password fully (menu bar, Quit 1Password) and relaunch. Verify with:
+
+```bash
+SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock ssh-add -l
+```
+
+**Touch ID on signing.** If 1P's Developer settings have "Require authorization to use SSH keys" enabled (default on most Macs), a Touch ID prompt appears on every signing operation. Interactive terminal sessions answer the prompt naturally. Non-interactive Bash contexts (Claude Code Bash tool, scripts, launchd jobs, cron) cannot answer it, and after the prompt times out the signing fails with `sign_and_send_pubkey: signing failed ... communication with agent failed`, followed by `Too many authentication failures`. **Use the headless pattern below as the default for automation**, not as a fallback.
+
+### Headless SSH Pattern (Default for Automation)
+
+**When to use:** any non-interactive SSH from Claude Code Bash, scripts, launchd agents, cron, or CI. Anywhere a Touch ID prompt cannot be answered by a human sitting at the Mac in real time.
+
+**When NOT to use:** interactive terminal sessions where the user is at the keyboard. There the GUI agent works fine and Touch ID is transparent.
+
+**Principle:** bypass the 1P agent entirely; pull the private key from the vault to a short-lived temp file, use it as an explicit `IdentityFile`, then delete it. The key material lives on disk only for the duration of the SSH command.
+
+```bash
+# Load service account token if not already in env
+export OP_SERVICE_ACCOUNT_TOKEN=$(python3 -c "import json; print(json.load(open('/Users/oliverames/.claude/settings.json'))['env']['OP_SERVICE_ACCOUNT_TOKEN'])")
+
+# Pull the private key from 1P to a locked-down temp file.
+# The ?ssh-format=openssh query parameter ensures OpenSSH format.
+# Replace <item-uuid> with the 1P item holding the client identity for this host.
+KEYFILE=$(mktemp) && chmod 600 "$KEYFILE"
+op read "op://Development/<item-uuid>/private key?ssh-format=openssh" > "$KEYFILE"
+
+# SSH with -i pointing at the temp file, and -o IdentityAgent=none so ssh
+# does NOT also consult the 1P agent (which would re-trigger the signing
+# failure path and exhaust MaxAuthTries).
+ssh -i "$KEYFILE" -o IdentitiesOnly=yes -o IdentityAgent=none home-server 'COMMAND HERE'
+
+# Always clean up
+rm -f "$KEYFILE"
+```
+
+**For repeated operations in one session**, extract the key once and reuse via a shell function:
+
+```bash
+KEYFILE=$(mktemp) && chmod 600 "$KEYFILE"
+op read "op://Development/<item-uuid>/private key?ssh-format=openssh" > "$KEYFILE"
+ssh_hs() { ssh -i "$KEYFILE" -o IdentitiesOnly=yes -o IdentityAgent=none home-server "$@"; }
+
+ssh_hs 'echo step 1'
+ssh_hs 'echo step 2'
+# ... many commands ...
+
+# At end of session:
+rm -f "$KEYFILE"
+```
+
+**Diagnostic: you know you hit this when:**
+- `ssh` reports `sign_and_send_pubkey: signing failed ... communication with agent failed`
+- followed by `Too many authentication failures`
+- and `ssh-add -l` against the 1P socket still shows your keys (the agent knows about them; it just can't sign them without Touch ID)
+
+**Why `-o IdentityAgent=none` matters:** without it, `ssh` reads `~/.ssh/config`'s `IdentityAgent` directive (typically pointing at the 1P socket) and tries the agent in addition to the temp-file identity. That re-triggers the Touch ID prompt and burns through `MaxAuthTries` before `-i` is tried.
+
+### Git Commit Signing via 1P
+
+Commit and tag signing route through `/Applications/1Password.app/Contents/MacOS/op-ssh-sign`. Typical `~/.gitconfig`:
+
+```
+[gpg]
+    format = ssh
+[gpg "ssh"]
+    program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
+    allowedSignersFile = ~/.config/git/allowed_signers
+[user]
+    signingkey = ssh-ed25519 AAAAC3...<pubkey>
+[commit]
+    gpgsign = true
+[tag]
+    gpgsign = true
+```
+
+The `allowedSignersFile` lets `git log --show-signature` verify your own commits locally. Format:
+
+```
+oliver@amesvt.com ssh-ed25519 AAAAC3...<pubkey>
+```
+
+Smoke test in any throwaway repo:
+
+```bash
+git init -q tmp && cd tmp
+echo x > f && git add f && git commit -q -m "sig test"
+git log --show-signature -1
+# Expect: Good "git" signature for <email> with ED25519 key SHA256:...
 ```
 
 ### Retrieve a Credential (for scripts/automation)
