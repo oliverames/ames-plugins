@@ -283,97 +283,157 @@ Workflow scripts at the repo root (`sync`, `bump-and-sync`) help keep these alig
 
 ## My Claude Code configuration
 
-A snapshot of Oliver's full Claude Code setup alongside ames-claude, kept here as a rebuilding reference. If this machine died tomorrow, the tables below plus `~/.claude/settings.json` would reconstruct the environment.
+A complete snapshot of `~/.claude/settings.json`, documented here so this repo doubles as a rebuilding reference. **Kept in sync by the `wrap-up` skill**: any session that changes `~/.claude/settings.json` or installs or removes a plugin also updates the tables below and commits the result. If this machine died tomorrow, these tables plus a fresh `~/.claude/settings.json` would reconstruct the environment.
 
-### Installed third-party marketplaces
+### Installed marketplaces (15 total)
 
-14 marketplaces registered in `~/.claude/settings.json` via `extraKnownMarketplaces`. All have `autoUpdate: true`.
+14 marketplaces declared in `extraKnownMarketplaces` (all with `autoUpdate: true`), plus `claude-plugins-official` as the built-in default.
 
-| Marketplace | Source | Purpose |
-|-------------|--------|---------|
-| `ames-claude` | [`oliverames/ames-claude`](https://github.com/oliverames/ames-claude) | This marketplace (Oliver's personal) |
-| `claude-plugins-official` | [`anthropics/claude-plugins-official`](https://github.com/anthropics/claude-plugins-official) | Anthropic's official curated plugin directory |
+| Marketplace | Source | Why it's installed |
+|-------------|--------|--------------------|
+| `claude-plugins-official` | [`anthropics/claude-plugins-official`](https://github.com/anthropics/claude-plugins-official) | Built-in default. Anthropic's official curated plugin directory |
+| `ames-claude` | [`oliverames/ames-claude`](https://github.com/oliverames/ames-claude) | This repo. Oliver's personal plugin marketplace |
 | `claude-community` | [`anthropics/claude-plugins-community`](https://github.com/anthropics/claude-plugins-community) | Anthropic-stewarded community plugins |
-| `anthropic-agent-skills` | [`anthropics/skills`](https://github.com/anthropics/skills) | Anthropic's open-source Agent Skills repo |
-| `knowledge-work-plugins` | [`anthropics/knowledge-work-plugins`](https://github.com/anthropics/knowledge-work-plugins) | Anthropic's knowledge-work-focused plugins |
+| `anthropic-agent-skills` | [`anthropics/skills`](https://github.com/anthropics/skills) | Anthropic's open-source Agent Skills (Claude API, document skills) |
+| `knowledge-work-plugins` | [`anthropics/knowledge-work-plugins`](https://github.com/anthropics/knowledge-work-plugins) | Anthropic's knowledge-work plugins (PDF viewer, SEO, ads) |
 | `apple-notes-mcp` | [`sweetrb/apple-notes-mcp`](https://github.com/sweetrb/apple-notes-mcp) | Apple Notes MCP integration |
-| `axiom-marketplace` | [`CharlesWiltgen/Axiom`](https://github.com/CharlesWiltgen/Axiom) | Axiom plugin marketplace |
-| `claudeskillz` | [`tsilva/claudeskillz`](https://github.com/tsilva/claudeskillz) | Community skill pack (output stylers, README authors) |
+| `axiom-marketplace` | [`CharlesWiltgen/Axiom`](https://github.com/CharlesWiltgen/Axiom) | Axiom plugin marketplace (registered but no plugins enabled) |
+| `claudeskillz` | [`tsilva/claudeskillz`](https://github.com/tsilva/claudeskillz) | Output stylers and README authoring skills |
 | `addy-agent-skills` | [`addyosmani/agent-skills`](https://github.com/addyosmani/agent-skills) | Addy Osmani's curated agent skills |
-| `claude-code-workflows` | [`wshobson/agents`](https://github.com/wshobson/agents) | Workflow-oriented agent pack |
-| `claude-code-plugins-plus` | [`jeremylongshore/claude-code-plugins`](https://github.com/jeremylongshore/claude-code-plugins) | Additional community plugins |
+| `claude-code-workflows` | [`wshobson/agents`](https://github.com/wshobson/agents) | Workflow-oriented agent pack (registered but no plugins enabled) |
+| `claude-code-plugins-plus` | [`jeremylongshore/claude-code-plugins`](https://github.com/jeremylongshore/claude-code-plugins) | Additional community plugins (registered but no plugins enabled) |
 | `skill-codex` | [`skills-directory/skill-codex`](https://github.com/skills-directory/skill-codex) | Codex CLI interop skill |
 | `a5c.ai` | [`a5c-ai/babysitter`](https://github.com/a5c-ai/babysitter) | Babysitter workflow orchestration |
 | `karpathy-skills` | [`forrestchang/andrej-karpathy-skills`](https://github.com/forrestchang/andrej-karpathy-skills) | Karpathy-inspired coding guidelines |
-| `swiftui-agent-skill` | [`twostraws/SwiftUI-Agent-Skill`](https://github.com/twostraws/SwiftUI-Agent-Skill) | Paul Hudson's SwiftUI Pro skill (replaced previously vendored copy) |
+| `swiftui-agent-skill` | [`twostraws/SwiftUI-Agent-Skill`](https://github.com/twostraws/SwiftUI-Agent-Skill) | Paul Hudson's SwiftUI Pro (replaced previously vendored copy) |
 
-### Enabled plugins
+### Enabled plugins (44 total)
 
-Currently enabled in `~/.claude/settings.json` via `enabledPlugins`, grouped by marketplace:
+Grouped by source marketplace. Each `plugin@marketplace` key in `enabledPlugins` is listed below with its purpose.
 
-**From `claude-plugins-official` (Anthropic official, 24 plugins):**
-`frontend-design`, `superpowers`, `context7`, `github`, `feature-dev`, `playwright`, `skill-creator`, `ralph-loop`, `claude-md-management`, `typescript-lsp`, `security-guidance`, `commit-commands`, `claude-code-setup`, `pyright-lsp`, `explanatory-output-style`, `plugin-dev`, `learning-output-style`, `chrome-devtools-mcp`, `firecrawl`, `swift-lsp`, `remember`, `imessage`, `mcp-server-dev`, `gopls-lsp`
+**`claude-plugins-official` (24 plugins):**
 
-**From `ames-claude` (this repo, 6 plugins):**
-`ames-standalone-skills`, `ames-preferred-mcps`, `ames-ynab`, `ames-lytho`, `ames-community-skills`, `ames-claude-only`
+| Plugin | Purpose |
+|--------|---------|
+| `frontend-design` | Production-quality UI component generation |
+| `superpowers` | Core skill framework (brainstorming, debugging, TDD, code review, git worktrees, etc.) |
+| `context7` | Real-time library documentation lookup |
+| `github` | GitHub issue, PR, and release management |
+| `feature-dev` | Guided feature development workflow |
+| `playwright` | Browser automation via Playwright |
+| `skill-creator` | Scaffold and validate new Agent Skills |
+| `ralph-loop` | Loop-based iterative workflow |
+| `claude-md-management` | Audit and maintain `CLAUDE.md` files |
+| `typescript-lsp` | TypeScript language server |
+| `security-guidance` | Security review and hardening prompts |
+| `commit-commands` | Conventional git commit workflow |
+| `claude-code-setup` | Recommend Claude Code automations for a codebase |
+| `pyright-lsp` | Python language server |
+| `explanatory-output-style` | Sets the "Explanatory" output style |
+| `plugin-dev` | Plugin scaffolding and development tools |
+| `learning-output-style` | Learning-oriented output style option |
+| `chrome-devtools-mcp` | Chrome DevTools Protocol integration |
+| `firecrawl` | Web search, scraping, and skill generation from URLs |
+| `swift-lsp` | Swift language server |
+| `remember` | Session state persistence |
+| `imessage` | iMessage send/receive integration |
+| `mcp-server-dev` | Build MCP servers and apps |
+| `gopls-lsp` | Go language server |
 
-**From `knowledge-work-plugins` (3 plugins):**
-`adspirer-ads-agent`, `pdf-viewer`, `searchfit-seo`
+**`ames-claude` (5 of 6 available enabled):** `ames-standalone-skills`, `ames-preferred-mcps`, `ames-ynab`, `ames-community-skills`, `ames-claude-only`. The 6th plugin `ames-lytho` is published in the marketplace but not currently enabled at the user level.
 
-**From `claudeskillz` (4 plugins):**
-`bash-output-styler`, `project-readme-author`, `project-spec-extractor`, `python-output-styler`
+**`knowledge-work-plugins` (3):** `adspirer-ads-agent` (ad campaign analytics), `pdf-viewer` (interactive PDF), `searchfit-seo` (SEO audits and content strategy)
 
-**From `anthropic-agent-skills` (2 plugins):**
-`claude-api`, `document-skills`
+**`claudeskillz` (4):** `bash-output-styler`, `python-output-styler`, `project-readme-author`, `project-spec-extractor`
 
-**From `apple-notes-mcp` (1):** `apple-notes`
-**From `addy-agent-skills` (1):** `agent-skills`
-**From `skill-codex` (1):** `skill-codex`
-**From `a5c.ai` (1):** `babysitter`
-**From `karpathy-skills` (1):** `andrej-karpathy-skills`
-**From `swiftui-agent-skill` (1):** `swiftui-pro`
+**`anthropic-agent-skills` (2):** `claude-api` (Claude API and SDK best practices), `document-skills` (pptx, docx, xlsx, pdf, frontend-design, mcp-builder)
+
+**`apple-notes-mcp` (1):** `apple-notes` — Apple Notes MCP
+**`addy-agent-skills` (1):** `agent-skills` — Addy Osmani's agent skills pack
+**`skill-codex` (1):** `skill-codex` — Codex CLI interop for code analysis and refactoring
+**`a5c.ai` (1):** `babysitter` — Workflow orchestration via `@babysitter`
+**`karpathy-skills` (1):** `andrej-karpathy-skills` — Anti-overengineering coding guidelines
+**`swiftui-agent-skill` (1):** `swiftui-pro` — Paul Hudson's SwiftUI review skill
 
 ### Environment variables
 
-Required at Claude Code launch (non-credential values omitted for clarity; 1Password service account token intentionally not documented here):
+Defined in `env` block of `~/.claude/settings.json` and at session launch. `OP_SERVICE_ACCOUNT_TOKEN` is intentionally omitted from this record.
 
-| Variable | Used by | Purpose |
-|----------|---------|---------|
-| `YNAB_API_TOKEN` | `ames-ynab` | YNAB Personal Access Token, created at https://app.ynab.com/settings/developer |
+**Claude Code runtime:**
+
+| Variable | Value | Why |
+|----------|-------|-----|
+| `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` | `1` | Opt into experimental agent teams feature for multi-agent workflows |
+| `ENABLE_TOOL_SEARCH` | `1` | Enable deferred-tool search via the `ToolSearch` tool, keeping the initial tool list short |
+| `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` | `85` | Auto-compact context at 85% of window rather than the default 95%, for more headroom before compression |
+| `CLAUDE_CODE_NO_FLICKER` | `1` | Suppress terminal redraw flicker during streaming output |
+| `BASH_MAX_OUTPUT_LENGTH` | `200000` | Raise the Bash output truncation limit to 200KB for long-running commands (tests, builds) |
+
+**Plugin credentials (set in shell, not in settings.json):**
+
+| Variable | Used by | Source |
+|----------|---------|--------|
+| `YNAB_API_TOKEN` | `ames-ynab` | YNAB Personal Access Token, create at https://app.ynab.com/settings/developer |
 | `LYTHO_CLIENT_ID` | `ames-lytho` | Lytho OAuth client ID |
 | `LYTHO_CLIENT_SECRET` | `ames-lytho` | Lytho OAuth client secret |
 | `LYTHO_TOKEN_URL` | `ames-lytho` | Lytho OAuth token endpoint |
-| `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` | Claude Code | Enable experimental agent teams feature (set to `1`) |
-| `ENABLE_TOOL_SEARCH` | Claude Code | Enable deferred-tool search via `ToolSearch` (set to `1`) |
-| `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` | Claude Code | Context auto-compact threshold percent (set to `85`) |
-| `CLAUDE_CODE_NO_FLICKER` | Claude Code | Suppress terminal flicker during rendering (set to `1`) |
-| `BASH_MAX_OUTPUT_LENGTH` | Claude Code | Max Bash output length in bytes (set to `200000`) |
 
-Additional plugin-specific credentials (for `ames-preferred-mcps` servers and some third-party plugins) are resolved at runtime through the `1password` MCP rather than exported environment variables.
+Other plugin-specific credentials (for servers in `ames-preferred-mcps` and some third-party plugins) are resolved at runtime via the `1password` MCP rather than exported shell variables.
 
-### Claude Code settings overrides
+### Permissions
 
-Non-default `~/.claude/settings.json` values that shape Oliver's experience:
+`permissions.defaultMode` is `auto` (auto-allow tools on the allowlist without prompting). The allowlist covers core file I/O, search, language tooling, skills, agents, and teamwork primitives so those never interrupt flow:
 
-| Setting | Value | Effect |
-|---------|-------|--------|
-| `cleanupPeriodDays` | `45` | Longer retention for conversation history |
-| `outputStyle` | `Explanatory` | Use the explanatory output style (educational insights) |
-| `alwaysThinkingEnabled` | `true` | Extended thinking on for every turn |
-| `effortLevel` | `xhigh` | Maximum effort tier |
-| `viewMode` | `focus` | Focused UI mode |
-| `autoUpdatesChannel` | `latest` | Subscribe to bleeding-edge Claude Code releases |
-| `autoDreamEnabled` | `true` | Background reflection between turns |
-| `voiceEnabled` | `true` | Voice I/O on |
-| `remoteControlAtStartup` | `true` | Accept remote-control connections at launch |
-| `teammateMode` | `auto` | Auto-spawn teammate agents when the workflow calls for it |
-| `skipAutoPermissionPrompt` | `true` | Suppress repeat permission prompts |
-| `skipDangerousModePermissionPrompt` | `true` | Suppress dangerous-mode warning |
-| `feedbackSurveyRate` | `0` | Disable feedback surveys |
-| `permissions.defaultMode` | `auto` | Auto-allow tools on the allowlist |
-| `enableAllProjectMcpServers` | `true` | Project-level MCPs load automatically |
+`Read`, `Edit`, `Write`, `Glob`, `Grep`, `NotebookEdit`, `TaskCreate`, `TaskUpdate`, `TaskList`, `TaskGet`, `TaskStop`, `LSP`, `Agent`, `Skill`, `ToolSearch`, `ListMcpResourcesTool`, `ReadMcpResourceTool`, `EnterWorktree`, `TeamCreate`, `TeamDelete`, `SendMessage`
 
-Hooks wired up: a `PostToolUse` hook for `Bash` commits (logs a success line after `git commit`), and a `PostToolUse` hook for `Edit|Write` that runs the `validate-skill` shell script. Status line is customized via `~/.claude/statusline-command.sh`.
+`deny` is empty. Tools outside the allowlist still require explicit approval. Two additional flags suppress specific prompts: `skipAutoPermissionPrompt: true` (no repeated prompts for the same tool) and `skipDangerousModePermissionPrompt: true` (no warning when entering dangerous mode).
+
+### Hooks
+
+Two `PostToolUse` hooks, both in `hooks.PostToolUse`:
+
+| Matcher | Command | Effect |
+|---------|---------|--------|
+| `Bash` | Python one-liner that checks if the bash command contained `git commit`, and if so prints `✅ Committed` and the latest commit summary | Lightweight confirmation that a commit actually landed, useful during multi-commit sessions |
+| `Edit\|Write` | `bash ~/Library/Mobile Documents/com~apple~CloudDocs/Developer/Scripts/validate-skill` | Runs the `validate-skill` shell script after any file edit or write, to catch skill authoring errors (malformed frontmatter, broken references) at write time |
+
+### Status line
+
+`statusLine.command` runs `bash ~/.claude/statusline-command.sh`, which renders a custom status line.
+
+### UI and agent behavior
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| `outputStyle` | `Explanatory` | Default to the explanatory style, which surfaces educational insights alongside changes. Useful when the point of a session is learning as much as shipping |
+| `alwaysThinkingEnabled` | `true` | Extended thinking on for every turn, not just complex ones. Opus 4.7 uses the thinking budget adaptively |
+| `effortLevel` | `xhigh` | Maximum effort tier; Claude plans harder and verifies more before acting |
+| `autoDreamEnabled` | `true` | Background reflection between turns (experimental) |
+| `teammateMode` | `auto` | Auto-spawn teammate agents when the workflow obviously benefits from parallelism |
+| `viewMode` | `focus` | Focused UI mode: hide non-essential chrome |
+| `voiceEnabled` | `true` | Voice I/O on for spoken prompts and replies |
+| `remoteControlAtStartup` | `true` | Accept remote-control connections from other clients at launch |
+
+### Miscellaneous
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| `cleanupPeriodDays` | `45` | Keep conversation history for 45 days instead of the default, since some projects span weeks |
+| `autoUpdatesChannel` | `latest` | Track the bleeding-edge Claude Code release channel |
+| `feedbackSurveyRate` | `0` | Disable in-product feedback surveys |
+| `enableAllProjectMcpServers` | `true` | Project-level MCP servers from `.mcp.json` load automatically without per-project opt-in |
+
+### Keeping this section current
+
+The `wrap-up` skill runs a config-drift check at end of session. If any of these change during a session, the wrap-up flow updates this section and commits the change:
+
+- New plugin enabled or disabled in `~/.claude/settings.json`
+- New marketplace added to `extraKnownMarketplaces`
+- New env variable added to `env`
+- Any top-level settings value changes
+- Any hook added, removed, or modified
+
+This is what makes the configuration record trustworthy: it doesn't go stale because the wrap-up ritual won't let it.
 
 ## Related
 

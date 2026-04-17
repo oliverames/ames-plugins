@@ -1,10 +1,12 @@
 ---
 name: wrap-up
-version: 4.2.0
+version: 4.3.0
 description: This skill should be used when the user says "wrap up", "close
   session", "end session", "wrap things up", "close out this task", or invokes
   /wrap-up, "done for the day", or "session complete". Runs an end-of-session
-  checklist covering shipping, memory, and self-improvement.
+  checklist covering shipping, memory, self-improvement, and a config-drift
+  check that keeps ames-claude's configuration record in sync with
+  ~/.claude/settings.json.
 ---
 
 # Session Wrap-Up
@@ -74,34 +76,58 @@ documents. Auto-apply all actions without asking.
 10. CLAUDE.md files can become very stale — if you notice significant drift,
     flag it and fix it
 
+**Claude Code config drift check (ames-claude README):**
+11. Reflect on the session: did anything change in `~/.claude/settings.json`,
+    or was any plugin or marketplace installed, enabled, disabled, or removed?
+    Also count as drift: new env vars, changed hooks, new permissions, or any
+    settings override added/removed/modified.
+12. If yes, the `## My Claude Code configuration` section of
+    `~/Developer/Projects/ames-claude/README.md` is now stale. Update the
+    affected tables to match the current `~/.claude/settings.json`:
+    - `Installed marketplaces` — add or remove rows for `extraKnownMarketplaces` changes
+    - `Enabled plugins` — update per-marketplace groupings to match `enabledPlugins`
+    - `Environment variables` — reflect changes to `env` or plugin credentials
+    - `Permissions` — update the allowlist if it changed
+    - `Hooks` — update rows for any added/removed/modified hook
+    - `UI and agent behavior` and `Miscellaneous` — update any changed values
+    - Update totals in section headers ("X marketplaces", "N enabled plugins")
+13. When updating, cross-check with a fresh read of `~/.claude/settings.json`
+    rather than relying on memory, then verify the README tables render
+    correctly (pipe counts, missing columns).
+14. Commit the README change to ames-claude with a `docs:` prefix, e.g.
+    `docs: sync config record with settings.json (added X plugin)`.
+15. Push to origin. The configuration record is only useful if it stays
+    current; a stale record is worse than none.
+16. If nothing changed in the config this session, skip this step entirely.
+
 **Apple Notes "💻 Tech" check:**
-11. Use the `apple-notes` MCP to search notes in the "💻 Tech" folder that
+17. Use the `apple-notes` MCP to search notes in the "💻 Tech" folder that
     are related to what was worked on this session (search by project name,
     tool name, or key terms from the session)
-12. For each matching note found, evaluate whether its content is stale or
+18. For each matching note found, evaluate whether its content is stale or
     incomplete given the session's changes:
     - New setup steps added, removed, or changed?
     - Config values, paths, or commands that have changed?
     - Gotchas or workarounds that have been resolved?
     - New gotchas or learnings that aren't yet captured?
-13. If a note needs updating, **invoke the `apple-notes-formatting` skill
+19. If a note needs updating, **invoke the `apple-notes-formatting` skill
     first** to produce correctly-styled content (headings, checklists,
     code blocks, spacing per the user's canonical rules), then use
     `apple-notes` to write the update. Never write raw markdown or
     model-default formatting — always route through the formatting skill
-14. If a new topic was covered that warrants a new note (e.g. a tool or
+20. If a new topic was covered that warrants a new note (e.g. a tool or
     workflow not yet documented), draft the body through
     `apple-notes-formatting` first, then create it in the "💻 Tech" folder
-15. Report what was found and changed (or "No matching Tech notes")
-16. Skip this step for trivial sessions (Phase 0 triage)
+21. Report what was found and changed (or "No matching Tech notes")
+22. Skip this step for trivial sessions (Phase 0 triage)
 
 **Deploy:**
-17. Check if the project has a deploy skill or script
-18. If one exists, run it
-19. If not, skip deployment entirely — do not ask about manual deployment
+23. Check if the project has a deploy skill or script
+24. If one exists, run it
+25. If not, skip deployment entirely — do not ask about manual deployment
 
 **Publish:**
-20. If `package.json` exists in the project root:
+26. If `package.json` exists in the project root:
     - Run `npm view <package-name> version` to get the published version
     - Compare against the local `package.json` version
     - If the local version is newer (bumped during this session), run
@@ -109,11 +135,11 @@ documents. Auto-apply all actions without asking.
     - If the versions match, skip — nothing to publish
     - If no published version exists (404), this is a new package — ask
       the user before first publish
-21. If no `package.json` exists, skip entirely
+27. If no `package.json` exists, skip entirely
 
 **Task cleanup:**
-22. Check the task list for in-progress or stale items
-23. Mark completed tasks as done, flag orphaned ones
+28. Check the task list for in-progress or stale items
+29. Mark completed tasks as done, flag orphaned ones
 
 ## Phase 1.5: WORKLOG.md
 
