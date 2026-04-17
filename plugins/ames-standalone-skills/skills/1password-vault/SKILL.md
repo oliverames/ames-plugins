@@ -245,7 +245,11 @@ rm -f /tmp/temp-credential-file
 
 ### Vault SSH Keys from Remote Servers
 
-The CLI cannot import existing key material into an SSH Key item (see "SSH Key Handling Caveats" below). The working approach is GUI-assisted.
+The CLI cannot import existing key material into an SSH Key item (see "SSH Key Handling Caveats" below). Two working approaches, with different tradeoffs:
+
+**Decision rule:** if the existing on-disk public key is already registered elsewhere (GitHub deploy key, other servers' `authorized_keys`, CI system), use **Path A (GUI paste-import)** to preserve the key and avoid a coordinated rotation. If nothing external depends on the key (common for a server that's only an SSH destination, not a client), use **Path B (CLI generate + deploy)** — fully scriptable, no GUI click needed.
+
+**Path A — GUI paste-import (preserves existing key):**
 
 ```bash
 # Retrieve the key material to clipboard (hooks block direct cat; use ssh + pbcopy)
@@ -266,11 +270,37 @@ Clear the clipboard when done:
 pbcopy < /dev/null
 ```
 
+**Path B — CLI generate + deploy (rotates the key, fully scriptable):**
+
+```bash
+# 1) Generate the key in 1Password
+op item create --category=ssh --ssh-generate-key=ed25519 \
+  --title="SSH Key - home-server (ED25519)" --vault=Development --format=json > /tmp/k.json
+ITEM_ID=$(python3 -c "import json; print(json.load(open('/tmp/k.json'))['id'])")
+
+# 2) Deploy the new private key to the remote, derive public, atomically replace the current key
+op read "op://Development/$ITEM_ID/private key?ssh-format=openssh" | \
+  ssh home-server 'umask 077 && cat > ~/.ssh/id_ed25519.new && chmod 600 ~/.ssh/id_ed25519.new && \
+    ssh-keygen -y -f ~/.ssh/id_ed25519.new > ~/.ssh/id_ed25519.pub.new && \
+    cp -p ~/.ssh/id_ed25519 ~/.ssh/id_ed25519.bak-$(date +%F) && \
+    cp -p ~/.ssh/id_ed25519.pub ~/.ssh/id_ed25519.pub.bak-$(date +%F) && \
+    mv ~/.ssh/id_ed25519.new ~/.ssh/id_ed25519 && \
+    mv ~/.ssh/id_ed25519.pub.new ~/.ssh/id_ed25519.pub && \
+    chmod 644 ~/.ssh/id_ed25519.pub'
+
+# 3) Verify on-disk fingerprint matches 1Password's fingerprint
+ssh home-server 'ssh-keygen -lf ~/.ssh/id_ed25519'
+op item get "$ITEM_ID" --vault Development --fields fingerprint
+rm -f /tmp/k.json
+```
+
+The private key is piped from `op read` through `ssh` stdin directly to the remote — never written to local disk. The remote derives the public key from the private via `ssh-keygen -y`, so you only transport the private once.
+
 ### SSH Key Handling Caveats
 
-The `op` CLI has three hard limitations on SSH Key (`SSH_KEY`) category items, all confirmed 2026-04-16:
+The `op` CLI has three hard limitations on SSH Key (`SSH_KEY`) category items, confirmed 2026-04-16 and 2026-04-17:
 
-1. **Creation with existing key material fails silently.** `op item create --category=ssh` with a JSON template containing a `private_key[SSHKEY]` field accepts the input and returns a new item ID, but the resulting item is malformed. Derived fields (public key, fingerprint, key type) are not populated, and `op item get` / `op read` on any field returns `"private_key" isn't a field in the ... item`. Only `--ssh-generate-key=<type>` produces a valid CLI-readable item. To import an existing key, use the 1P desktop GUI (New Item, SSH Key, paste private key).
+1. **Creation with existing key material fails silently.** `op item create --category=ssh` with a JSON template containing a `private_key[SSHKEY]` field accepts the input and returns a new item ID, but the resulting item is malformed. Derived fields (public key, fingerprint, key type) are not populated, and `op item get` / `op read` on any field returns `"private_key" isn't a field in the ... item`. Assignment-statement forms (`"private key[sshkey]=$PEM"`) also fail, with `"sshkey" is not a supported field type`. Adding `ssh_formats: {openssh: {value: <PEM>}}` to the template alongside `value` doesn't help either — the server still stores the item in a malformed state. Only `--ssh-generate-key=<type>` produces a valid CLI-readable item. To preserve an existing key, use Path A (GUI paste-import) from "Vault SSH Keys from Remote Servers" above. To create a healthy 1P item via CLI only, use Path B (generate + deploy), accepting a key rotation.
 
 2. **Editing is not supported.** `op item edit <ssh-key-id>` returns `SSH Key item editing in the CLI is not yet supported`. Broken items must be deleted and recreated via GUI.
 

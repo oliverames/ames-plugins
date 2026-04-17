@@ -1,5 +1,22 @@
 # Worklog
 
+## 2026-04-17 — home-server SSH key vaulted; `1password-vault` skill gains Path B
+
+**What changed**: Closed out the open item from yesterday's entry about vaulting the home-server's outbound SSH key. Generated a fresh ED25519 in 1Password (`SSH Key - home-server (ED25519)`, id `5wqjaqb6zgrtqt4xgqscrqaopq`, fingerprint `SHA256:Q14gG5v2Ax0+5h5FaeX3XXfZMdS12skx6ihPQCuakUY`) via `op item create --category=ssh --ssh-generate-key=ed25519`, then piped `op read "op://.../private key?ssh-format=openssh"` through `ssh` stdin to atomically replace home-server's `~/.ssh/id_ed25519`. Prior on-disk key preserved as `id_ed25519.bak-2026-04-17`. `authorized_keys` untouched, inbound verified. `1password-vault` skill gained a **Path B (CLI generate + deploy)** workflow alongside the existing Path A (GUI paste-import), plus a decision rule for picking between them. Caveat #1 expanded with two additional confirmed-failing import paths (`"private key[sshkey]="` assignment statement returns "unsupported field type"; JSON template with `ssh_formats.openssh.value` still produces a malformed item).
+
+**Decisions made**:
+- **Path B over Path A** for home-server because nothing external references the old public key (not a deploy key anywhere, not in other hosts' `authorized_keys`). When rotating has zero blast radius, the CLI-only path is a strict win over the GUI click.
+- **Key stays on disk on home-server, no 1P SSH agent deployment.** Revisited yesterday's "1P desktop install on home-server" open item and chose to leave it. The Mac Mini runs services under the user account, and requiring 1P-app-unlocked-after-every-reboot is operationally fragile for a server. The disk-copy-plus-1P-backup-record pattern is the right shape.
+- **Private key never hit local disk**: `op read | ssh home-server 'cat > ...new && mv ...'`. Backup created on home-server only. Clipboard cleared when done.
+
+**Left off at**:
+- Still open from prior entries: most of yesterday's list (publish script, ImageRelay verification, UniFi 1P item, bcbs-meeting-notes real-world run, etc.).
+- NEW: Add the new item id `5wqjaqb6zgrtqt4xgqscrqaopq` to `~/.config/1Password/ssh/agent.toml` ONLY if home-server ever needs to use the 1P agent path — not today's architecture.
+
+**Open questions**: none.
+
+---
+
 ## 2026-04-16 (evening) — Opus 4.7 config overhaul + new `/go` skill
 
 **What changed**: Migrated `~/.claude/settings.json` to the Anthropic-recommended Opus 4.7 defaults: `effortLevel` high → `xhigh`, `permissions.defaultMode` bypassPermissions → `auto`, added `viewMode: focus` and `skipAutoPermissionPrompt: true`, raised `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` 75 → 85. Added a "First-Message Context (Opus 4.7)" subsection to global `~/.claude/CLAUDE.md` under Engineering Workflow → Planning. Created a new `/go` skill in `ames-standalone-skills` (Phase 0 pre-flight → Phase 1 verify e2e → Phase 2 simplify → Phase 3 ship) that codifies Boris Cherny's recommended Opus 4.7 ship pipeline. Bumped plugin 3.1.1 → 3.2.0, ran `./sync`, committed as `ec6f555`, pushed to `oliverames/ames-claude`. Backup of pre-change settings at `~/.claude/settings.json.bak.20260416-200952`.
