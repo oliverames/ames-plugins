@@ -1,0 +1,35 @@
+{
+  "name": "ames-community-skills",
+  "version": "2.0.0",
+  "description": "Third-party Claude Code skills curated by Oliver Ames that ship as bare SKILL.md files with no upstream marketplace. Currently includes humanizer (blader).",
+  "author": {
+    "name": "Oliver Ames",
+    "email": "oliverames@gmail.com",
+    "url": "https://github.com/oliverames"
+  },
+  "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-community-skills",
+  "repository": "https://github.com/oliverames/ames-claude",
+  "keywords": [
+    "skills",
+    "community",
+    "humanizer",
+    "writing"
+  ],
+  "category": "productivity",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Community Skills",
+    "shortDescription": "Curated third-party skills that lack an upstream marketplace.",
+    "longDescription": "A curated pack of community skills that ship as bare SKILL.md files. Currently includes humanizer by blader for removing AI-generated writing patterns from text.",
+    "developerName": "Oliver Ames",
+    "category": "Productivity",
+    "capabilities": [
+      "Skills"
+    ],
+    "websiteURL": "https://github.com/oliverames/ames-claude#ames-community-skills",
+    "defaultPrompt": [
+      "Humanize this draft.",
+      "Remove AI tells from this paragraph."
+    ]
+  }
+}

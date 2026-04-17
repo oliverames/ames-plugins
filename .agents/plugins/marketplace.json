@@ -1,0 +1,68 @@
+{
+  "name": "ames-claude",
+  "interface": {
+    "displayName": "Oliver's Plugins (experimental Codex support)"
+  },
+  "plugins": [
+    {
+      "name": "ames-community-skills",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ames-community-skills"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "productivity"
+    },
+    {
+      "name": "ames-lytho",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ames-lytho"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "productivity"
+    },
+    {
+      "name": "ames-preferred-mcps",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ames-preferred-mcps"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "developer-tools"
+    },
+    {
+      "name": "ames-standalone-skills",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ames-standalone-skills"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "productivity"
+    },
+    {
+      "name": "ames-ynab",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ames-ynab"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "finance"
+    }
+  ]
+}

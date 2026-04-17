@@ -1,0 +1,40 @@
+{
+  "name": "ames-standalone-skills",
+  "version": "3.2.0",
+  "description": "Oliver's original Claude Code skills covering writing, development, automation, finance, and AI tools (28 skills).",
+  "author": {
+    "name": "Oliver Ames",
+    "email": "oliverames@gmail.com",
+    "url": "https://github.com/oliverames"
+  },
+  "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-standalone-skills",
+  "repository": "https://github.com/oliverames/ames-claude",
+  "keywords": [
+    "skills",
+    "writing",
+    "automation",
+    "finance",
+    "apple",
+    "ios",
+    "macos",
+    "codex"
+  ],
+  "category": "productivity",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Oliver's Skills",
+    "shortDescription": "General-purpose skills for writing, automation, and Apple workflows.",
+    "longDescription": "A broad skill pack covering writing, development, automation, finance, Apple platform workflows, and transcription. Includes skills for Apple Notes, Apple Music, Audible, Drafts, iOS/macOS app builds, TestFlight, tone/voice, file organization, and more.",
+    "developerName": "Oliver Ames",
+    "category": "Productivity",
+    "capabilities": [
+      "Skills"
+    ],
+    "websiteURL": "https://github.com/oliverames/ames-claude#ames-standalone-skills",
+    "defaultPrompt": [
+      "Transcribe this recording and clean it up.",
+      "Generate an Apple Watch workout from this plan.",
+      "Draft this note in Oliver's tone."
+    ]
+  }
+}
