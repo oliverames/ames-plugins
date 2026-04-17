@@ -1,5 +1,31 @@
 # Worklog
 
+## 2026-04-16 (evening) — Opus 4.7 config overhaul + new `/go` skill
+
+**What changed**: Migrated `~/.claude/settings.json` to the Anthropic-recommended Opus 4.7 defaults: `effortLevel` high → `xhigh`, `permissions.defaultMode` bypassPermissions → `auto`, added `viewMode: focus` and `skipAutoPermissionPrompt: true`, raised `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` 75 → 85. Added a "First-Message Context (Opus 4.7)" subsection to global `~/.claude/CLAUDE.md` under Engineering Workflow → Planning. Created a new `/go` skill in `ames-standalone-skills` (Phase 0 pre-flight → Phase 1 verify e2e → Phase 2 simplify → Phase 3 ship) that codifies Boris Cherny's recommended Opus 4.7 ship pipeline. Bumped plugin 3.1.1 → 3.2.0, ran `./sync`, committed as `ec6f555`, pushed to `oliverames/ames-claude`. Backup of pre-change settings at `~/.claude/settings.json.bak.20260416-200952`.
+
+**Decisions made**:
+- **`auto` mode over `bypassPermissions`** as the default. The Opus 4.7 blog + Boris's thread both frame `auto` (classifier-gated) as the safer replacement for `--dangerously-skip-permissions`. Accepted the behavioral shift from "runs anything" to "runs classifier-approved things" because the productivity win of long autonomous tasks outweighs the occasional pause-for-ambiguous-command.
+- **`xhigh` over `max`** as the new default effort. Blog positions `xhigh` as best-of-both (autonomy + intelligence without runaway tokens). `max` reserved for truly hard problems, one-shot via CLI.
+- **Raise autocompact threshold to 85%** rather than keep 75. Opus 4.7's longer agentic runs mean earlier compaction fires more often and disrupts cooking sessions; willing to trade higher risk of bumping the wall for fewer mid-task context cuts.
+- **`/go` skill structure — Phase 0 pre-flight BEFORE verify** so the skill refuses to ship obviously-incomplete work rather than running a pipeline on it. Phase 3 ship logic branches on context (plugin repo ⇒ `./sync` first; bare repo ⇒ commit+push+PR; non-repo ⇒ local-only report).
+- **One-off `--no-gpg-sign` for this commit** at user's explicit "Please proceed" authorization. 1Password SSH agent can't supply Touch ID from headless Bash; skipping signing was the only autonomous path once user authorized. Next-similar-situation default is still: ask before skipping.
+- **Kept the 1Password `OP_SERVICE_ACCOUNT_TOKEN` plaintext in `settings.json`** at user confirmation ("op service account is required for auth") — it's a bootstrap token that must load before `.env` refs can resolve, so it can't follow the `op://` convention used elsewhere.
+
+**Left off at**:
+- Still open (from previous entry): `publish` script untested end-to-end
+- Still open (from previous entry): postpublish hooks in meta/sprout/imagerelay/unifi still call bump-and-sync for removed plugin entry
+- Still open (from previous entry): disable ames-original-connectors / enable ames-ynab in plugin UI
+- Still open (from previous entry): ImageRelay 1Password fallback verification
+- NEW: New settings activate at next Claude Code restart — run `/less-permission-prompts` afterward to tune the `auto` classifier's allowlist based on actual transcript history
+- NEW: `/go` skill not yet battle-tested — first real use will reveal whether Phase 1's verification-mode branching is the right cut
+
+**Open questions**:
+- Is the bundled skill called `/fewer-permission-prompts` (per Boris's tweet) or `/less-permission-prompts` (what resolves in this session's skill list)? Worth confirming next session by typing each and seeing which autocompletes.
+- Does `viewMode: "focus"` persist across sessions or reset? Blog implies it's sticky; worth verifying after first restart.
+
+---
+
 ## 2026-04-16 — SSH key audit + rotation; 1password-vault skill rewrite; new shared-terminal-tmux skill
 
 **What changed**: In this repo, `ames-standalone-skills` bumped 3.0.0 → 3.1.1. The `1password-vault` skill got three new sections (SSH Key Handling Caveats, SSH Agent Configuration, Headless SSH Pattern as default for automation, Git Commit Signing via op-ssh-sign) plus a reworded SSH-key vaulting section that replaces the broken JSON-template pattern with `--ssh-generate-key` for fresh keys and GUI-only for imports. A new skill `shared-terminal-tmux` was added for bridging Claude's Bash tool with a Terminal.app session via tmux (covers local setup, remote attach via ttyd/SSH/jumphost, coordination protocol). `./sync` regenerated `marketplace.json`. Part of a broader session that also rotated all SSH keys across MBP, home-server, and UDM Pro; archived 6 obsolete 1P items; configured git commit signing via 1P's op-ssh-sign; decommissioned the reminders-web stack on home-server; updated 2 Tech notes in Apple Notes; and wrote/updated 3 memory files (`feedback_headless_ssh_first.md` new, `feedback_ssh_headless_pattern.md` rewritten, `ref_udm_pro.md` new).
