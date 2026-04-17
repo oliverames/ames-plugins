@@ -6,13 +6,19 @@
   },
   "metadata": {
     "description": "Oliver's personal Claude Code plugins and skills",
-    "version": "3.1.0"
+    "version": "3.2.0"
   },
   "plugins": [
     {
-      "name": "ames-community-skills",
+      "name": "ames-claude-only",
       "version": "1.0.0",
-      "description": "Third-party Claude Code skills curated by Oliver Ames. Includes humanizer (blader), SwiftUI Pro (Paul Hudson/twostraws), and Apple platform dev skills from OpenAI's Codex plugins.",
+      "description": "Claude-only skill bundle curated by Oliver Ames. Houses third-party skills adapted for Claude Code that have no Claude-compatible upstream marketplace. Currently includes iOS and macOS build skills originally from OpenAI's Codex plugins, converted for Claude Code use.",
+      "source": "./plugins/ames-claude-only"
+    },
+    {
+      "name": "ames-community-skills",
+      "version": "2.0.0",
+      "description": "Third-party Claude Code skills curated by Oliver Ames that ship as bare SKILL.md files with no upstream marketplace. Currently includes humanizer (blader). SwiftUI Pro now installs directly from the twostraws/SwiftUI-Agent-Skill marketplace; Apple platform dev skills from OpenAI's Codex plugins moved to ames-claude-only.",
       "source": "./plugins/ames-community-skills"
     },
     {

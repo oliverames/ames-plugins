@@ -1,0 +1,8 @@
+{
+  "name": "ames-claude-only",
+  "version": "1.0.0",
+  "description": "Claude-only skill bundle curated by Oliver Ames. Houses third-party skills adapted for Claude Code that have no Claude-compatible upstream marketplace. Currently includes iOS and macOS build skills originally from OpenAI's Codex plugins, converted for Claude Code use.",
+  "author": {
+    "name": "Oliver Ames"
+  }
+}
