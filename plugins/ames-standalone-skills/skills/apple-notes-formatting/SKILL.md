@@ -383,3 +383,79 @@ Options:
 - Ask the user for the full exact title
 - Create a new note with a proper short title instead
 - Tell the user to rename the note manually first
+
+### Title Lookup Fails When Title Contains `&`
+
+The `get-note-content`, `update-note`, and `delete-note` tools all fail with "Note not found" when the note's title contains an `&` character, even when passing the exact title string. This is a limitation in how the underlying AppleScript `note "name"` resolver handles the ampersand.
+
+**Workaround:** First call `search-notes` with a query that omits the `&` (e.g., search for "Asana MCP" instead of "Asana MCP — Gotchas & Reliable Patterns"), extract the note's `id` from the result, then call the operation using the `id` parameter instead of `title`.
+
+Example:
+```
+1. search-notes query="macOS Shell Config" → returns id x-coredata://.../p8756
+2. update-note id="x-coredata://.../p8756" newContent="..." format="html"
+```
+
+### Internal Storage Format (Not What You Input)
+
+Apple Notes transforms HTML on save. The output of `get-note-content` shows the **stored** format, which differs from what you submit. These transformations render correctly in the Notes app — they are NOT bugs:
+
+| Input HTML | Stored / `get-note-content` output |
+|-----------|-------------------------------------|
+| `<h1>Title</h1>` | `<div><b><span style="font-size: 24px">Title</span></b></div>` |
+| `<h2>Section</h2>` | `<div><b><span style="font-size: 18px">Section</span></b></div>` |
+| `<tt>code</tt>` | `<font face="Courier"><tt>code</tt></font>` or `<font face="Courier"><span style="font-size: 12px">code</span></font>` |
+| `<i><tt>path</tt></i>` | `<font face="Courier-Oblique">path</font>` (can't be reverted) |
+| `&amp;` | `&amp` (no trailing `;` in output — but stored correctly) |
+
+**Do NOT "fix" these in `update-note` calls** — you will be chasing ghosts. The skill's input conventions (`<h1>`, `<tt>`, `&amp;`) remain correct; Apple Notes normalizes them internally.
+
+### Verifying Rendered Output
+
+`get-note-content` returns stored HTML, which can look wrong even when rendering is correct (see above). For true verification of what the user sees, use AppleScript to fetch the note's `plaintext` property:
+
+```bash
+osascript -e 'tell application "Notes" to return plaintext of note "🧩 Lytho MCP Server"'
+```
+
+This returns the rendered text as shown in the Notes app — the reliable oracle for "does this actually render as expected." Use it whenever `get-note-content` output looks suspicious or after fixing broken entities/nested lists.
+
+### `<a href>` Anchor Tags Stripped on Update
+
+The `update-note` tool strips `<a href="url">text</a>` tags on save, keeping only the inner text. Real hyperlinks cannot be inserted via this tool.
+
+**Workaround:** Submit the bare URL as plain text. Apple Notes auto-detects URLs on render and makes them clickable:
+
+```html
+<!-- Submit this -->
+<div>Calendar sync: https://calendar.google.com/calendar/u/0/syncselect</div>
+
+<!-- Apple Notes auto-links the URL on render -->
+```
+
+Do NOT use `<a href>` in `update-note` content — it will be silently dropped.
+
+### Nested Lists Don't Work (`<ul>` inside `<ol>`)
+
+Apple Notes does NOT render `<ul>` nested inside `<ol>` as a true nested list. Either:
+- The nested `<ul>` renders as a sibling list (orphaning substeps from their parent numbered step)
+- Or the structure collapses unpredictably
+
+**Fix:** Inline sub-bullets into the parent `<li>` using `<br>` + bullet entity:
+
+```html
+<!-- Bad: orphans substeps -->
+<ol>
+  <li>Step 3: Enable SSH agent</li>
+  <ul><li>Substep A</li><li>Substep B</li></ul>
+  <li>Step 4: ...</li>
+</ol>
+
+<!-- Good: substeps stay inside parent step -->
+<ol>
+  <li>Step 3: Enable SSH agent<br>&#8226; Substep A<br>&#8226; Substep B</li>
+  <li>Step 4: ...</li>
+</ol>
+```
+
+Use `&#8226;` for the bullet character (safer than raw `•`).
