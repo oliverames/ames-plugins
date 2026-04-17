@@ -3,6 +3,7 @@ firebase-debug.log
 logs/
 __pycache__/
 .a5c/
+.remember/
 
 # Secrets & environment
 .env
