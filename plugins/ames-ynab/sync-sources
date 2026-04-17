@@ -12,7 +12,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 MANIFEST = HERE / "update-sources.json"
 DEST_ROOT = HERE / "sources"
-PROJECTS_ROOT = Path.home() / "Developer" / "projects"
+PROJECTS_ROOT = Path.home() / "Developer" / "Projects"
 EXCLUDES = [
     ".DS_Store",
     ".git",

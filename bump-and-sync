@@ -54,6 +54,9 @@ python3 sync
 
 # Commit and push if there are changes
 git add "plugins/$PLUGIN/.claude-plugin/plugin.json" .claude-plugin/marketplace.json
+# Also stage the Codex side, which sync just brought in-sync (if the plugin has a Codex manifest)
+[ -f "plugins/$PLUGIN/.codex-plugin/plugin.json" ] && git add "plugins/$PLUGIN/.codex-plugin/plugin.json"
+[ -f .agents/plugins/marketplace.json ] && git add .agents/plugins/marketplace.json
 if git diff --cached --quiet; then
     step "Nothing changed, skipping commit"
     exit 0

@@ -21,3 +21,7 @@ secrets.json
 
 # iCloud conflict files
 .!*.md
+
+# Backup files (timestamped or otherwise)
+*.bak
+*.bak-*

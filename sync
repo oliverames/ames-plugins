@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
-"""sync — Regenerate marketplace.json from plugin.json files.
+"""sync: regenerate marketplace manifests from per-plugin plugin.json files.
 
 Run before pushing to GitHub. Claude Code polls the marketplace manifest
-and auto-updates installed plugins when versions change.
+and auto-updates installed plugins when versions change. Codex does the
+same on its own schedule.
+
+Handles both hosts:
+  Claude Code: .claude-plugin/marketplace.json (authoritative source of truth)
+  Codex (experimental): .agents/plugins/marketplace.json (regenerated, Codex
+      plugin.json versions propagated from Claude side)
 
 Usage:
     ./sync
@@ -13,55 +19,116 @@ import os
 import sys
 from pathlib import Path
 
-# ── Terminal styling ───────────────────────────────────────────────────
+# Terminal styling
 _NO_COLOR = os.environ.get("NO_COLOR") is not None or not sys.stdout.isatty()
 _B = "" if _NO_COLOR else "\033[38;5;141m"   # brand purple
 _S = "" if _NO_COLOR else "\033[38;5;114m"   # success green
+_W = "" if _NO_COLOR else "\033[38;5;214m"   # warn amber
 _M = "" if _NO_COLOR else "\033[38;5;244m"   # muted gray
 _R = "" if _NO_COLOR else "\033[0m"
 
-def _success(msg): print(f"  {_S}✓{_R} {_S}{msg}{_R}")
+def _success(msg): print(f"  {_S}\u2713{_R} {_S}{msg}{_R}")
+def _warn(msg):    print(f"  {_W}!{_R} {_W}{msg}{_R}")
 def _dim(msg):     print(f"  {_M}{msg}{_R}")
-def _header(title, sub=""): print(f"\n{_B}{'─' * 48}{_R}\n{_B}  {title}{('  —  ' + sub) if sub else ''}{_R}\n{_B}{'─' * 48}{_R}\n")
+def _header(title, sub=""): print(f"\n{_B}{'-' * 48}{_R}\n{_B}  {title}{('  ' + sub) if sub else ''}{_R}\n{_B}{'-' * 48}{_R}\n")
 
 HERE = Path(__file__).parent
 PLUGINS_DIR = HERE / "plugins"
-MARKETPLACE = HERE / ".claude-plugin" / "marketplace.json"
+CLAUDE_MARKETPLACE = HERE / ".claude-plugin" / "marketplace.json"
+CODEX_MARKETPLACE = HERE / ".agents" / "plugins" / "marketplace.json"
 
-_header("sync", "ames-claude marketplace")
+_header("sync", "ames-claude marketplaces")
 
-with open(MARKETPLACE) as f:
-    current = json.load(f)
+# Read current Claude marketplace to preserve top-level metadata
+with open(CLAUDE_MARKETPLACE) as f:
+    claude_current = json.load(f)
 
-plugins = []
+# Pass 1: propagate Claude plugin.json versions into matching Codex plugin.json
+# files so the two sides never drift. Claude side is authoritative.
+propagated = 0
+for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
+    claude_json = plugin_dir / ".claude-plugin" / "plugin.json"
+    codex_json = plugin_dir / ".codex-plugin" / "plugin.json"
+    if not claude_json.exists() or not codex_json.exists():
+        continue
+    with open(claude_json) as f:
+        claude_meta = json.load(f)
+    with open(codex_json) as f:
+        codex_meta = json.load(f)
+    claude_version = claude_meta.get("version")
+    if codex_meta.get("version") != claude_version:
+        codex_meta["version"] = claude_version
+        with open(codex_json, "w") as f:
+            json.dump(codex_meta, f, indent=2)
+            f.write("\n")
+        _dim(f"propagated version {claude_version} to {plugin_dir.name}/.codex-plugin/plugin.json")
+        propagated += 1
+
+# Pass 2: regenerate Claude marketplace.json from per-plugin .claude-plugin/plugin.json
+claude_plugins = []
 for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
     plugin_json = plugin_dir / ".claude-plugin" / "plugin.json"
     if not plugin_json.exists():
         continue
-
     with open(plugin_json) as f:
         meta = json.load(f)
-
-    entry = {
+    claude_plugins.append({
         "name": meta["name"],
         "version": meta["version"],
         "description": meta.get("description", ""),
         "source": f"./plugins/{plugin_dir.name}",
-    }
+    })
 
-    plugins.append(entry)
-
-output = {
-    "name": current["name"],
-    "owner": current["owner"],
-    "metadata": current["metadata"],
-    "plugins": plugins,
+claude_output = {
+    "name": claude_current["name"],
+    "owner": claude_current["owner"],
+    "metadata": claude_current["metadata"],
+    "plugins": claude_plugins,
 }
-
-with open(MARKETPLACE, "w") as f:
-    json.dump(output, f, indent=2)
+with open(CLAUDE_MARKETPLACE, "w") as f:
+    json.dump(claude_output, f, indent=2)
     f.write("\n")
+_success(f".claude-plugin/marketplace.json: {len(claude_plugins)} plugin(s)")
+for p in claude_plugins:
+    print(f"  {_M}.{_R} {p['name']} {_M}v{p['version']}{_R}")
 
-_success(f"marketplace.json — {len(plugins)} plugin(s)")
-for p in plugins:
-    print(f"  {_M}•{_R} {p['name']} {_M}v{p['version']}{_R}")
+# Pass 3: regenerate Codex marketplace.json from per-plugin .codex-plugin/plugin.json
+# Plugins without a .codex-plugin/ directory are Claude-only (e.g. ames-claude-only)
+# and are correctly excluded from the Codex manifest.
+if CODEX_MARKETPLACE.exists():
+    with open(CODEX_MARKETPLACE) as f:
+        codex_current = json.load(f)
+    codex_plugins = []
+    for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
+        codex_json = plugin_dir / ".codex-plugin" / "plugin.json"
+        if not codex_json.exists():
+            continue
+        with open(codex_json) as f:
+            meta = json.load(f)
+        codex_plugins.append({
+            "name": meta["name"],
+            "source": {
+                "source": "local",
+                "path": f"./plugins/{plugin_dir.name}",
+            },
+            "policy": {
+                "installation": "AVAILABLE",
+                "authentication": "ON_INSTALL",
+            },
+            "category": meta.get("category", "productivity"),
+        })
+    codex_output = {
+        "name": codex_current["name"],
+        "interface": codex_current.get("interface", {"displayName": codex_current["name"]}),
+        "plugins": codex_plugins,
+    }
+    with open(CODEX_MARKETPLACE, "w") as f:
+        json.dump(codex_output, f, indent=2)
+        f.write("\n")
+    _success(f".agents/plugins/marketplace.json: {len(codex_plugins)} plugin(s) (experimental)")
+    if propagated:
+        _dim(f"propagated {propagated} Claude-to-Codex version(s)")
+else:
+    _warn(".agents/plugins/marketplace.json not present; Codex side skipped")
+
+print()
