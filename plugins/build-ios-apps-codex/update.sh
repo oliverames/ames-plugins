@@ -36,7 +36,6 @@ CODEX_VERSION=$(python3 -c "import json; print(json.load(open('$CACHE_DIR/.codex
 echo "  Codex cache version: v$CODEX_VERSION"
 echo "  Cache path: $CACHE_DIR"
 
-# Sync skills (skip openai.yaml agent files)
 if [[ ! -d "$CACHE_DIR/skills" ]]; then
     error "No skills directory found in cache"
     exit 1
