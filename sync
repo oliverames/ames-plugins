@@ -93,8 +93,9 @@ for p in claude_plugins:
     print(f"  {_M}.{_R} {p['name']} {_M}v{p['version']}{_R}")
 
 # Pass 3: regenerate Codex marketplace.json from per-plugin .codex-plugin/plugin.json
-# Plugins without a .codex-plugin/ directory are Claude-only (e.g. ames-claude-only)
-# and are correctly excluded from the Codex manifest.
+# Plugins without a .codex-plugin/ directory are Claude-only
+# (e.g. build-ios-apps-codex, build-macos-apps-codex) and are correctly
+# excluded from the Codex manifest.
 if CODEX_MARKETPLACE.exists():
     with open(CODEX_MARKETPLACE) as f:
         codex_current = json.load(f)

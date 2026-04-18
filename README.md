@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <code>6 plugins</code> &bull;
-  <code>31 skills</code> &bull;
+  <code>7 plugins</code> &bull;
+  <code>46 skills</code> &bull;
   <code>18 MCP servers</code> &bull;
   <code>dual-host</code>
 </p>
@@ -49,7 +49,8 @@ ames-claude takes the additive route. One tree, two manifest namespaces, identic
     "ames-ynab@ames-claude": true,
     "ames-lytho@ames-claude": true,
     "ames-community-skills@ames-claude": true,
-    "ames-claude-only@ames-claude": true
+    "build-ios-apps-codex@ames-claude": true,
+    "build-macos-apps-codex@ames-claude": true
   }
 }
 ```
@@ -65,7 +66,8 @@ Restart Claude Code. The marketplace registers, plugins install, and `autoUpdate
 /plugin install ames-ynab@ames-claude
 /plugin install ames-lytho@ames-claude
 /plugin install ames-community-skills@ames-claude
-/plugin install ames-claude-only@ames-claude
+/plugin install build-ios-apps-codex@ames-claude
+/plugin install build-macos-apps-codex@ames-claude
 ```
 
 ### Codex (experimental)
@@ -74,13 +76,13 @@ Restart Claude Code. The marketplace registers, plugins install, and `autoUpdate
 codex marketplace add https://github.com/oliverames/ames-claude
 ```
 
-Then install plugins through Codex's plugin UI or CLI. `ames-claude-only` is intentionally absent from the Codex side (see below).
+Then install plugins through Codex's plugin UI or CLI. `build-ios-apps-codex` and `build-macos-apps-codex` are intentionally absent from the Codex side (see below).
 
 > **Heads-up:** Codex's marketplace commands are still stabilizing. Verify exact syntax with `codex --help` before scripting. File an issue if any Codex manifest in this repo falls out of spec.
 
 ## Plugins
 
-Six plugins ship in this marketplace:
+Seven plugins ship in this marketplace:
 
 | Plugin | Hosts | Version | Summary |
 |--------|-------|---------|---------|
@@ -89,7 +91,8 @@ Six plugins ship in this marketplace:
 | [`ames-ynab`](plugins/ames-ynab/) | Claude + Codex | 2.0.0 | Custom YNAB MCP connector |
 | [`ames-lytho`](plugins/ames-lytho/) | Claude + Codex | 1.0.0 | Custom Lytho Workflow MCP connector |
 | [`ames-community-skills`](plugins/ames-community-skills/) | Claude + Codex | 2.0.0 | Third-party skills without upstream marketplaces |
-| [`ames-claude-only`](plugins/ames-claude-only/) | **Claude only** | 1.0.0 | Skills converted from Codex plugins, non-reversible |
+| [`build-ios-apps-codex`](plugins/build-ios-apps-codex/) | **Claude only** | 1.0.0 | 6 iOS dev skills converted from OpenAI's Codex plugin |
+| [`build-macos-apps-codex`](plugins/build-macos-apps-codex/) | **Claude only** | 1.0.0 | 11 macOS dev skills + 3 commands converted from OpenAI's Codex plugin |
 
 ### `ames-standalone-skills`
 
@@ -140,14 +143,15 @@ A wrapper for third-party skills that ship as bare `SKILL.md` files with no upst
 
 When an upstream author publishes their own marketplace (as [twostraws](https://github.com/twostraws/SwiftUI-Agent-Skill) did with SwiftUI Pro), that upstream is preferred and the skill leaves this plugin.
 
-### `ames-claude-only`
+### `build-ios-apps-codex`
 
-Claude Code only. Houses skills converted from Codex-native plugins that cannot round-trip to Codex without reconversion. Currently two:
+Claude Code only. 6 iOS development skills converted from OpenAI's [`build-ios-apps`](https://github.com/openai/plugins/tree/main/plugins/build-ios-apps) Codex plugin (MIT): `ios-app-intents`, `ios-debugger-agent`, `swiftui-liquid-glass`, `swiftui-performance-audit`, `swiftui-ui-patterns`, `swiftui-view-refactor`. Each lives at [`plugins/build-ios-apps-codex/skills/<name>/`](plugins/build-ios-apps-codex/skills/). Run [`./plugins/build-ios-apps-codex/update.sh`](plugins/build-ios-apps-codex/update.sh) to resync from the local Codex plugin cache.
 
-- [`build-ios-apps-codex`](plugins/ames-claude-only/skills/build-ios-apps-codex/) — iOS workflows: App Intents, debugger agents, Liquid Glass, performance auditing, SwiftUI UI patterns, view refactoring. Contains nested sub-skills.
-- [`build-macos-apps-codex`](plugins/ames-claude-only/skills/build-macos-apps-codex/) — macOS workflows: AppKit interop, build/run/debug, packaging and notarization, signing, SwiftPM, SwiftUI patterns, telemetry, test triage, window management. Contains nested sub-skills.
+### `build-macos-apps-codex`
 
-Both originated in [openai/plugins](https://github.com/openai/plugins) and were adapted for Claude Code. They are omitted from the Codex marketplace manifest by design, since installing them in Codex would re-import already-diverged skills.
+Claude Code only. 11 macOS development skills plus 3 commands converted from OpenAI's [`build-macos-apps`](https://github.com/openai/plugins/tree/main/plugins/build-macos-apps) Codex plugin (MIT): `appkit-interop`, `build-run-debug`, `liquid-glass`, `packaging-notarization`, `signing-entitlements`, `swiftpm-macos`, `swiftui-patterns`, `telemetry`, `test-triage`, `view-refactor`, `window-management`. Commands: `build-and-run-macos-app`, `fix-codesign-error`, `test-macos-app`. Run [`./plugins/build-macos-apps-codex/update.sh`](plugins/build-macos-apps-codex/update.sh) to resync from the local Codex plugin cache.
+
+Both plugins originated in [openai/plugins](https://github.com/openai/plugins) and were adapted for Claude Code. They are omitted from the Codex marketplace manifest by design, since installing them in Codex would re-import already-diverged skills.
 
 ## Skills catalog
 
@@ -193,7 +197,7 @@ Both originated in [openai/plugins](https://github.com/openai/plugins) and were 
 - [`1password-vault`](plugins/ames-standalone-skills/skills/1password-vault/) — Store, retrieve, and rotate credentials in 1Password
 - [`gmcf-masters-swim`](plugins/ames-standalone-skills/skills/gmcf-masters-swim/) — Daily GMCF masters swim workout lookup
 
-Plus 2 parent skills in `ames-claude-only` (with 17 nested sub-skills) and 1 in `ames-community-skills`.
+Plus 6 skills in `build-ios-apps-codex`, 11 skills (+ 3 commands) in `build-macos-apps-codex`, and 1 in `ames-community-skills` (humanizer).
 
 ## MCP servers catalog
 
@@ -223,8 +227,8 @@ ames-claude/
 
 | Host | Marketplace manifest | Per-plugin manifest | Plugins |
 |------|----------------------|---------------------|---------|
-| Claude Code | `.claude-plugin/marketplace.json` | `.claude-plugin/plugin.json` | 6 |
-| Codex (experimental) | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | 5 (excludes `ames-claude-only`) |
+| Claude Code | `.claude-plugin/marketplace.json` | `.claude-plugin/plugin.json` | 7 |
+| Codex (experimental) | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | 5 (excludes `build-ios-apps-codex`, `build-macos-apps-codex`) |
 
 ### What crosses the boundary
 
@@ -235,7 +239,7 @@ ames-claude/
 ### What does not
 
 - **Plugin and marketplace manifests** differ in location and schema; they live side by side in the same repo
-- **`ames-claude-only`** is Claude Code only by design (converted-from-Codex skills can't round-trip cleanly)
+- **`build-ios-apps-codex` and `build-macos-apps-codex`** are Claude Code only by design (converted-from-Codex skills can't round-trip cleanly, since they already exist upstream in `openai/plugins`)
 - **Third-party marketplaces that publish only one manifest format** can't be rewrapped by ames-claude. Install those from upstream wherever the author supports
 
 ## Configuration
@@ -260,7 +264,7 @@ Each plugin's version lives in three places that must stay in sync:
 2. `plugins/<name>/.codex-plugin/plugin.json` — Codex mirror (must match 1)
 3. Root `.claude-plugin/marketplace.json` — per-plugin `version` (must match 1)
 
-The marketplace itself has a separate version at `.claude-plugin/marketplace.json`'s top-level `metadata.version`, currently `3.2.0`.
+The marketplace itself has a separate version at `.claude-plugin/marketplace.json`'s top-level `metadata.version`, currently `3.4.0`.
 
 Workflow scripts at the repo root (`sync`, `bump-and-sync`) help keep these aligned after content changes. Always run one of those before committing version-bearing changes.
 
@@ -340,7 +344,7 @@ Grouped by source marketplace. Each `plugin@marketplace` key in `enabledPlugins`
 | `mcp-server-dev` | Build MCP servers and apps |
 | `gopls-lsp` | Go language server |
 
-**`ames-claude` (5 of 6 available enabled):** `ames-standalone-skills`, `ames-preferred-mcps`, `ames-ynab`, `ames-community-skills`, `ames-claude-only`. The 6th plugin `ames-lytho` is published in the marketplace but not currently enabled at the user level.
+**`ames-claude` (4 of 7 available enabled):** `ames-standalone-skills`, `ames-preferred-mcps`, `ames-ynab`, `ames-community-skills`. The remaining three plugins (`ames-lytho`, `build-ios-apps-codex`, `build-macos-apps-codex`) are published in the marketplace but not currently enabled at the user level. The next `wrap-up` session will reconcile `~/.claude/settings.json` against the marketplace and may enable/disable plugins accordingly.
 
 **`knowledge-work-plugins` (3):** `adspirer-ads-agent` (ad campaign analytics), `pdf-viewer` (interactive PDF), `searchfit-seo` (SEO audits and content strategy)
 
@@ -442,7 +446,7 @@ This is what makes the configuration record trustworthy: it doesn't go stale bec
 | `oliverames/dotfiles` | Shell config, install script, system-wide hooks |
 | `oliverames/scripts` | CLI tools including sync utilities |
 | `oliverames/claude-code-backup` | Mirror of `~/.claude/` with secrets redacted |
-| [openai/plugins](https://github.com/openai/plugins) | Upstream for `ames-claude-only` converted skills |
+| [openai/plugins](https://github.com/openai/plugins) | Upstream for `build-ios-apps-codex` and `build-macos-apps-codex` converted skills |
 | [twostraws/SwiftUI-Agent-Skill](https://github.com/twostraws/SwiftUI-Agent-Skill) | Recommended companion marketplace for SwiftUI Pro |
 | [blader/humanizer](https://github.com/blader/humanizer) | Upstream for `humanizer` in `ames-community-skills` |
 

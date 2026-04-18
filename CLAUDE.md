@@ -1,19 +1,20 @@
 # ames-claude
 
-Oliver's personal plugin marketplace for Claude Code with experimental Codex dual-host support. Ships 6 plugins, 31 skills, 18 MCP servers.
+Oliver's personal plugin marketplace for Claude Code with experimental Codex dual-host support. Ships 7 plugins, 46 skills, 18 MCP servers.
 
 ## Structure
 
 ```
-plugins/<name>/                          Plugins (each has .claude-plugin/plugin.json)
-plugins/ames-standalone-skills/skills/   Original skills (28)
-plugins/ames-community-skills/skills/    Curated third-party skills (1: humanizer)
-plugins/ames-claude-only/skills/         Claude-only skills converted from Codex plugins (2)
-.claude-plugin/marketplace.json          Claude Code marketplace manifest
-.agents/plugins/marketplace.json         Codex marketplace manifest (experimental)
-plugins/<name>/.codex-plugin/plugin.json Codex plugin manifest (for dual-host plugins)
-sync                                     Regenerates marketplace.json from plugin manifests
-bump-and-sync                            Bumps ames-ynab version + runs sync + pushes
+plugins/<name>/                             Plugins (each has .claude-plugin/plugin.json)
+plugins/ames-standalone-skills/skills/      Original skills (28)
+plugins/ames-community-skills/skills/       Curated third-party skills (1: humanizer)
+plugins/build-ios-apps-codex/skills/        iOS skills converted from OpenAI's Codex plugin (6)
+plugins/build-macos-apps-codex/skills/      macOS skills converted from OpenAI's Codex plugin (11)
+.claude-plugin/marketplace.json             Claude Code marketplace manifest
+.agents/plugins/marketplace.json            Codex marketplace manifest (experimental)
+plugins/<name>/.codex-plugin/plugin.json    Codex plugin manifest (for dual-host plugins)
+sync                                        Regenerates marketplace.json from plugin manifests
+bump-and-sync                               Bumps ames-ynab version + runs sync + pushes
 ```
 
 ## Workflow
@@ -30,10 +31,10 @@ The repo carries two parallel manifest namespaces under a shared plugin tree:
 
 | Host | Marketplace manifest | Per-plugin manifest | Plugins |
 |------|----------------------|---------------------|---------|
-| Claude Code (primary) | `.claude-plugin/marketplace.json` | `.claude-plugin/plugin.json` | 6 |
-| Codex (experimental) | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | 5 (excludes `ames-claude-only`) |
+| Claude Code (primary) | `.claude-plugin/marketplace.json` | `.claude-plugin/plugin.json` | 7 |
+| Codex (experimental) | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | 5 (excludes `build-ios-apps-codex`, `build-macos-apps-codex`) |
 
-Skill content (`SKILL.md`) and MCP config (`.mcp.json`) are portable across hosts. Only the plugin and marketplace manifests differ. `ames-claude-only` is Claude-only because its skills were converted from Codex plugins and cannot round-trip.
+Skill content (`SKILL.md`) and MCP config (`.mcp.json`) are portable across hosts. Only the plugin and marketplace manifests differ. `build-ios-apps-codex` and `build-macos-apps-codex` are Claude-only because their skills were converted from OpenAI's Codex plugins (which exist upstream in `openai/plugins`) and cannot round-trip.
 
 When bumping a plugin version, update all three spots: `plugins/<name>/.claude-plugin/plugin.json`, `plugins/<name>/.codex-plugin/plugin.json` (if it exists), and the per-plugin `version` in the root `.claude-plugin/marketplace.json`.
 
@@ -46,7 +47,8 @@ When bumping a plugin version, update all three spots: `plugins/<name>/.claude-p
 | `ames-ynab` | Claude + Codex | Custom YNAB MCP connector (`@oliverames/ynab-mcp-server`) |
 | `ames-lytho` | Claude + Codex | Custom Lytho Workflow MCP connector (`@oliverames/lytho-mcp-server`) |
 | `ames-community-skills` | Claude + Codex | Third-party skills without upstream marketplaces (currently 1: humanizer by blader) |
-| `ames-claude-only` | Claude only | Skills converted from Codex plugins: `build-ios-apps-codex`, `build-macos-apps-codex` |
+| `build-ios-apps-codex` | Claude only | 6 iOS dev skills converted from OpenAI's `build-ios-apps` Codex plugin (MIT) |
+| `build-macos-apps-codex` | Claude only | 11 macOS dev skills + 3 commands converted from OpenAI's `build-macos-apps` Codex plugin (MIT) |
 
 ## Plugin conventions
 
@@ -99,5 +101,5 @@ For Codex (experimental): `codex marketplace add https://github.com/oliverames/a
 - **MCP connector secrets**: plugin-spawned MCP servers don't inherit the `op run` environment. Secrets must be declared in `.mcp.json` via `${ENV_VAR}` (resolved from `settings.json` env block), or loaded from a plugin-local `.env` file by the server itself.
 - **Flat `.mcp.json` format**: no outer `mcpServers` wrapper, no `"type": "stdio"`. Matches the official plugin format.
 - **Codex marketplace schema differs from Claude's**: Codex uses nested `source: {source: "local", path: "./..."}` and requires `policy: {installation: "AVAILABLE", authentication: "ON_INSTALL"}`. Claude uses flat `source: "./..."`. Both manifest shapes are maintained side-by-side.
-- **`ames-claude-only` is Claude Code only** by design. Its skills were converted from Codex plugins and cannot be installed in Codex (they're already in `openai/plugins` upstream in a different form).
+- **`build-ios-apps-codex` and `build-macos-apps-codex` are Claude Code only** by design. Their skills were converted from OpenAI's Codex plugins and cannot be republished to Codex (they already exist upstream in `openai/plugins` in their original form). Both are promoted to top-level plugins (rather than nested inside an umbrella plugin) so Claude Code's shallow auto-discovery finds each sub-skill directly.
 - **Version parity across manifests** is enforced manually. The `wrap-up` skill's config-drift check catches mismatches at end of session.

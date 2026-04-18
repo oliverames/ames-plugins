@@ -6,19 +6,13 @@
   },
   "metadata": {
     "description": "Oliver's personal Claude Code plugins and skills",
-    "version": "3.2.0"
+    "version": "3.4.0"
   },
   "plugins": [
     {
-      "name": "ames-claude-only",
-      "version": "1.0.0",
-      "description": "Claude-only skill bundle curated by Oliver Ames. Houses third-party skills adapted for Claude Code that have no Claude-compatible upstream marketplace. Currently includes iOS and macOS build skills originally from OpenAI's Codex plugins, converted for Claude Code use.",
-      "source": "./plugins/ames-claude-only"
-    },
-    {
       "name": "ames-community-skills",
       "version": "2.0.0",
-      "description": "Third-party Claude Code skills curated by Oliver Ames that ship as bare SKILL.md files with no upstream marketplace. Currently includes humanizer (blader). SwiftUI Pro now installs directly from the twostraws/SwiftUI-Agent-Skill marketplace; Apple platform dev skills from OpenAI's Codex plugins moved to ames-claude-only.",
+      "description": "Third-party Claude Code skills curated by Oliver Ames that ship as bare SKILL.md files with no upstream marketplace. Currently includes humanizer (blader). SwiftUI Pro installs directly from the twostraws/SwiftUI-Agent-Skill marketplace; Apple platform dev skills converted from OpenAI's Codex plugins ship as their own top-level plugins (build-ios-apps-codex, build-macos-apps-codex).",
       "source": "./plugins/ames-community-skills"
     },
     {
@@ -44,6 +38,18 @@
       "version": "2.0.0",
       "description": "YNAB (You Need A Budget) MCP connector built and maintained by Oliver Ames. Installing this plugin activates the ynab-mcp-server MCP, providing full read/write access to YNAB budgets, transactions, categories, scheduled transactions, and payees.",
       "source": "./plugins/ames-ynab"
+    },
+    {
+      "name": "build-ios-apps-codex",
+      "version": "1.0.0",
+      "description": "iOS development skills converted from OpenAI's curated build-ios-apps Codex plugin (MIT). Ships 6 skills covering App Intents/Shortcuts, SwiftUI UI patterns, Liquid Glass adoption, performance auditing, view refactoring, and simulator debugging.",
+      "source": "./plugins/build-ios-apps-codex"
+    },
+    {
+      "name": "build-macos-apps-codex",
+      "version": "1.0.0",
+      "description": "macOS development skills and commands converted from OpenAI's curated build-macos-apps Codex plugin (MIT). Ships 11 skills plus 3 commands covering building, running, debugging, SwiftUI and AppKit patterns, signing, packaging, notarization, SwiftPM, telemetry, and window management.",
+      "source": "./plugins/build-macos-apps-codex"
     }
   ]
 }
