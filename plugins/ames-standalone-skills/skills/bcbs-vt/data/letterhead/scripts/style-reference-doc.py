@@ -23,12 +23,13 @@ except ImportError:
     print("Run: pip install python-docx")
     sys.exit(1)
 
-# --- BCBS VT Brand Colors ---
-DARK_BLUE = RGBColor(0x00, 0x38, 0x67)    # #003867
-PRIMARY_BLUE = RGBColor(0x00, 0x75, 0xC9)  # #0075c9
-LIGHT_BLUE = RGBColor(0x93, 0xCB, 0xEE)   # #93cbee
-BLACK = RGBColor(0x1A, 0x1A, 0x1A)        # #1a1a1a
-GRAY = RGBColor(0x66, 0x66, 0x66)         # #666666
+# --- BCBS VT Brand Colors (2025-10 Brand Style Guide) ---
+DARK_BLUE = RGBColor(0x00, 0x46, 0x7B)     # #00467B — Web Dark Blue, Title/H1 emphasis
+PRIMARY_BLUE = RGBColor(0x00, 0x77, 0xC8)  # #0077C8 — Blue Cross VT Blue, PMS 3005 C (dominant)
+LIGHT_BLUE = RGBColor(0x99, 0xD6, 0xEA)    # #99D6EA — Sky Blue, PMS 2975 C
+DARK_GRAY = RGBColor(0x63, 0x66, 0x6A)     # #63666A — Cool Gray 10 C (H4, tertiary headings)
+BLACK = RGBColor(0x1A, 0x1A, 0x1A)         # #1a1a1a
+GRAY = RGBColor(0x66, 0x66, 0x66)          # #666666
 
 SCRIPT_DIR = Path(__file__).parent
 ASSETS_DIR = SCRIPT_DIR.parent / "assets"
@@ -137,25 +138,32 @@ def main():
 
     # --- Typography ---
     print("Applying typography...")
-    # Body text
-    apply_style(doc, "Normal", "Droid Sans", 12, color=BLACK, space_after=6)  # Calibri as fallback if Droid Sans unavailable
-    apply_style(doc, "Body Text", "Droid Sans", 12, color=BLACK, space_after=6)
+    # Body text — Calibri per Writing and Tone Style Guide §Text formatting
+    # (Calibri / DIN 2014 / Arial are the approved correspondence fonts)
+    apply_style(doc, "Normal", "Calibri", 12, color=BLACK, space_after=6)
+    apply_style(doc, "Body Text", "Calibri", 12, color=BLACK, space_after=6)
 
-    # Headings
-    apply_style(doc, "Heading 1", "Arial", 28, bold=True, color=DARK_BLUE,
+    # Headings — hierarchy designed so each level is visually distinct from
+    # Title and its neighbors. Size drops at each step and color pivots at
+    # H2 (Dark Blue → Primary Blue) and H4 (Primary Blue → Dark Gray) keep
+    # the five levels readable without violating the Brand Style Guide's
+    # guidance to stay near three primary text sizes for accessibility.
+    apply_style(doc, "Heading 1", "Arial", 22, bold=True, color=DARK_BLUE,
                 space_before=12, space_after=6)
-    apply_style(doc, "Heading 2", "Arial", 20, bold=True, color=PRIMARY_BLUE,
+    apply_style(doc, "Heading 2", "Arial", 16, bold=True, color=PRIMARY_BLUE,
                 space_before=10, space_after=4)
-    apply_style(doc, "Heading 3", "Arial", 14, bold=True, color=DARK_BLUE,
+    apply_style(doc, "Heading 3", "Arial", 13, bold=True, color=PRIMARY_BLUE,
                 space_before=8, space_after=4)
-    apply_style(doc, "Heading 4", "Arial", 12, bold=True, color=DARK_BLUE,
+    apply_style(doc, "Heading 4", "Arial", 12, bold=True, color=DARK_GRAY,
                 space_before=6, space_after=2)
 
-    # Title block (pandoc renders YAML frontmatter title/author/date using these styles)
-    apply_style(doc, "Title", "Arial", 28, bold=True, color=DARK_BLUE,
-                space_before=0, space_after=4)
-    apply_style(doc, "Author", "Droid Sans", 11, color=GRAY, space_after=2)
-    apply_style(doc, "Date", "Droid Sans", 11, color=GRAY, space_after=12)
+    # Title block (pandoc renders YAML frontmatter title/author/date using
+    # these styles). Title is deliberately 10pt larger than Heading 1 so
+    # the document name reads as the strongest element on page one.
+    apply_style(doc, "Title", "Arial", 32, bold=True, color=DARK_BLUE,
+                space_before=0, space_after=12)
+    apply_style(doc, "Author", "Calibri", 11, color=GRAY, space_after=2)
+    apply_style(doc, "Date", "Calibri", 11, color=GRAY, space_after=12)
 
     # Other styles
     apply_style(doc, "Caption", "Calibri", 10, color=GRAY)

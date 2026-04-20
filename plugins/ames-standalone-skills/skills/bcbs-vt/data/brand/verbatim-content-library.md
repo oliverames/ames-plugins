@@ -489,7 +489,7 @@ Key context:
 ---
 
 ## VT Affordable Care Campaign (vtaffordablecare.com)
-*Launched Dec 2025 | Coalition: BCBSVT + Northwestern Medical Center + Green Mountain Surgery Center + Vermont OPEN Imaging + Vermont Diagnostic Imaging*
+*Launched Dec 2025 | Coalition: Blue Cross VT + Northwestern Medical Center + Green Mountain Surgery Center + Vermont OPEN Imaging + Vermont Diagnostic Imaging*
 
 **Campaign tagline:**
 > "Each of us can help lower the cost of our health care without sacrificing quality."

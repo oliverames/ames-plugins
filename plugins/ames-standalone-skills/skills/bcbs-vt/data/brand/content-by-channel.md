@@ -126,17 +126,18 @@ Authoritative, plain-spoken, member-focused. Pages serve as the primary source o
 ## Print Materials
 
 ### Brochures / Plan Documents
-- Font: DIN 2014 for headlines, Droid Sans for body
-- Colors: Primary Blue and Dark Blue; white space intentional
+- Font: DIN 2014 (or Arial) for headlines, Calibri for body
+- Colors: Primary Blue (`#0077C8`, PMS 3005 C) dominant; Web Dark Blue (`#00467B`) for emphasis; white space intentional
 - Required footer: "An Independent Licensee of the Blue Cross and Blue Shield Association"
 - Contact info: Always include (800) 255-4550 and bluecrossvt.org
 - Legal: Include plan-specific disclaimers; coordinate with compliance
 
-### Letterhead (see pandoc-letterhead skill for generation)
-- BCBS VT logo top-left on Dark Blue (`#003867`) header
+### Letterhead (see the letterhead/ workflow in this skill for generation)
+- BCBS VT logo top-left; Web Dark Blue (`#00467B`) for header band when used
 - Sender's name, title, phone, email in header or below logo
-- Body: 12pt Droid Sans or Times New Roman
-- Footer: "An Independent Licensee of the Blue Cross and Blue Shield Association | bluecrossvt.org | Berlin, Vermont"
+- Body: 11pt Calibri (12pt for Medicare-related communications); DIN 2014 or Arial also approved
+- Margins: 1" top/bottom, 1.25" left/right per the authoritative Letter Checklist
+- Footer: "Blue Cross and Blue Shield of Vermont is an independent licensee of the Blue Cross and Blue Shield Association | bluecrossvt.org | Berlin, Vermont"
 
 ### Event Signage / Banners
 - Logo prominent, color-consistent

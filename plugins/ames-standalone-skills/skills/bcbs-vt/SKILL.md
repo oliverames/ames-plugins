@@ -1,21 +1,85 @@
 ---
 name: bcbs-vt
 description: >
-  Use when the user asks anything about Blue Cross and Blue Shield of Vermont (BCBS VT):
-  "write something for Blue Cross", "draft BCBS VT content", "check brand voice",
+  This skill should be used when the user asks anything about Blue Cross and
+  Blue Shield of Vermont (BCBS VT): "write something for Blue Cross",
+  "draft BCBS VT content", "check brand voice", "lint this draft",
+  "brand-lint this", "verify brand compliance", "does this follow the
+  BCBS style guide", "check this letter against the BCBS checklist",
+  "verify letter format", "run the letter checklist", "fix brand voice",
   "create a social post", "plan social posts", "build a content calendar",
-  "write in the Blue Cross Vermont style", "draft a press release", "write marketing copy",
-  "review content for brand accuracy", "create a letterhead document", "make a .docx letterhead",
+  "write in the Blue Cross Vermont style", "draft a press release",
+  "write marketing copy", "review content for brand accuracy",
+  "create a letterhead document", "make a .docx letterhead",
   "my benefits", "Blue Cross VT employee benefits", "how much PTO do I have",
-  "401k at Blue Cross", "health insurance at Blue Cross VT", "remote work policy",
-  "triage a ticket", "draft a customer response", "write a KB article",
-  "campaign plan for Blue Cross", "BCBS VT", "Blue Cross Vermont".
-version: 1.0.0
+  "401k at Blue Cross", "health insurance at Blue Cross VT",
+  "remote work policy", "triage a ticket", "draft a customer response",
+  "write a KB article", "campaign plan for Blue Cross",
+  "BCBS VT", "Blue Cross Vermont".
+version: 1.2.0
 ---
 
 # Blue Cross and Blue Shield of Vermont
 
-Comprehensive reference for Oliver Ames's work at BCBS VT. This skill consolidates brand, marketing, customer support, benefits, social media, and letterhead resources.
+Apply Blue Cross VT's authoritative brand and writing standards to any BCBS VT task — drafting, reviewing, linting, letterhead building, or customer support. Consolidates brand, marketing, customer support, benefits, social media, and letterhead resources.
+
+## Authoritative Sources (READ FIRST for brand/voice questions)
+
+Two files under `data/brand/` are the canonical sources of truth, sourced verbatim from the internal BCBS VT reference PDFs in `~/Documents/BCBS/Reference/`. Where any other file in this skill conflicts with these two, **these two win**:
+
+| File | Supersedes | Covers |
+|------|-----------|--------|
+| `data/brand/authoritative-brand-style-guide-2025-10.md` | Anything about visual identity | Brand story, tone attributes, approved/unapproved names, logos, colors (exact hex/PMS/CMYK/RGB), typography, photography, accessibility, co-branding, derivative marks. Source: Brand Style Guide (October 2025). |
+| `data/brand/authoritative-writing-and-tone-guide.md` | Anything about writing, grammar, or voice | Writing goals, voice vs. tone, inclusive-language lists (people, age, gender, heritage, etc.), grammar mechanics, letter/email checklists, word list (insurance/policy/premium exceptions, healthcare vs. health care). Source: Writing and Tone Style Guide (rev. November 2021). |
+
+**Key authoritative rules that override legacy data files:**
+
+- Approved names: **"Blue Cross and Blue Shield of Vermont"** and **"Blue Cross VT"** only. Never "BCBSVT," "BCBS Vermont," "Blue Cross Vermont," or "Blue Cross of Vermont."
+- Primary color is **Blue Cross VT Blue `#0077C8` (PMS 3005 C)** — must be the dominant color, with other colors as accents.
+- Writing at a **sixth-grade reading level**; single-space, left-align, Calibri/DIN 2014/Arial.
+- **Never refer to ourselves as an "insurance company"** — we're a **"health service organization."** We sell **subscriptions** (not policies); we charge **subscription rates** (not premiums); externally, "rates" works.
+- Letter checklist format: 11 pt (12 pt for Medicare), single-spaced, 1" top/bottom, **1.25" left/right** margins, logo on page one, include "over" on multi-page letters.
+
+## Before Delivering Any Draft — Run the Linter
+
+Run the mechanical brand checks **before** returning a draft to the user. These rules are not judgment calls.
+
+```bash
+python3 scripts/brand-lint.py path/to/draft.md
+# or via stdin
+echo "$draft" | python3 scripts/brand-lint.py -
+```
+
+The linter flags: forbidden names (BCBSVT, BCBS Vermont, etc.), forbidden self-references ("insurance company," "our policy," "our premiums"), phones missing the TTY/TDD: 711 annotation, `--` instead of em dash, double-space between sentences, `!!`, generic link text ("click here", "learn more"), wrong domain (bcbsvt.com vs bluecrossvt.org), and top inclusive-language violations ("the elderly," "hearing impaired," etc.).
+
+Exit code `0` means the draft passes; `1` means there are violations to fix before returning it. For judgment-based checks (reading level, tone, inclusiveness beyond the top-confidence phrases), load `data/brand/authoritative-writing-and-tone-guide.md` and review manually.
+
+### Quick brand lint (always loaded)
+
+| ❌ Never write | ✅ Write instead |
+|---------------|-----------------|
+| BCBSVT, BCBS Vermont, Blue Cross Vermont, Blue Cross of Vermont | Blue Cross and Blue Shield of Vermont (first use) / Blue Cross VT |
+| insurance company (for us) | health service organization |
+| policy / policies (for our products) | subscription(s) |
+| premium(s) (for us, external) | rate(s) |
+| the elderly | older adults, older Vermonters |
+| hearing impaired | deaf, hard of hearing |
+| `--` (double-hyphen) | `—` (true em dash) |
+| "click here", "learn more" | descriptive link text ("Find a doctor") |
+| (802) 555-1234 alone | (802) 555-1234 (TTY/TDD: 711) |
+
+## Verifying a Letter's Format
+
+For any `.docx` that must pass the authoritative Letter Checklist (formal letters, member communications, compliance-sensitive outputs), run:
+
+```bash
+python3 scripts/letter-check.py path/to/letter.docx             # 11pt expected
+python3 scripts/letter-check.py --medicare path/to/letter.docx  # 12pt expected
+```
+
+The checker reports pass/fail for: approved font family (Calibri / DIN 2014 / Arial), point size, single-spacing, 1" top/bottom + 1.25" left/right margins, left-justification, and logo-bearing header presence. Exit code `0` means all mechanical checks pass.
+
+**Known caveat:** the default `reference.docx` produces **12pt body** and **1.0" right margin** — great for general memos, but off-spec for the strict Letter Checklist. For a Letter-Checklist-compliant build, use the opt-in `--template=proposal-report` route OR fix the source before delivery.
 
 ## Organization Quick Reference
 
@@ -54,6 +118,15 @@ Comprehensive reference for Oliver Ames's work at BCBS VT. This skill consolidat
 | 401(k) | 12.6% total at 6% employee contribution |
 | Start Date | March 2026 |
 
+## Scripts
+
+Operational tools live in `scripts/` at the skill root. Run them — don't reinvent their checks in-line.
+
+| File | Purpose |
+|------|---------|
+| `scripts/brand-lint.py` | Flag forbidden names, self-references, phone-without-TTY, em-dash mis-use, and top inclusive-language violations in draft markdown or plain text. Run before delivering any draft. |
+| `scripts/letter-check.py` | Verify a built `.docx` against the authoritative Letter Checklist format section (font, size, line spacing, margins, alignment, logo). |
+
 ## Data Files
 
 All reference data lives in `data/` next to this file. Load as needed — don't load everything upfront.
@@ -61,8 +134,10 @@ All reference data lives in `data/` next to this file. Load as needed — don't 
 ### Brand & Voice
 | File | Contents |
 |------|----------|
-| `data/brand/brand-voice.md` | Full writing guide with verbatim examples |
-| `data/brand/visual-identity.md` | Colors, typography, logo usage |
+| **`data/brand/authoritative-brand-style-guide-2025-10.md`** | **AUTHORITATIVE. Visual identity, colors, logos, typography, co-branding, derivative marks (from the Oct 2025 Brand Style Guide PDF).** |
+| **`data/brand/authoritative-writing-and-tone-guide.md`** | **AUTHORITATIVE. Voice, tone, grammar mechanics, inclusive-language lists, letter/email checklists, word list (from the Writing and Tone Style Guide PDF).** |
+| `data/brand/brand-voice.md` | Legacy — full writing guide with verbatim examples. Use for historical context; defer to authoritative file for rules. |
+| `data/brand/visual-identity.md` | Legacy — earlier colors/typography/logo usage. Defer to authoritative brand style guide for exact values. |
 | `data/brand/content-by-channel.md` | Channel-specific rules (web, email, social, print, press) |
 | `data/brand/messaging-pillars.md` | Key messages by audience with do/don't comparisons |
 | `data/brand/social-content-archive.md` | Real captions with engagement data, top-performing patterns |
@@ -99,15 +174,34 @@ All reference data lives in `data/` next to this file. Load as needed — don't 
 | `data/social/annual-themes.md` | Annual content calendar: health observances, seasonal themes, events |
 
 ### Letterhead
-| File | Contents |
-|------|----------|
-| `data/letterhead/assets/reference.docx` | Branded pandoc reference template |
-| `data/letterhead/scripts/build-letterhead.sh` | Build script for branded .docx |
-| `data/letterhead/scripts/style-reference-doc.py` | Python script to regenerate reference.docx |
 
-**Letterhead usage:**
+Two templates are available. **Default to the simple `reference.docx` unless the user explicitly asks for a proposal-report style.**
+
+| File | Role | Contents |
+|------|------|----------|
+| `data/letterhead/assets/reference.docx` | **DEFAULT** | Simple Blue Cross VT pandoc reference — best for letters, member communications, and short-form documents. Built by `style-reference-doc.py`. |
+| `data/letterhead/assets/reference-proposal-report.docx` | Opt-in | Formal template with the Proposal Report header band (BCBS logo + title area). Use only when the user asks for a "report," "proposal," "strategy document," or similar formal artifact. Built by `style-proposal-report.py` from the .dotx below. |
+| `data/letterhead/assets/proposal-report-template.dotx` | Source | Authoritative Blue Cross VT Proposal Report Portrait Template (Word .dotx). Copy of the canonical file in `~/Documents/BCBS/Templates/`. Do not edit directly — regenerate the reference docx via `style-proposal-report.py`. |
+| `data/letterhead/scripts/build-letterhead.sh` | Build | Runs pandoc against the selected reference doc. Accepts `--template=default` (implicit) or `--template=proposal-report`. |
+| `data/letterhead/scripts/style-reference-doc.py` | Regenerate default | Python script that styles `reference.docx` with Blue Cross VT colors, fonts, and margins. |
+| `data/letterhead/scripts/style-proposal-report.py` | Regenerate opt-in | Python script that converts the .dotx to .docx, strips placeholder body, applies the authoritative palette, and writes the footer. |
+
+**Letterhead usage (default, simple letterhead):**
 ```bash
-pandoc input.md --reference-doc=data/letterhead/assets/reference.docx -o output.docx
+bash data/letterhead/scripts/build-letterhead.sh input.md output.docx
+```
+
+**Letterhead usage (opt-in proposal/report template):**
+```bash
+bash data/letterhead/scripts/build-letterhead.sh --template=proposal-report input.md output.docx
+```
+
+Both outputs inherit Calibri 11pt body, Arial blue headings, and the Independent Licensee footer disclosure. The proposal-report template additionally carries the formal header band with the BCBS logo.
+
+**To regenerate either reference doc** (after brand changes or a template update):
+```bash
+python3 data/letterhead/scripts/style-reference-doc.py          # default
+python3 data/letterhead/scripts/style-proposal-report.py        # opt-in
 ```
 
 ## Source Documents on Disk

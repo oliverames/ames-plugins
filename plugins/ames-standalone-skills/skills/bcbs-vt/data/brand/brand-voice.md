@@ -367,7 +367,7 @@ Facebook content is not publicly crawlable. Voice derived from campaign copy and
 
 ## Advocacy Voice: VT Affordable Care Campaign
 
-Launched Dec 2025. Coalition: BCBSVT + Northwestern Medical Center + Green Mountain Surgery Center + Vermont OPEN Imaging + Vermont Diagnostic Imaging. Site: vtaffordablecare.com
+Launched Dec 2025. Coalition: Blue Cross VT + Northwestern Medical Center + Green Mountain Surgery Center + Vermont OPEN Imaging + Vermont Diagnostic Imaging. Site: vtaffordablecare.com
 
 **Campaign tagline:** "Each of us can help lower the cost of our health care without sacrificing quality."
 

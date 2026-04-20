@@ -4,15 +4,15 @@
 
 | Name | Hex | Use |
 |------|-----|-----|
-| Primary Blue | `#0075c9` | Primary brand color — buttons, links, headlines, accents |
-| Dark Blue / Midnight | `#003867` | Headers, dark backgrounds, formal documents |
-| Light Blue / Cornflower | `#93cbee` | Backgrounds, secondary accents, light UI elements |
+| Primary Blue | `#0077C8` | Primary brand color — buttons, links, headlines, accents |
+| Dark Blue / Midnight | `#00467B` | Headers, dark backgrounds, formal documents |
+| Light Blue / Cornflower | `#99D6EA` | Backgrounds, secondary accents, light UI elements |
 | White | `#FFFFFF` | Body text backgrounds, reversed text on dark blue |
 | Black / Near-black | `#1a1a1a` | Body text |
 
 **Usage notes:**
 - Never use blue text on blue backgrounds
-- Primary Blue `#0075c9` is the go-to for brand accents; use Dark Blue for heavier/more formal contexts (letterhead, reports)
+- Primary Blue `#0077C8` is the go-to for brand accents; use Dark Blue for heavier/more formal contexts (letterhead, reports)
 - Light Blue works well for section backgrounds in web and email
 
 ---
@@ -22,9 +22,9 @@
 | Role | Font | Notes |
 |------|------|-------|
 | Display / Headlines | **DIN 2014** | Bold or Demi weight for major headlines |
-| Body / UI | **Droid Sans Regular** | Web body copy, UI labels |
+| Body / UI | **Calibri Regular** | Web body copy, UI labels |
 | Fallback (if DIN 2014 unavailable) | Arial / Helvetica Neue | Sans-serif geometric alternatives |
-| Fallback (if Droid Sans unavailable) | Open Sans / Georgia | For body text |
+| Fallback (if Calibri unavailable) | Arial or Open Sans | Per authoritative Writing and Tone Style Guide, Calibri / DIN 2014 / Arial are the approved body/internal fonts |
 
 **DIN 2014 notes:**
 - DIN 2014 is a geometric humanist sans-serif — clean, modern, readable
@@ -34,11 +34,11 @@
 
 **Hierarchy example:**
 ```
-H1 — DIN 2014 Bold, 32–40px, Dark Blue #003867
-H2 — DIN 2014 Demi, 24–28px, Primary Blue #0075c9
-H3 — DIN 2014 Regular, 18–20px, Dark Blue #003867
-Body — Droid Sans Regular, 14–16px, #1a1a1a
-Caption/Meta — Droid Sans Regular, 12px, #666666
+H1 — DIN 2014 Bold, 32–40px, Dark Blue #00467B
+H2 — DIN 2014 Demi, 24–28px, Primary Blue #0077C8
+H3 — DIN 2014 Regular, 18–20px, Dark Blue #00467B
+Body — Calibri Regular, 14–16px, #1a1a1a
+Caption/Meta — Calibri Regular, 12px, #666666
 ```
 
 ---
@@ -78,7 +78,7 @@ Caption/Meta — Droid Sans Regular, 12px, #666666
 
 ## Print Materials
 
-- **Letterhead:** Dark Blue (`#003867`) header bar, logo top-left, contact info bottom
+- **Letterhead:** Dark Blue (`#00467B`) header bar, logo top-left, contact info bottom
 - **Body font size:** 11–12pt for business letters; 10pt for dense documents
 - **Margins:** 1-inch standard; 1.25-inch for formal correspondence
 - **Paper:** White, 24lb bond minimum for letterhead
@@ -87,8 +87,8 @@ Caption/Meta — Droid Sans Regular, 12px, #666666
 
 ## Email Design
 
-- **Header:** Blue (`#0075c9`) background with white logo
+- **Header:** Blue (`#0077C8`) background with white logo
 - **Body:** White background, dark body text
-- **CTA buttons:** Primary Blue (`#0075c9`), white text, rounded corners
+- **CTA buttons:** Primary Blue (`#0077C8`), white text, rounded corners
 - **Footer:** Light gray background, include "An Independent Licensee of the Blue Cross and Blue Shield Association"
 - **Mobile-first:** 600px max width, 16px minimum font size for body

@@ -224,12 +224,12 @@ If Blue Cross VT were a person, they would be a trusted Vermont neighbor — som
 
 | Element | Value |
 |---------|-------|
-| Primary Blue | `#0075c9` — buttons, links, headlines, accents |
-| Dark Blue / Midnight | `#003867` — headers, dark backgrounds, formal docs |
-| Light Blue / Cornflower | `#93cbee` — backgrounds, secondary accents |
-| Headline font | DIN 2014 (Bold/Demi) |
-| Body font | Droid Sans Regular |
-| Fallback | Arial / Helvetica Neue (headlines), Open Sans / Georgia (body) |
+| Primary Blue | `#0077C8` (PMS 3005 C) — buttons, links, headlines, accents. Must be the dominant color. |
+| Dark Blue / Web Dark | `#00467B` — headers, dark backgrounds, formal docs |
+| Sky Blue | `#99D6EA` (PMS 2975 C) — backgrounds, secondary accents |
+| Headline font | DIN 2014 (Bold/Demi), or Arial where DIN is unavailable |
+| Body font | Calibri |
+| Fallback | Arial / Helvetica Neue (headlines), Arial or Open Sans (body) |
 
 ---
 
