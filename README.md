@@ -86,7 +86,7 @@ Seven plugins ship in this marketplace:
 
 | Plugin | Hosts | Version | Summary |
 |--------|-------|---------|---------|
-| [`ames-standalone-skills`](plugins/ames-standalone-skills/) | Claude + Codex | 3.3.0 | Oliver's original skill pack (28 skills) |
+| [`ames-standalone-skills`](plugins/ames-standalone-skills/) | Claude + Codex | 3.5.0 | Oliver's original skill pack (28 skills) |
 | [`ames-preferred-mcps`](plugins/ames-preferred-mcps/) | Claude + Codex | 1.4.0 | 16 curated third-party MCP servers |
 | [`ames-ynab`](plugins/ames-ynab/) | Claude + Codex | 2.0.0 | Custom YNAB MCP connector |
 | [`ames-lytho`](plugins/ames-lytho/) | Claude + Codex | 1.0.0 | Custom Lytho Workflow MCP connector |
