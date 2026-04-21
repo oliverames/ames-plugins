@@ -35,7 +35,7 @@
     },
     {
       "name": "ames-ynab",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "description": "YNAB (You Need A Budget) MCP connector built and maintained by Oliver Ames. Installing this plugin activates the ynab-mcp-server MCP, providing full read/write access to YNAB budgets, transactions, categories, scheduled transactions, and payees.",
       "source": "./plugins/ames-ynab"
     },
