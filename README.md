@@ -5,9 +5,9 @@
 </p>
 
 <p align="center">
-  <code>7 plugins</code> &bull;
+  <code>5 plugins</code> &bull;
   <code>46 skills</code> &bull;
-  <code>15 MCP servers</code> &bull;
+  <code>13 MCP servers</code> &bull;
   <code>dual-host</code>
 </p>
 
@@ -41,13 +41,16 @@ ames-claude takes the additive route. One tree, two manifest namespaces, identic
     "ames-claude": {
       "source": { "source": "github", "repo": "oliverames/ames-claude" },
       "autoUpdate": true
+    },
+    "ames-connectors": {
+      "source": { "source": "github", "repo": "oliverames/ames-connectors" },
+      "autoUpdate": true
     }
   },
   "enabledPlugins": {
     "ames-standalone-skills@ames-claude": true,
     "ames-preferred-mcps@ames-claude": true,
-    "ames-ynab@ames-claude": true,
-    "ames-lytho@ames-claude": true,
+    "ames-ynab@ames-connectors": true,
     "ames-community-skills@ames-claude": true,
     "build-ios-apps-codex@ames-claude": true,
     "build-macos-apps-codex@ames-claude": true
@@ -61,10 +64,10 @@ Restart Claude Code. The marketplace registers, plugins install, and `autoUpdate
 
 ```
 /plugin marketplace add oliverames/ames-claude
+/plugin marketplace add oliverames/ames-connectors
 /plugin install ames-standalone-skills@ames-claude
 /plugin install ames-preferred-mcps@ames-claude
-/plugin install ames-ynab@ames-claude
-/plugin install ames-lytho@ames-claude
+/plugin install ames-ynab@ames-connectors
 /plugin install ames-community-skills@ames-claude
 /plugin install build-ios-apps-codex@ames-claude
 /plugin install build-macos-apps-codex@ames-claude
@@ -82,14 +85,14 @@ Then install plugins through Codex's plugin UI or CLI. `build-ios-apps-codex` an
 
 ## Plugins
 
-Seven plugins ship in this marketplace:
+Five plugins ship in this marketplace:
+
+Custom first-party MCP connectors moved to [ames-connectors](https://github.com/oliverames/ames-connectors), which now owns `ames-ynab` and `ames-lytho`.
 
 | Plugin | Hosts | Version | Summary |
 |--------|-------|---------|---------|
 | [`ames-standalone-skills`](plugins/ames-standalone-skills/) | Claude + Codex | 3.5.0 | Oliver's original skill pack (28 skills) |
 | [`ames-preferred-mcps`](plugins/ames-preferred-mcps/) | Claude + Codex | 2.0.0 | 13 curated third-party MCP servers |
-| [`ames-ynab`](plugins/ames-ynab/) | Claude + Codex | 2.0.0 | Custom YNAB MCP connector |
-| [`ames-lytho`](plugins/ames-lytho/) | Claude + Codex | 1.0.0 | Custom Lytho Workflow MCP connector |
 | [`ames-community-skills`](plugins/ames-community-skills/) | Claude + Codex | 2.0.0 | Third-party skills without upstream marketplaces |
 | [`build-ios-apps-codex`](plugins/build-ios-apps-codex/) | **Claude only** | 1.0.0 | 6 iOS dev skills converted from OpenAI's Codex plugin |
 | [`build-macos-apps-codex`](plugins/build-macos-apps-codex/) | **Claude only** | 1.0.0 | 11 macOS dev skills + 3 commands converted from OpenAI's Codex plugin |
@@ -119,18 +122,6 @@ A single plugin that activates 13 curated third-party MCP servers:
 | `XcodeBuildMCP` | Xcode build/run/test for simulators and devices |
 
 Some servers depend on locally installed apps or additional credentials.
-
-### `ames-ynab`
-
-Activates `ynab-mcp-server` (published as `@oliverames/ynab-mcp-server` on npm) for read and write access to YNAB budgets, transactions, categories, scheduled transactions, and payees.
-
-**Required env:** `YNAB_API_TOKEN`
-
-### `ames-lytho`
-
-Activates `lytho-mcp-server` (published as `@oliverames/lytho-mcp-server` on npm) for read and write access to Lytho work requests, tasks, proofs, projects, campaigns, and preferences through the Lytho Open API.
-
-**Required env:** `LYTHO_CLIENT_ID`, `LYTHO_CLIENT_SECRET`, `LYTHO_TOKEN_URL`
 
 ### `ames-community-skills`
 
@@ -198,12 +189,10 @@ Plus 6 skills in `build-ios-apps-codex`, 11 skills (+ 3 commands) in `build-maco
 
 ## MCP servers catalog
 
-15 MCP servers across three plugins:
+13 MCP servers in `ames-preferred-mcps`:
 
 | Plugin | Server | Package |
 |--------|--------|---------|
-| `ames-lytho` | `lytho-mcp-server` | [`@oliverames/lytho-mcp-server`](https://www.npmjs.com/package/@oliverames/lytho-mcp-server) |
-| `ames-ynab` | `ynab-mcp-server` | [`@oliverames/ynab-mcp-server`](https://www.npmjs.com/package/@oliverames/ynab-mcp-server) |
 | `ames-preferred-mcps` | 13 third-party servers | See [plugin table](#ames-preferred-mcps) above |
 
 ## Architecture
@@ -224,8 +213,8 @@ ames-claude/
 
 | Host | Marketplace manifest | Per-plugin manifest | Plugins |
 |------|----------------------|---------------------|---------|
-| Claude Code | `.claude-plugin/marketplace.json` | `.claude-plugin/plugin.json` | 7 |
-| Codex (experimental) | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | 5 (excludes `build-ios-apps-codex`, `build-macos-apps-codex`) |
+| Claude Code | `.claude-plugin/marketplace.json` | `.claude-plugin/plugin.json` | 5 |
+| Codex (experimental) | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | 3 (excludes `build-ios-apps-codex`, `build-macos-apps-codex`, and first-party connectors now in `ames-connectors`) |
 
 ### What crosses the boundary
 
@@ -245,10 +234,6 @@ Per-plugin environment requirements:
 
 | Plugin | Variable | Required | Purpose |
 |--------|----------|----------|---------|
-| `ames-ynab` | `YNAB_API_TOKEN` | Yes | YNAB Personal Access Token |
-| `ames-lytho` | `LYTHO_CLIENT_ID` | Yes | Lytho OAuth client ID |
-| `ames-lytho` | `LYTHO_CLIENT_SECRET` | Yes | Lytho OAuth client secret |
-| `ames-lytho` | `LYTHO_TOKEN_URL` | Yes | Lytho OAuth token endpoint |
 | `ames-preferred-mcps` | varies | varies | Some servers require their own credentials or apps |
 
 Credentials are never stored in the repo. MCPs reference environment variables at runtime, with secrets resolved from the user's local configuration.
@@ -286,14 +271,15 @@ Workflow scripts at the repo root (`sync`, `bump-and-sync`) help keep these alig
 
 A complete snapshot of `~/.claude/settings.json`, documented here so this repo doubles as a rebuilding reference. **Kept in sync by the `wrap-up` skill**: any session that changes `~/.claude/settings.json` or installs or removes a plugin also updates the tables below and commits the result. If this machine died tomorrow, these tables plus a fresh `~/.claude/settings.json` would reconstruct the environment.
 
-### Installed marketplaces (15 total)
+### Installed marketplaces (16 total)
 
-14 marketplaces declared in `extraKnownMarketplaces` (all with `autoUpdate: true`), plus `claude-plugins-official` as the built-in default.
+15 marketplaces declared in `extraKnownMarketplaces` (all with `autoUpdate: true`), plus `claude-plugins-official` as the built-in default.
 
 | Marketplace | Source | Why it's installed |
 |-------------|--------|--------------------|
 | `claude-plugins-official` | [`anthropics/claude-plugins-official`](https://github.com/anthropics/claude-plugins-official) | Built-in default. Anthropic's official curated plugin directory |
-| `ames-claude` | [`oliverames/ames-claude`](https://github.com/oliverames/ames-claude) | This repo. Oliver's personal plugin marketplace |
+| `ames-claude` | [`oliverames/ames-claude`](https://github.com/oliverames/ames-claude) | This repo. Oliver's personal skill and workflow marketplace |
+| `ames-connectors` | [`oliverames/ames-connectors`](https://github.com/oliverames/ames-connectors) | Oliver's first-party MCP connector marketplace |
 | `claude-community` | [`anthropics/claude-plugins-community`](https://github.com/anthropics/claude-plugins-community) | Anthropic-stewarded community plugins |
 | `anthropic-agent-skills` | [`anthropics/skills`](https://github.com/anthropics/skills) | Anthropic's open-source Agent Skills (Claude API, document skills) |
 | `knowledge-work-plugins` | [`anthropics/knowledge-work-plugins`](https://github.com/anthropics/knowledge-work-plugins) | Anthropic's knowledge-work plugins (PDF viewer, SEO, ads) |
@@ -341,7 +327,9 @@ Grouped by source marketplace. Each `plugin@marketplace` key in `enabledPlugins`
 | `mcp-server-dev` | Build MCP servers and apps |
 | `gopls-lsp` | Go language server |
 
-**`ames-claude` (4 of 7 available enabled):** `ames-standalone-skills`, `ames-preferred-mcps`, `ames-ynab`, `ames-community-skills`. The remaining three plugins (`ames-lytho`, `build-ios-apps-codex`, `build-macos-apps-codex`) are published in the marketplace but not currently enabled at the user level. The next `wrap-up` session will reconcile `~/.claude/settings.json` against the marketplace and may enable/disable plugins accordingly.
+**`ames-claude` (3 of 5 available enabled):** `ames-standalone-skills`, `ames-preferred-mcps`, `ames-community-skills`. The remaining two plugins (`build-ios-apps-codex`, `build-macos-apps-codex`) are published in the marketplace but not currently enabled at the user level. The next `wrap-up` session will reconcile `~/.claude/settings.json` against the marketplace and may enable/disable plugins accordingly.
+
+**`ames-connectors` (1 of 2 available enabled):** `ames-ynab`. `ames-lytho` is available in the connector marketplace but not currently enabled at the user level.
 
 **`knowledge-work-plugins` (3):** `adspirer-ads-agent` (ad campaign analytics), `pdf-viewer` (interactive PDF), `searchfit-seo` (SEO audits and content strategy)
 
@@ -372,14 +360,7 @@ Defined in `env` block of `~/.claude/settings.json` and at session launch. `OP_S
 
 **Plugin credentials (set in shell, not in settings.json):**
 
-| Variable | Used by | Source |
-|----------|---------|--------|
-| `YNAB_API_TOKEN` | `ames-ynab` | YNAB Personal Access Token, create at https://app.ynab.com/settings/developer |
-| `LYTHO_CLIENT_ID` | `ames-lytho` | Lytho OAuth client ID |
-| `LYTHO_CLIENT_SECRET` | `ames-lytho` | Lytho OAuth client secret |
-| `LYTHO_TOKEN_URL` | `ames-lytho` | Lytho OAuth token endpoint |
-
-Other plugin-specific credentials (for servers in `ames-preferred-mcps` and some third-party plugins) are resolved at runtime through local configuration rather than stored in the repo.
+Connector-specific credentials now live with [ames-connectors](https://github.com/oliverames/ames-connectors). Other plugin-specific credentials (for servers in `ames-preferred-mcps` and some third-party plugins) are resolved at runtime through local configuration rather than stored in the repo.
 
 ### Permissions
 
