@@ -16,12 +16,6 @@
       "source": "./plugins/ames-community-skills"
     },
     {
-      "name": "ames-lytho",
-      "version": "1.0.0",
-      "description": "Lytho Workflow MCP connector built and maintained by Oliver Ames. Installing this plugin activates the lytho-mcp-server MCP, providing full read/write access to Lytho work requests, tasks, proofs, projects, campaigns, and preferences via the Lytho Open API.",
-      "source": "./plugins/ames-lytho"
-    },
-    {
       "name": "ames-preferred-mcps",
       "version": "2.0.0",
       "description": "Preferred third-party MCP servers curated by Oliver Ames. Includes Apple Docs, Apple Notifier, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, XcodeBuild, iMCP, Sim Genie, and Sosumi integrations. Run sync-sources to install or update non-npm dependencies.",
@@ -32,12 +26,6 @@
       "version": "3.5.0",
       "description": "Oliver's original Claude Code skills covering writing, development, automation, finance, and AI tools (29 skills)",
       "source": "./plugins/ames-standalone-skills"
-    },
-    {
-      "name": "ames-ynab",
-      "version": "2.0.1",
-      "description": "YNAB (You Need A Budget) MCP connector built and maintained by Oliver Ames. Installing this plugin activates the ynab-mcp-server MCP, providing full read/write access to YNAB budgets, transactions, categories, scheduled transactions, and payees.",
-      "source": "./plugins/ames-ynab"
     },
     {
       "name": "build-ios-apps-codex",
