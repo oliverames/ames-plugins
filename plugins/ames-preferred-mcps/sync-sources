@@ -4,7 +4,6 @@
 npm/uvx-based servers self-update via @latest — this script handles
 the remaining dependencies that require explicit installation:
   - iMCP        (macOS app, Homebrew cask)
-  - shortcuts   (Swift binary, mise + ubi)
   - pandoc      (system dependency for mcp-pandoc)
 
 Not managed here (no CLI update path):
@@ -84,15 +83,6 @@ def install_pandoc() -> None:
     _success("pandoc")
 
 
-def install_shortcuts_mcp() -> None:
-    if not check_tool("mise"):
-        _warn("mise not installed — install from https://mise.jdx.dev")
-        return
-    _step("Updating shortcuts-mcp-server via mise...")
-    run(["mise", "install", "ubi:artemnovichkov/shortcuts-mcp-server@latest"], check=False)
-    _success("shortcuts-mcp-server")
-
-
 def check_npm_versions() -> None:
     if not check_tool("npm"):
         return
@@ -122,9 +112,6 @@ def main() -> None:
 
     _section("pandoc  (required by mcp-pandoc)")
     install_pandoc()
-
-    _section("shortcuts-mcp-server  (Swift binary via mise)")
-    install_shortcuts_mcp()
 
     _section("npm package versions  (self-update via @latest)")
     _dim("These update automatically on next Claude launch:")

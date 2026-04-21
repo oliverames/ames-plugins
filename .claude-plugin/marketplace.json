@@ -23,8 +23,8 @@
     },
     {
       "name": "ames-preferred-mcps",
-      "version": "1.4.0",
-      "description": "Preferred third-party MCP servers curated by Oliver Ames. Includes 1Password, Apple Docs, Apple Notifier, Docling, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, Shortcuts, XcodeBuild, iMCP, Sim Genie, and Sosumi integrations. Run sync-sources to install or update non-npm dependencies.",
+      "version": "2.0.0",
+      "description": "Preferred third-party MCP servers curated by Oliver Ames. Includes Apple Docs, Apple Notifier, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, XcodeBuild, iMCP, Sim Genie, and Sosumi integrations. Run sync-sources to install or update non-npm dependencies.",
       "source": "./plugins/ames-preferred-mcps"
     },
     {

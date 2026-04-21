@@ -1,6 +1,6 @@
 # ames-Codex
 
-Oliver's personal plugin marketplace for Codex with experimental Codex dual-host support. Ships 7 plugins, 46 skills, 18 MCP servers.
+Oliver's personal plugin marketplace for Codex with experimental Codex dual-host support. Ships 7 plugins, 46 skills, 15 MCP servers.
 
 ## Structure
 
@@ -43,7 +43,7 @@ When bumping a plugin version, update all three spots: `plugins/<name>/.Codex-pl
 | Plugin | Hosts | Description |
 |--------|-------|-------------|
 | `ames-standalone-skills` | Codex + Codex | 28 original skills covering writing, dev, Apple workflows, finance, automation |
-| `ames-preferred-mcps` | Codex + Codex | 16 curated third-party MCP servers (1Password, Apple Docs, Drafts, Excel, Google Workspace, XcodeBuildMCP, etc.) |
+| `ames-preferred-mcps` | Codex + Codex | 13 curated third-party MCP servers (Apple Docs, Drafts, Excel, Google Workspace, XcodeBuildMCP, etc.) |
 | `ames-ynab` | Codex + Codex | Custom YNAB MCP connector (`@oliverames/ynab-mcp-server`) |
 | `ames-lytho` | Codex + Codex | Custom Lytho Workflow MCP connector (`@oliverames/lytho-mcp-server`) |
 | `ames-community-skills` | Codex + Codex | Third-party skills without upstream marketplaces (currently 1: humanizer by blader) |

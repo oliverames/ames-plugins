@@ -1,8 +1,4 @@
 {
-  "1password": {
-    "command": "npx",
-    "args": ["-y", "@takescake/1password-mcp"]
-  },
   "apple-docs": {
     "command": "npx",
     "args": ["-y", "@kimsungwhee/apple-docs-mcp@latest"]
@@ -10,10 +6,6 @@
   "apple-notifier": {
     "command": "npx",
     "args": ["-y", "apple-notifier-mcp@latest"]
-  },
-  "docling": {
-    "command": "uvx",
-    "args": ["--from=docling-mcp", "docling-mcp-server"]
   },
   "drafts": {
     "command": "npx",
@@ -42,10 +34,6 @@
   "peekaboo": {
     "command": "npx",
     "args": ["-y", "@steipete/peekaboo@latest", "mcp"]
-  },
-  "shortcuts": {
-    "command": "mise",
-    "args": ["x", "ubi:artemnovichkov/shortcuts-mcp-server@latest", "--", "shortcuts-mcp-server"]
   },
   "XcodeBuildMCP": {
     "command": "npx",

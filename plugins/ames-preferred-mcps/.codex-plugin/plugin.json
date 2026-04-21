@@ -1,7 +1,7 @@
 {
   "name": "ames-preferred-mcps",
-  "version": "1.4.0",
-  "description": "Preferred third-party MCP servers curated by Oliver Ames. Includes 1Password, Apple Docs, Apple Notifier, Docling, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, Shortcuts, XcodeBuild, iMCP, Sim Genie, and Sosumi integrations.",
+  "version": "2.0.0",
+  "description": "Preferred third-party MCP servers curated by Oliver Ames. Includes Apple Docs, Apple Notifier, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, XcodeBuild, iMCP, Sim Genie, and Sosumi integrations.",
   "author": {
     "name": "Oliver Ames",
     "email": "oliverames@gmail.com",
@@ -11,17 +11,14 @@
   "repository": "https://github.com/oliverames/ames-claude",
   "keywords": [
     "mcp",
-    "1password",
     "apple-docs",
     "apple-notifier",
-    "docling",
     "drafts",
     "excel",
     "google-workspace",
     "macos-automator",
     "pandoc",
     "peekaboo",
-    "shortcuts",
     "xcodebuild",
     "imcp",
     "simgenie",
@@ -33,7 +30,7 @@
   "interface": {
     "displayName": "Preferred MCPs",
     "shortDescription": "Curated MCP server pack for Apple, docs, productivity, and local tooling.",
-    "longDescription": "A curated bundle of Oliver's preferred MCP servers, including 1Password, Apple Docs, Apple Notifier, Docling, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, Shortcuts, XcodeBuildMCP, iMCP, Sim Genie, and Sosumi. Some servers require local apps or credentials.",
+    "longDescription": "A curated bundle of Oliver's preferred MCP servers, including Apple Docs, Apple Notifier, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, XcodeBuildMCP, iMCP, Sim Genie, and Sosumi. Some servers require local apps or credentials.",
     "developerName": "Oliver Ames",
     "category": "Developer Tools",
     "capabilities": [

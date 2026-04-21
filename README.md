@@ -7,7 +7,7 @@
 <p align="center">
   <code>7 plugins</code> &bull;
   <code>46 skills</code> &bull;
-  <code>18 MCP servers</code> &bull;
+  <code>15 MCP servers</code> &bull;
   <code>dual-host</code>
 </p>
 
@@ -87,7 +87,7 @@ Seven plugins ship in this marketplace:
 | Plugin | Hosts | Version | Summary |
 |--------|-------|---------|---------|
 | [`ames-standalone-skills`](plugins/ames-standalone-skills/) | Claude + Codex | 3.5.0 | Oliver's original skill pack (28 skills) |
-| [`ames-preferred-mcps`](plugins/ames-preferred-mcps/) | Claude + Codex | 1.4.0 | 16 curated third-party MCP servers |
+| [`ames-preferred-mcps`](plugins/ames-preferred-mcps/) | Claude + Codex | 2.0.0 | 13 curated third-party MCP servers |
 | [`ames-ynab`](plugins/ames-ynab/) | Claude + Codex | 2.0.0 | Custom YNAB MCP connector |
 | [`ames-lytho`](plugins/ames-lytho/) | Claude + Codex | 1.0.0 | Custom Lytho Workflow MCP connector |
 | [`ames-community-skills`](plugins/ames-community-skills/) | Claude + Codex | 2.0.0 | Third-party skills without upstream marketplaces |
@@ -100,14 +100,12 @@ Oliver's original Claude Code skills covering writing, development, automation, 
 
 ### `ames-preferred-mcps`
 
-A single plugin that activates 16 curated third-party MCP servers:
+A single plugin that activates 13 curated third-party MCP servers:
 
 | MCP | Purpose |
 |-----|---------|
-| `1password` | 1Password credential lookup and password generation |
 | `apple-docs` | Apple Developer documentation search and WWDC lookup |
 | `apple-notifier` | Native macOS notifications, speech, screen capture |
-| `docling` | Document parsing and conversion |
 | `drafts` | Drafts.app integration for note capture |
 | `excel` | Excel workbook manipulation |
 | `google-workspace` | Gmail, Calendar, Drive, Docs, Sheets, Tasks, Meet |
@@ -116,7 +114,6 @@ A single plugin that activates 16 curated third-party MCP servers:
 | `markitdown` | Convert files to Markdown |
 | `pandoc` | Universal document conversion |
 | `peekaboo` | macOS UI automation and screen capture |
-| `shortcuts` | List and run Apple Shortcuts |
 | `SimGenie` | iOS Simulator helpers |
 | `sosumi` | Apple documentation fetcher |
 | `XcodeBuildMCP` | Xcode build/run/test for simulators and devices |
@@ -201,13 +198,13 @@ Plus 6 skills in `build-ios-apps-codex`, 11 skills (+ 3 commands) in `build-maco
 
 ## MCP servers catalog
 
-18 MCP servers across three plugins:
+15 MCP servers across three plugins:
 
 | Plugin | Server | Package |
 |--------|--------|---------|
 | `ames-lytho` | `lytho-mcp-server` | [`@oliverames/lytho-mcp-server`](https://www.npmjs.com/package/@oliverames/lytho-mcp-server) |
 | `ames-ynab` | `ynab-mcp-server` | [`@oliverames/ynab-mcp-server`](https://www.npmjs.com/package/@oliverames/ynab-mcp-server) |
-| `ames-preferred-mcps` | 16 third-party servers | See [plugin table](#ames-preferred-mcps) above |
+| `ames-preferred-mcps` | 13 third-party servers | See [plugin table](#ames-preferred-mcps) above |
 
 ## Architecture
 
@@ -254,7 +251,7 @@ Per-plugin environment requirements:
 | `ames-lytho` | `LYTHO_TOKEN_URL` | Yes | Lytho OAuth token endpoint |
 | `ames-preferred-mcps` | varies | varies | Some servers require their own credentials or apps |
 
-Credentials are never stored in the repo. All MCPs reference environment variables at runtime, and `ames-preferred-mcps` includes a `1password` MCP for credential resolution via `op read`.
+Credentials are never stored in the repo. MCPs reference environment variables at runtime, with secrets resolved from the user's local configuration.
 
 ## Versioning
 
@@ -382,7 +379,7 @@ Defined in `env` block of `~/.claude/settings.json` and at session launch. `OP_S
 | `LYTHO_CLIENT_SECRET` | `ames-lytho` | Lytho OAuth client secret |
 | `LYTHO_TOKEN_URL` | `ames-lytho` | Lytho OAuth token endpoint |
 
-Other plugin-specific credentials (for servers in `ames-preferred-mcps` and some third-party plugins) are resolved at runtime via the `1password` MCP rather than exported shell variables.
+Other plugin-specific credentials (for servers in `ames-preferred-mcps` and some third-party plugins) are resolved at runtime through local configuration rather than stored in the repo.
 
 ### Permissions
 
