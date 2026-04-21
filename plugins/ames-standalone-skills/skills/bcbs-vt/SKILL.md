@@ -10,13 +10,13 @@ description: >
   "create a social post", "plan social posts", "build a content calendar",
   "write in the Blue Cross Vermont style", "draft a press release",
   "write marketing copy", "review content for brand accuracy",
-  "create a letterhead document", "make a .docx letterhead",
+  "create a memo", "create a letterhead document", "make a .docx letterhead",
   "my benefits", "Blue Cross VT employee benefits", "how much PTO do I have",
   "401k at Blue Cross", "health insurance at Blue Cross VT",
   "remote work policy", "triage a ticket", "draft a customer response",
   "write a KB article", "campaign plan for Blue Cross",
   "BCBS VT", "Blue Cross Vermont".
-version: 1.2.0
+version: 1.3.0
 ---
 
 # Blue Cross and Blue Shield of Vermont
@@ -39,6 +39,21 @@ Two files under `data/brand/` are the canonical sources of truth, sourced verbat
 - Writing at a **sixth-grade reading level**; single-space, left-align, Calibri/DIN 2014/Arial.
 - **Never refer to ourselves as an "insurance company"** — we're a **"health service organization."** We sell **subscriptions** (not policies); we charge **subscription rates** (not premiums); externally, "rates" works.
 - Letter checklist format: 11 pt (12 pt for Medicare), single-spaced, 1" top/bottom, **1.25" left/right** margins, logo on page one, include "over" on multi-page letters.
+
+## BCBS Operating Defaults
+
+- **Task tracking is Jira.** For BCBS action items, use the Blue Cross VT Jira
+  workspace (`bluecrossvt.atlassian.net`) and structured Jira/Atlassian MCP
+  tools. Do not use another task system unless Oliver explicitly asks for it in
+  the current request.
+- **Word deliverables use the Proposal Report Portrait template by default.**
+  Memos, reports, proposals, strategy documents, formal internal documents,
+  and polished `.docx` outputs must use
+  `data/letterhead/assets/reference-proposal-report.docx`, built from
+  `data/letterhead/assets/proposal-report-template.dotx`, which is the bundled
+  copy of `/Users/oliverames/Library/CloudStorage/OneDrive-Personal/Documents/BCBS/Templates/Proposal Report Portrait Template.dotx`.
+  Use the simple reference document only when Oliver explicitly asks for a
+  plain/simple document.
 
 ## Before Delivering Any Draft — Run the Linter
 
@@ -79,7 +94,11 @@ python3 scripts/letter-check.py --medicare path/to/letter.docx  # 12pt expected
 
 The checker reports pass/fail for: approved font family (Calibri / DIN 2014 / Arial), point size, single-spacing, 1" top/bottom + 1.25" left/right margins, left-justification, and logo-bearing header presence. Exit code `0` means all mechanical checks pass.
 
-**Known caveat:** the default `reference.docx` produces **12pt body** and **1.0" right margin** — great for general memos, but off-spec for the strict Letter Checklist. For a Letter-Checklist-compliant build, use the opt-in `--template=proposal-report` route OR fix the source before delivery.
+**Template rule:** memos and formal BCBS Word deliverables use the Proposal
+Report Portrait template by default. Run `build-letterhead.sh input.md
+output.docx`, which now selects `reference-proposal-report.docx`. Use the
+simple `reference.docx` only when Oliver explicitly asks for a plain/simple
+document.
 
 ## Organization Quick Reference
 
@@ -175,33 +194,37 @@ All reference data lives in `data/` next to this file. Load as needed — don't 
 
 ### Letterhead
 
-Two templates are available. **Default to the simple `reference.docx` unless the user explicitly asks for a proposal-report style.**
+Two templates are available. **Default to the Proposal Report Portrait template
+for memos, reports, proposals, strategy documents, formal internal documents,
+and polished `.docx` outputs.**
 
 | File | Role | Contents |
 |------|------|----------|
-| `data/letterhead/assets/reference.docx` | **DEFAULT** | Simple Blue Cross VT pandoc reference — best for letters, member communications, and short-form documents. Built by `style-reference-doc.py`. |
-| `data/letterhead/assets/reference-proposal-report.docx` | Opt-in | Formal template with the Proposal Report header band (BCBS logo + title area). Use only when the user asks for a "report," "proposal," "strategy document," or similar formal artifact. Built by `style-proposal-report.py` from the .dotx below. |
-| `data/letterhead/assets/proposal-report-template.dotx` | Source | Authoritative Blue Cross VT Proposal Report Portrait Template (Word .dotx). Copy of the canonical file in `~/Documents/BCBS/Templates/`. Do not edit directly — regenerate the reference docx via `style-proposal-report.py`. |
-| `data/letterhead/scripts/build-letterhead.sh` | Build | Runs pandoc against the selected reference doc. Accepts `--template=default` (implicit) or `--template=proposal-report`. |
-| `data/letterhead/scripts/style-reference-doc.py` | Regenerate default | Python script that styles `reference.docx` with Blue Cross VT colors, fonts, and margins. |
-| `data/letterhead/scripts/style-proposal-report.py` | Regenerate opt-in | Python script that converts the .dotx to .docx, strips placeholder body, applies the authoritative palette, and writes the footer. |
+| `data/letterhead/assets/reference-proposal-report.docx` | **DEFAULT** | Formal template with the Proposal Report header band (BCBS logo + title area). Use for memos, reports, proposals, strategy documents, formal internal documents, and polished `.docx` outputs. Built by `style-proposal-report.py` from the .dotx below. |
+| `data/letterhead/assets/proposal-report-template.dotx` | Source | Authoritative Blue Cross VT Proposal Report Portrait Template (Word .dotx). Copy of the canonical file at `/Users/oliverames/Library/CloudStorage/OneDrive-Personal/Documents/BCBS/Templates/Proposal Report Portrait Template.dotx` and `~/Documents/BCBS/Templates/Proposal Report Portrait Template.dotx`. Do not edit directly; regenerate the reference docx via `style-proposal-report.py`. |
+| `data/letterhead/assets/reference.docx` | Simple fallback | Simple Blue Cross VT pandoc reference for plain/simple documents only when Oliver explicitly asks for that style. Built by `style-reference-doc.py`. |
+| `data/letterhead/scripts/build-letterhead.sh` | Build | Runs pandoc against the selected reference doc. Omitting `--template` or passing `--template=default` uses the Proposal Report Portrait template. Use `--template=simple` only for explicitly requested plain/simple documents. |
+| `data/letterhead/scripts/style-proposal-report.py` | Regenerate default | Python script that converts the .dotx to .docx, strips placeholder body, applies the authoritative palette, and writes the footer. |
+| `data/letterhead/scripts/style-reference-doc.py` | Regenerate simple fallback | Python script that styles `reference.docx` with Blue Cross VT colors, fonts, and margins. |
 
-**Letterhead usage (default, simple letterhead):**
+**Letterhead usage (default Proposal Report Portrait template):**
 ```bash
 bash data/letterhead/scripts/build-letterhead.sh input.md output.docx
 ```
 
-**Letterhead usage (opt-in proposal/report template):**
+**Letterhead usage (plain/simple fallback only when explicitly requested):**
 ```bash
-bash data/letterhead/scripts/build-letterhead.sh --template=proposal-report input.md output.docx
+bash data/letterhead/scripts/build-letterhead.sh --template=simple input.md output.docx
 ```
 
-Both outputs inherit Calibri 11pt body, Arial blue headings, and the Independent Licensee footer disclosure. The proposal-report template additionally carries the formal header band with the BCBS logo.
+Both outputs inherit Calibri body text, Arial blue headings, and the Independent
+Licensee footer disclosure. The default Proposal Report Portrait template also
+carries the formal header band with the BCBS logo.
 
 **To regenerate either reference doc** (after brand changes or a template update):
 ```bash
-python3 data/letterhead/scripts/style-reference-doc.py          # default
-python3 data/letterhead/scripts/style-proposal-report.py        # opt-in
+python3 data/letterhead/scripts/style-proposal-report.py        # default
+python3 data/letterhead/scripts/style-reference-doc.py          # simple fallback
 ```
 
 ## Source Documents on Disk

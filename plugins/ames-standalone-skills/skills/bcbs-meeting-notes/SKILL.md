@@ -9,14 +9,26 @@ description: >
   SmartTranscribe finishes if the user says "now process it" or "now do the
   notes". Always invoke this skill for any BCBS meeting transcript — do not
   just summarize ad hoc.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # BCBS Meeting Notes
 
 Processes a SmartTranscribe transcript into rich, structured meeting notes,
-routes the files to the right BCBS folder, and creates Asana tasks from
+routes the files to the right BCBS folder, and creates Jira tasks from
 action items.
+
+## BCBS Operating Defaults
+
+- **Task tracking is Jira.** Use the Blue Cross VT Jira workspace
+  (`bluecrossvt.atlassian.net`) and structured Jira/Atlassian MCP tools for
+  projects, issue search, issue creation, and issue updates. Do not use another
+  task system unless Oliver explicitly asks for it in the current request.
+- **Verify Jira before acting.** Confirm the accessible Jira workspace and
+  destination project before creating or updating issues. Prefer structured
+  project and JQL tools over generic search when available.
+- **Action item tags use Jira.** Notes should use `*(→ Jira: [Project Name])*`
+  while routing and `*(→ Jira: PROJECT-123)*` after an issue exists.
 
 ## Input
 
@@ -82,9 +94,9 @@ Determine the project by:
    appears.)
 2. **Check the Projects folder** — list `~/Documents/BCBS/Projects/` and
    match by topic, not just by exact name.
-3. **Search Asana** — first call `mcp__claude_ai_Asana__get_me` to confirm
-   the workspace, then use `mcp__claude_ai_Asana__search_objects` to find
-   matching projects by keyword.
+3. **Search Jira** — confirm the Blue Cross VT Jira workspace, list visible
+   projects, then use Jira project search or JQL to find matching projects by
+   keyword. Search by topic and existing local project-folder names.
 4. **Err on the side of routing to a project.** If you can make a reasonable
    case that the meeting is about a known project's domain, route it there.
 
@@ -207,7 +219,7 @@ Do not just restate the SmartTranscribe summary.]
 ## Action Items
 
 ### Oliver
-- [ ] Task description *(→ Asana: [Project Name])*
+- [ ] Task description *(→ Jira: [Project Name])*
 
 ### [Other Person]
 - [ ] Task description
@@ -235,35 +247,45 @@ Do not just restate the SmartTranscribe summary.]
 - **Action item completeness**: Capture both explicit commitments ("I'll send
   that over") and implicit ones ("I can look into that", "let me follow up on
   X"). If someone expressed intent to do something, it is an action item.
-- **Asana tags on all action items**: Add `*(→ Asana: [Project Name])*` to
-  every action item regardless of owner — not just Oliver's. This supports
-  handoffs and accountability tracking even for tasks owned by others.
+- **Jira tags on all action items**: Add `*(→ Jira: [Project Name])*` to every
+  action item regardless of owner, not just Oliver's. After a Jira issue exists,
+  replace the project-name tag with the issue key: `*(→ Jira: PROJECT-123)*`.
+  This supports handoffs and accountability tracking even for tasks owned by
+  others.
 - **Routing context stays out of the notes file**: The notes file should read
   as a clean standalone document. Do not include routing decisions, metadata
   about where the file was moved, or skill execution notes inside it.
 
 ---
 
-## Step 4: Create Asana Tasks
+## Step 4: Create Jira Issues
 
-For each action item assigned to **Oliver**, create a task in Asana using
-`mcp__claude_ai_Asana__create_task_confirm`.
+For each action item assigned to **Oliver**, create a Jira issue in the matching
+Blue Cross VT Jira project.
 
-If you haven't already called `mcp__claude_ai_Asana__get_me` in this session,
-do so now to confirm the workspace GID before searching or creating.
+If you have not already confirmed Jira access in this session, do so now before
+searching or creating. Use structured Atlassian/Jira tools when available:
+visible-project lookup, JQL issue search, issue type metadata, issue creation,
+and issue edit/update tools. In Codex, the Atlassian Rovo tools are the
+preferred path. In other hosts, use the equivalent Jira MCP tools discovered
+through the available tool surface.
 
-Match action items to existing Asana projects using
-`mcp__claude_ai_Asana__search_objects`. If no matching project exists, create
-one that mirrors an existing BCBS project's structure:
-- Call `mcp__claude_ai_Asana__get_project` on an existing project for team,
-  color, and layout
-- Create with `mcp__claude_ai_Asana__create_project_confirm`
+Match action items to existing Jira projects using project search, local project
+folder names, and JQL searches for similar work. If no matching Jira project
+exists, do not create a new project automatically. Use the nearest valid project
+or report the ambiguity in Step 5.
+
+After creating an issue:
+- Update the note's action item tag from `*(→ Jira: [Project Name])*` to
+  `*(→ Jira: ISSUE-123)*`
+- Strike through the task text to show it is tracked in Jira:
+  `- [ ] ~~Task description~~ *(→ Jira: ISSUE-123)*`
 
 For action items assigned to others (Cass, Ashley, etc.), list them in the
-notes but do not create Asana tasks unless Oliver asks.
+notes but do not create Jira issues unless Oliver asks.
 
-If the Asana MCP is unavailable or throws an auth error, skip task creation,
-note it clearly in the Step 5 report, and continue.
+If Jira tools are unavailable or throw an auth error, skip issue creation, note
+it clearly in the Step 5 report, and continue.
 
 ---
 
@@ -273,11 +295,11 @@ note it clearly in the Step 5 report, and continue.
 Notes:       ~/Documents/BCBS/[path]/YYYY-MM-DD – Meeting Name – Notes.md
 Transcript:  ~/Documents/BCBS/[path]/YYYY-MM-DD – Meeting Name – Transcript.md  (moved)
 Audio:       [path] — awaiting confirmation to delete / deleted
-Asana:       N tasks created in [Project Name] / skipped (auth error)
+Jira:        N issues created / skipped (auth error or ambiguous project)
 ```
 
 Call out anything ambiguous (routing judgment calls, unresolved speakers,
-Asana failures) so Oliver can review.
+Jira failures) so Oliver can review.
 
 ---
 

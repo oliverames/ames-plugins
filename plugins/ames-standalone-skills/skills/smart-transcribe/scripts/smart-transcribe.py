@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-Smart Transcribe - Default-Trio Transcription with Headless Merge
-=================================================================
+Smart Transcribe - Multi-Engine Transcription with Agent Merge
+==============================================================
 
-Default transcription uses AssemblyAI Universal-3 Pro, ElevenLabs Scribe v2,
-and Cohere Transcribe (local). Merge uses headless Claude Code first and falls
-back to headless Codex when Claude is unavailable or rate-limited.
+Default transcription uses Cohere Transcribe locally plus Mistral Voxtral,
+ElevenLabs Scribe v2, and AssemblyAI Universal-3 Pro. Merge uses headless
+Claude Code first and falls back to headless Codex when Claude is unavailable
+or rate-limited.
 """
 
 import sys
@@ -32,8 +33,19 @@ from common import (
     write_status,
 )
 
-DEFAULT_ENGINES = ["assemblyai-u3-pro", "scribe-v2", "cohere-transcribe"]
-DEFAULT_FALLBACK_ENGINE = "voxtral-small"
+DEFAULT_ENGINES = ["cohere-transcribe", "voxtral-small", "scribe-v2", "assemblyai-u3-pro"]
+DEFAULT_FALLBACK_ENGINE = "gpt4o-mini-transcribe"
+LOCAL_ENGINE_IDS = {"voxtral-mini-local", "cohere-transcribe"}
+ENGINE_TIMEOUTS = {
+    "assemblyai-u3-pro": 3600,
+    "scribe-v2": 3600,
+    "voxtral-small": 3600,
+    "gemini-3-pro": 3600,
+    "gpt4o-transcribe": 3600,
+    "gpt4o-mini-transcribe": 3600,
+    "voxtral-mini-local": 900,
+    "cohere-transcribe": 900,
+}
 CANONICAL_SPEAKER_RE = re.compile(r"Speaker\s+([A-Za-z0-9_-]+)", re.IGNORECASE)
 MERGE_RATE_LIMIT_PATTERNS = (
     "rate limit",
@@ -43,6 +55,37 @@ MERGE_RATE_LIMIT_PATTERNS = (
     "capacity",
     "try again later",
 )
+
+MERGE_OUTPUT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "metadata": {
+            "type": "object",
+            "additionalProperties": True,
+            "properties": {
+                "title": {"type": "string"},
+                "speakers": {"type": "array", "items": {"type": "string"}},
+                "summary": {"type": "string"},
+                "date_mentioned": {"type": "string"},
+            },
+            "required": ["title", "speakers", "summary", "date_mentioned"],
+        },
+        "transcript": {"type": "string"},
+        "transparency_report": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "applied": {"type": "array", "items": {"type": "string"}},
+                "uncertain": {"type": "array", "items": {"type": "string"}},
+                "preserved": {"type": "array", "items": {"type": "string"}},
+            },
+            "required": ["applied", "uncertain", "preserved"],
+        },
+        "suggestions": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["metadata", "transcript", "transparency_report", "suggestions"],
+}
 
 # =============================================================================
 # PER-CONTEXT CONFIGURATION
@@ -271,8 +314,9 @@ def interactive_corrections_review(report_text: str) -> None:
         if resp == "n":
             # Parse "wrong" → "right" from the item text
             entry: dict = {"raw": item, "status": "disputed", "timestamp": datetime.now().isoformat()}
-            if "→" in item:
-                parts = item.split("→", 1)
+            arrow = "→" if "→" in item else "->" if "->" in item else None
+            if arrow:
+                parts = item.split(arrow, 1)
                 entry["wrong"] = parts[0].strip().strip('"\'')
                 right_part = parts[1].split("(")[0].strip().strip('"\'')
                 entry["right"] = right_part
@@ -388,6 +432,66 @@ def emit_manual_merge_bundle(output_dir: Path, engine_results: dict[str, dict]) 
     return bundle_path
 
 
+def emit_agent_merge_bundle(
+    output_dir: Path,
+    transcripts: dict[str, str],
+    dictionary: dict,
+    source_file: str,
+    speakers: list | None = None,
+    mode: str = "merge",
+) -> Path:
+    """Write a merge bundle for the current chat agent to consume."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    bundle_path = output_dir / "agent-merge-bundle.md"
+    corrections = list(dictionary.get("corrections", {}).items())[:200]
+    entities = list(dictionary.get("entities", []))[:100]
+    notes = list(dictionary.get("notes", []))[:60]
+
+    parts = [
+        "# Agent Merge Bundle",
+        "",
+        "## Instructions For Current Agent",
+        "",
+        "Merge the source transcript outputs into one accurate Markdown transcript. Apply dictionary corrections conservatively, preserve intentional casual speech, and put uncertain passages in a transparency report instead of guessing.",
+        "",
+        "Return or save a final transcript with: metadata, summary, transcript, transparency report, and dictionary suggestions.",
+        "",
+        "## Run Metadata",
+        "",
+        "```json",
+        json.dumps({
+            "source_file": source_file,
+            "mode": mode,
+            "speakers": speakers or [],
+            "transcript_sources": list(transcripts.keys()),
+        }, indent=2, ensure_ascii=False),
+        "```",
+        "",
+        "## Known Corrections",
+        "",
+    ]
+    if corrections:
+        parts.extend(f"- {wrong} -> {right}" for wrong, right in corrections)
+    else:
+        parts.append("_None_")
+
+    parts.extend(["", "## Known Entities", ""])
+    parts.append(", ".join(entities) if entities else "_None_")
+
+    parts.extend(["", "## Context Notes", ""])
+    if notes:
+        parts.extend(f"- {note}" for note in notes)
+    else:
+        parts.append("_None_")
+
+    parts.extend(["", "## Source Transcript Outputs", ""])
+    for label, text in transcripts.items():
+        parts.extend([f"### {label}", "", text or "_No transcript produced._", ""])
+
+    bundle_path.write_text("\n".join(parts), encoding="utf-8")
+    return bundle_path
+
+
 def build_doctor_report(
     selected_engine_ids: list[str],
     engine_python_overrides: dict[str, str] | None = None,
@@ -400,7 +504,13 @@ def build_doctor_report(
     }
     keys = {
         key: resolve_key_status(key)
-        for key in ["ASSEMBLYAI_API_KEY", "ELEVENLABS_API_KEY", "HF_TOKEN", "ANTHROPIC_API_KEY"]
+        for key in [
+            "ASSEMBLYAI_API_KEY",
+            "ELEVENLABS_API_KEY",
+            "MISTRAL_API_KEY",
+            "HF_TOKEN",
+            "ANTHROPIC_API_KEY",
+        ]
     }
     ffmpeg = check_ffmpeg_tools()
     claude_path = shutil.which("claude")
@@ -444,13 +554,14 @@ def build_doctor_report(
 def check_engine_runtime(engine_id: str, python_bin: str) -> dict:
     check_scripts = {
         "assemblyai-u3-pro": r"""
-import json
+import inspect, json
 try:
     import assemblyai as aai
+    params = list(inspect.signature(aai.TranscriptionConfig).parameters)
     print(json.dumps({
-        "ok": hasattr(aai, "Transcriber") and hasattr(aai, "SpeechModel"),
+        "ok": hasattr(aai, "Transcriber") and "speech_models" in params and "keyterms_prompt" in params,
         "runtime": "assemblyai",
-        "slam_1": hasattr(aai.SpeechModel, "slam_1"),
+        "supported_args": [name for name in params if name in ("speech_models", "speaker_labels", "speakers_expected", "keyterms_prompt")],
     }))
 except Exception as exc:
     print(json.dumps({"ok": False, "error": str(exc)}))
@@ -470,6 +581,46 @@ try:
         "runtime": "elevenlabs",
         "supported_args": [name for name in params if name in ("file", "audio")],
     }))
+except Exception as exc:
+    print(json.dumps({"ok": False, "error": str(exc)}))
+""",
+        "voxtral-small": r"""
+import inspect, json
+try:
+    from mistralai import Mistral
+    client = Mistral(api_key="test")
+    complete = getattr(getattr(client, "audio", None), "transcriptions", None)
+    complete = getattr(complete, "complete", None)
+    params = list(inspect.signature(complete).parameters) if complete else []
+    print(json.dumps({
+        "ok": bool(complete) and "context_bias" in params and "diarize" in params,
+        "runtime": "mistralai",
+        "supported_args": [name for name in params if name in ("file", "file_id", "file_url", "context_bias", "diarize", "timestamp_granularities")],
+    }))
+except Exception as exc:
+    print(json.dumps({"ok": False, "error": str(exc)}))
+""",
+        "gemini-3-pro": r"""
+import json
+try:
+    from google import genai  # noqa: F401
+    print(json.dumps({"ok": True, "runtime": "google-genai"}))
+except Exception as exc:
+    print(json.dumps({"ok": False, "error": str(exc)}))
+""",
+        "gpt4o-transcribe": r"""
+import json
+try:
+    from openai import OpenAI  # noqa: F401
+    print(json.dumps({"ok": True, "runtime": "openai"}))
+except Exception as exc:
+    print(json.dumps({"ok": False, "error": str(exc)}))
+""",
+        "gpt4o-mini-transcribe": r"""
+import json
+try:
+    from openai import OpenAI  # noqa: F401
+    print(json.dumps({"ok": True, "runtime": "openai"}))
 except Exception as exc:
     print(json.dumps({"ok": False, "error": str(exc)}))
 """,
@@ -531,10 +682,13 @@ def _is_rate_limited_merge_error(message: str) -> bool:
     return any(pattern in lowered for pattern in MERGE_RATE_LIMIT_PATTERNS)
 
 
-def _run_merge_runner(runner: str, prompt_text: str) -> tuple[str, str]:
+def _run_merge_runner(runner: str, prompt_text: str, schema_path: str | None = None) -> tuple[str, str]:
     if runner == "claude":
+        cmd = ["claude", "-p", "--model", "opus", "--effort", "medium", "--no-session-persistence"]
+        if schema_path:
+            cmd.extend(["--json-schema", Path(schema_path).read_text(encoding="utf-8")])
         result = subprocess.run(
-            ["claude", "-p", "--model", "opus", "--effort", "medium"],
+            cmd,
             input=prompt_text,
             capture_output=True,
             text=True,
@@ -561,6 +715,7 @@ def _run_merge_runner(runner: str, prompt_text: str) -> tuple[str, str]:
                     "--ephemeral",
                     "--output-last-message",
                     output_file,
+                    *(["--output-schema", schema_path] if schema_path else []),
                     "-",
                 ],
                 input=prompt_text,
@@ -580,6 +735,42 @@ def _run_merge_runner(runner: str, prompt_text: str) -> tuple[str, str]:
                 Path(output_file).unlink(missing_ok=True)
 
     raise RuntimeError(f"Unknown merge runner: {runner}")
+
+
+def _format_structured_transparency(report: dict | str | None) -> str:
+    if isinstance(report, str):
+        return report
+    if not isinstance(report, dict):
+        return ""
+    sections = [
+        ("APPLIED", report.get("applied") or []),
+        ("UNCERTAIN", report.get("uncertain") or []),
+        ("PRESERVED", report.get("preserved") or []),
+    ]
+    lines: list[str] = []
+    for label, items in sections:
+        lines.append(f"{label}:")
+        if items:
+            lines.extend(f"- {item}" for item in items if str(item).strip())
+        else:
+            lines.append("- None")
+        lines.append("")
+    return "\n".join(lines).strip()
+
+
+def _coerce_structured_merge(full_text: str) -> tuple[str, list, dict, str] | None:
+    """Parse JSON/schema merge output into the legacy return shape."""
+    try:
+        payload = json.loads(full_text)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    transcript = str(payload.get("transcript") or "").strip()
+    metadata = payload.get("metadata") if isinstance(payload.get("metadata"), dict) else {}
+    suggestions = payload.get("suggestions") if isinstance(payload.get("suggestions"), list) else []
+    transparency_report = _format_structured_transparency(payload.get("transparency_report"))
+    return transcript, [str(item).strip() for item in suggestions if str(item).strip()], metadata, transparency_report
 
 
 # =============================================================================
@@ -621,7 +812,7 @@ def transcribe_assemblyai(audio_path: str, speaker_labels: bool = True, context_
     # Build status message
     diarization_note = " + speaker diarization" if speaker_labels else ""
     bias_note = f" + {len(context_bias)} boost terms" if context_bias else ""
-    print(f"🌐 Running AssemblyAI Universal-3 / SLAM-1 (all features{diarization_note}{bias_note})...")
+    print(f"🌐 Running AssemblyAI Universal-3 Pro (all features{diarization_note}{bias_note})...")
 
     script = f'''
 import assemblyai as aai
@@ -634,17 +825,17 @@ boost_env = os.environ.get("ST_BOOST_TERMS")
 boost_terms = json.loads(boost_env) if boost_env and boost_env != "None" else None
 
 config = aai.TranscriptionConfig(
-    speech_model=aai.SpeechModel.slam_1,  # Universal-3 / SLAM-1 explicitly
+    speech_models=["universal-3-pro"],
     speaker_labels={speaker_labels},
     speakers_expected={num_speakers},
-    language_code="en",
-    keyterms_prompt=boost_terms,  # SLAM-1 uses keyterms_prompt instead of word_boost
+    language_detection=True,
+    keyterms_prompt=boost_terms,
     punctuate=True,
     format_text=True,
     # Intelligence features (all enabled for maximum richness)
     auto_highlights=True,          # Key phrases and topics
     entity_detection=True,         # Names, places, organizations
-    auto_chapters=True,            # Chapter markers with gist + headline (mutually exclusive with summarization)
+    auto_chapters=False,           # Universal-3 Pro rejects auto_chapters; keep transcript path reliable
     sentiment_analysis=True,       # Per-utterance sentiment (positive/negative/neutral)
     iab_categories=True,           # IAB content category classification
 )
@@ -763,20 +954,18 @@ print(json.dumps({{"text": text, "assemblyai_meta": meta}}))
 # TRANSCRIPTION ENGINE: MISTRAL VOXTRAL 2
 # =============================================================================
 
-def transcribe_mistral(audio_path: str, context_bias: list) -> str | None:
+def transcribe_mistral(audio_path: str, context_bias: list | None = None,
+                       python_bin: str | None = None, log_path: Path | None = None) -> str | None:
     """
     Transcribe audio using Mistral's Voxtral 2 model.
     
-    Mistral is our SECONDARY engine because it excels at:
+    Mistral is one of the default engines because it excels at:
     - Word-level accuracy (often catches words AssemblyAI misses)
     - Technical vocabulary
     - Names and proper nouns
     
     We use voxtral-mini-latest which points to the optimized voxtral-mini-2602
     model designed for high-accuracy batch transcription (not real-time).
-    
-    Note: context_bias is prepared but may not be fully supported by the
-    current Mistral Python SDK. The parameter is included for future compatibility.
     
     Args:
         audio_path: Path to the audio file
@@ -788,132 +977,63 @@ def transcribe_mistral(audio_path: str, context_bias: list) -> str | None:
     if not resolve_key("MISTRAL_API_KEY"):
         print("⚠️  MISTRAL_API_KEY not set. Skipping Mistral.")
         return None
-    
-    # Mistral context_bias has restrictions: no spaces or commas allowed in terms
-    # Filter to only single-word terms (pattern: ^[^,\s]+$)
-    filtered_bias = [term for term in context_bias if ' ' not in term and ',' not in term][:100]
-    print(f"🌊 Running Mistral (Voxtral 2) with {len(filtered_bias)} context terms (filtered from {len(context_bias)})...")
-    
-    # Format bias list as JSON for safe injection into subprocess script
-    bias_str = json.dumps(filtered_bias)
 
-    # Check file size — Mistral rejects HTTP bodies > ~50MB.
-    # For large files, use the files.upload() API to pre-upload, then reference by file ID.
-    try:
-        file_size_mb = Path(audio_path).stat().st_size / (1024 * 1024)
-    except OSError as e:
-        print(f"   ❌ Cannot read audio file: {e}")
-        return None
-    MAX_INLINE_MB = 40  # Stay under Mistral's ~50MB limit with margin
-    use_file_upload = file_size_mb > MAX_INLINE_MB
+    valid_bias = [
+        term.strip()
+        for term in (context_bias or [])
+        if isinstance(term, str) and term.strip() and " " not in term and "," not in term
+    ][:100]
+    print(f"🌊 Running Mistral Voxtral with {len(valid_bias)} single-token context terms...")
 
-    if use_file_upload:
-        print(f"   📦 File is {file_size_mb:.1f}MB (>{MAX_INLINE_MB}MB) — using Mistral files.upload() API")
-
-    # Subprocess script for Mistral transcription
-    final_script = f'''
-import json
-import os
-import sys
-import time
-from mistralai import Mistral
-
-# Initialize client with API key from environment
-client = Mistral(api_key=os.environ["MISTRAL_API_KEY"])
-
-audio_file = os.environ["ST_AUDIO_PATH"]
-bias_terms = json.loads(os.environ.get("ST_BIAS_TERMS", "[]"))
-model = "voxtral-mini-latest"  # Points to voxtral-mini-2602 (high-accuracy batch model)
-use_upload = {use_file_upload}
-
+    script = '''
+import json, os, sys
 try:
+    from mistralai import Mistral
     from mistralai.models import File
-    with open(audio_file, "rb") as f:
-        file_content = f.read()
 
-    content_type_map = {{"m4a": "audio/m4a", "mp3": "audio/mpeg", "wav": "audio/wav", "ogg": "audio/ogg", "flac": "audio/flac", "webm": "audio/webm", "qta": "audio/quicktime", "caf": "audio/x-caf", "aif": "audio/aiff", "wma": "audio/x-ms-wma"}}
+    content_type_map = {
+        "m4a": "audio/m4a", "mp3": "audio/mpeg", "wav": "audio/wav",
+        "ogg": "audio/ogg", "flac": "audio/flac", "webm": "audio/webm",
+        "qta": "audio/quicktime", "caf": "audio/x-caf", "aif": "audio/aiff",
+        "wma": "audio/x-ms-wma",
+    }
+    audio_file = os.environ["ST_AUDIO_PATH"]
+    bias_terms = json.loads(os.environ.get("ST_BIAS_TERMS", "[]"))
+    model = os.environ.get("ST_MISTRAL_MODEL", "voxtral-mini-latest")
+    client = Mistral(api_key=os.environ["MISTRAL_API_KEY"])
+
     ext = os.path.splitext(audio_file)[1].lstrip(".").lower()
-
-    if use_upload:
-        # Large file: upload via files API, then reference by file ID.
-        # The SDK's files.upload() expects a File object, not a raw file handle.
+    with open(audio_file, "rb") as handle:
         file_obj = File(
             fileName=os.path.basename(audio_file),
-            content=file_content,
-            content_type=content_type_map.get(ext, "audio/m4a")
+            content=handle,
+            content_type=content_type_map.get(ext, "audio/m4a"),
         )
-        uploaded = client.files.upload(file=file_obj)
-        # Wait for file to be ready
-        while True:
-            retrieved = client.files.retrieve(file_id=uploaded.id)
-            if retrieved.status == "processed":
-                break
-            elif retrieved.status == "error":
-                raise RuntimeError(f"File upload failed: {{retrieved.status_details}}")
-            time.sleep(1)
-
         response = client.audio.transcriptions.complete(
-            file_id=uploaded.id,
             model=model,
-            language="en",
-            diarize=True,
-            timestamp_granularities=["segment"],
-            context_bias=bias_terms
-        )
-    else:
-        # Small file: inline in request body
-        file_obj = File(
-            fileName=os.path.basename(audio_file),
-            content=file_content,
-            content_type=content_type_map.get(ext, "audio/m4a")
-        )
-
-        response = client.audio.transcriptions.complete(
             file=file_obj,
-            model=model,
-            language="en",
             diarize=True,
             timestamp_granularities=["segment"],
-            context_bias=bias_terms
+            context_bias=bias_terms or None,
         )
-    print(response.text)
-    # Clean up uploaded file from Mistral's storage
-    if use_upload:
-        try:
-            client.files.delete(file_id=uploaded.id)
-        except Exception:
-            pass  # Best-effort cleanup
+    text = getattr(response, "text", None)
+    if text is None and isinstance(response, dict):
+        text = response.get("text")
+    if text is None:
+        text = str(response)
+    print(json.dumps({"text": text, "metadata": {"model": model}}))
 except Exception as e:
-    print(f"ERROR: {{e}}", file=sys.stderr)
+    print(json.dumps({"error": str(e)}))
     sys.exit(1)
 '''
 
-    # Pass sensitive values via environment variables
-    sub_env = {**os.environ, "MISTRAL_API_KEY": resolve_key("MISTRAL_API_KEY"), "ST_AUDIO_PATH": audio_path, "ST_BIAS_TERMS": bias_str}
-
-    try:
-        result = subprocess.run(
-            [str(VENV_PYTHON), "-c", final_script],
-            capture_output=True,
-            text=True,
-            timeout=3600,
-            env=sub_env
-        )
-        
-        if result.returncode != 0:
-            print(f"   ❌ Error: {result.stderr[:300]}")
-            return None
-        
-        text = result.stdout.strip()
-        print(f"   ✅ Complete ({len(text)} chars)")
-        return text
-        
-    except subprocess.TimeoutExpired:
-        print("   ❌ Timeout (60 min)")
-        return None
-    except Exception as e:
-        print(f"   ❌ Exception: {e}")
-        return None
+    sub_env = {
+        **os.environ,
+        "MISTRAL_API_KEY": resolve_key("MISTRAL_API_KEY"),
+        "ST_AUDIO_PATH": audio_path,
+        "ST_BIAS_TERMS": json.dumps(valid_bias),
+    }
+    return run_engine_text(script, sub_env, "Mistral Voxtral", python_bin=python_bin, log_path=log_path)
 
 
 # =============================================================================
@@ -983,8 +1103,9 @@ except Exception as e:
     return run_engine_text(script, env, "ElevenLabs Scribe v2", python_bin=python_bin, log_path=log_path)
 
 
-# Engine: Google Gemini 3 Pro (audio input)
-def transcribe_gemini_audio(audio_path: str, context_bias: list | None = None) -> str | None:
+# Engine: Google Gemini audio input
+def transcribe_gemini_audio(audio_path: str, context_bias: list | None = None,
+                            python_bin: str | None = None, log_path: Path | None = None) -> str | None:
     key = resolve_key("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY", "")
     if not key:
         print("⚠️  GOOGLE_API_KEY not set. Skipping Gemini audio.", file=sys.stderr)
@@ -998,7 +1119,8 @@ try:
     prompt = """Transcribe this audio verbatim. Output ONLY the transcript.
 For multiple speakers use: **Speaker N:** text (on new lines).
 Preserve all spoken words exactly."""
-    response = client.models.generate_content(model="gemini-3-pro", contents=[prompt, uploaded])
+    model = os.environ.get("ST_GEMINI_MODEL", "gemini-2.5-flash")
+    response = client.models.generate_content(model=model, contents=[prompt, uploaded])
     text = response.text if hasattr(response, "text") else str(response)
     print(json.dumps({"text": text}))
 except Exception as e:
@@ -1006,11 +1128,12 @@ except Exception as e:
     sys.exit(1)
 '''
     env = {**os.environ, "GOOGLE_API_KEY": key, "ST_AUDIO_PATH": audio_path}
-    return run_engine_text(script, env, "Gemini 3 Pro (audio)")
+    return run_engine_text(script, env, "Gemini audio", python_bin=python_bin, log_path=log_path)
 
 
 # Engine: OpenAI GPT-4o Transcribe
-def transcribe_gpt4o(audio_path: str, context_bias: list | None = None) -> str | None:
+def transcribe_gpt4o(audio_path: str, context_bias: list | None = None,
+                     python_bin: str | None = None, log_path: Path | None = None) -> str | None:
     key = resolve_key("OPENAI_API_KEY") or ""
     if not key:
         print("⚠️  OPENAI_API_KEY not set. Skipping GPT-4o Transcribe.", file=sys.stderr)
@@ -1021,8 +1144,9 @@ try:
     from openai import OpenAI
     client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
     with open(os.environ["ST_AUDIO_PATH"], "rb") as f:
+        prompt = os.environ.get("ST_OPENAI_PROMPT") or None
         resp = client.audio.transcriptions.create(
-            model="gpt-4o-transcribe", file=f, language="en", response_format="verbose_json")
+            model="gpt-4o-transcribe", file=f, language="en", response_format="json", prompt=prompt)
     print(json.dumps({"text": resp.text if hasattr(resp, "text") else str(resp)}))
 except Exception as e:
     print(json.dumps({"error": str(e)}))
@@ -1031,20 +1155,21 @@ except Exception as e:
     chunks = chunk_audio(audio_path)
     if len(chunks) == 1:
         env = {**os.environ, "OPENAI_API_KEY": key, "ST_AUDIO_PATH": chunks[0]}
-        return run_engine_text(script, env, "GPT-4o Transcribe")
+        return run_engine_text(script, env, "GPT-4o Transcribe", python_bin=python_bin, log_path=log_path)
     # Multi-chunk: concatenate
     parts: list[str] = []
     for i, chunk in enumerate(chunks):
         print(f"   GPT-4o chunk {i+1}/{len(chunks)}...", file=sys.stderr)
         env = {**os.environ, "OPENAI_API_KEY": key, "ST_AUDIO_PATH": chunk}
-        t = run_engine_text(script, env, f"GPT-4o chunk {i+1}")
+        t = run_engine_text(script, env, f"GPT-4o chunk {i+1}", python_bin=python_bin, log_path=log_path)
         if t:
             parts.append(t)
     return " ".join(parts) or None
 
 
 # Engine: OpenAI GPT-4o Mini Transcribe
-def transcribe_gpt4o_mini(audio_path: str, context_bias: list | None = None) -> str | None:
+def transcribe_gpt4o_mini(audio_path: str, context_bias: list | None = None,
+                          python_bin: str | None = None, log_path: Path | None = None) -> str | None:
     key = resolve_key("OPENAI_API_KEY") or ""
     if not key:
         print("⚠️  OPENAI_API_KEY not set. Skipping GPT-4o Mini Transcribe.", file=sys.stderr)
@@ -1055,8 +1180,9 @@ try:
     from openai import OpenAI
     client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
     with open(os.environ["ST_AUDIO_PATH"], "rb") as f:
+        prompt = os.environ.get("ST_OPENAI_PROMPT") or None
         resp = client.audio.transcriptions.create(
-            model="gpt-4o-mini-transcribe", file=f, language="en", response_format="verbose_json")
+            model="gpt-4o-mini-transcribe", file=f, language="en", response_format="json", prompt=prompt)
     print(json.dumps({"text": resp.text if hasattr(resp, "text") else str(resp)}))
 except Exception as e:
     print(json.dumps({"error": str(e)}))
@@ -1065,18 +1191,19 @@ except Exception as e:
     chunks = chunk_audio(audio_path)
     if len(chunks) == 1:
         env = {**os.environ, "OPENAI_API_KEY": key, "ST_AUDIO_PATH": chunks[0]}
-        return run_engine_text(script, env, "GPT-4o Mini Transcribe")
+        return run_engine_text(script, env, "GPT-4o Mini Transcribe", python_bin=python_bin, log_path=log_path)
     parts: list[str] = []
     for i, chunk in enumerate(chunks):
         env = {**os.environ, "OPENAI_API_KEY": key, "ST_AUDIO_PATH": chunk}
-        t = run_engine_text(script, env, f"GPT-4o Mini chunk {i+1}")
+        t = run_engine_text(script, env, f"GPT-4o Mini chunk {i+1}", python_bin=python_bin, log_path=log_path)
         if t:
             parts.append(t)
     return " ".join(parts) or None
 
 
 # Engine: Voxtral Mini Realtime (local, mlx-audio, Apple Silicon)
-def transcribe_voxtral_local(audio_path: str, context_bias: list | None = None) -> str | None:
+def transcribe_voxtral_local(audio_path: str, context_bias: list | None = None,
+                             python_bin: str | None = None, log_path: Path | None = None) -> str | None:
     wav_path = convert_16khz_mono(audio_path)
     script = '''
 import json, os, sys
@@ -1091,7 +1218,8 @@ except Exception as e:
     sys.exit(1)
 '''
     env = {**os.environ, "ST_AUDIO_PATH": wav_path}
-    return run_engine_text(script, env, "Voxtral Mini (local)", timeout=600)
+    return run_engine_text(script, env, "Voxtral Mini (local)", timeout=ENGINE_TIMEOUTS["voxtral-mini-local"],
+                           python_bin=python_bin, log_path=log_path)
 
 
 # Engine: Cohere Transcribe (local, PyTorch + MPS / MLX)
@@ -1175,19 +1303,20 @@ except Exception as e:
            "HF_TOKEN": hf_token,
            "HUGGING_FACE_HUB_TOKEN": hf_token,
            "HUGGINGFACE_TOKEN": hf_token}
-    return run_engine_text(script, env, "Cohere Transcribe (local)", timeout=600, python_bin=python_bin, log_path=log_path)
+    return run_engine_text(script, env, "Cohere Transcribe (local)", timeout=ENGINE_TIMEOUTS["cohere-transcribe"],
+                           python_bin=python_bin, log_path=log_path)
 
 
 # Engine dispatch table — keys match ensemble.py MODELS dict for consistency
 ENGINES: dict[str, tuple[str, object]] = {
-    "assemblyai-u3-pro":    ("AssemblyAI Universal-3 Pro", transcribe_assemblyai),
+    "cohere-transcribe":    ("Cohere Transcribe (local)",  transcribe_cohere),
     "voxtral-small":        ("Mistral Voxtral Small",      transcribe_mistral),
     "scribe-v2":            ("ElevenLabs Scribe v2",       transcribe_elevenlabs),
-    "gemini-3-pro":         ("Gemini 3 Pro (audio)",       transcribe_gemini_audio),
+    "assemblyai-u3-pro":    ("AssemblyAI Universal-3 Pro", transcribe_assemblyai),
+    "gemini-3-pro":         ("Gemini audio (configurable)", transcribe_gemini_audio),
     "gpt4o-transcribe":     ("GPT-4o Transcribe",          transcribe_gpt4o),
     "gpt4o-mini-transcribe":("GPT-4o Mini Transcribe",     transcribe_gpt4o_mini),
     "voxtral-mini-local":   ("Voxtral Mini (local)",       transcribe_voxtral_local),
-    "cohere-transcribe":    ("Cohere Transcribe (local)",  transcribe_cohere),
 }
 
 ENGINE_ALIASES = {
@@ -1338,7 +1467,7 @@ You are reviewing a single existing transcript against the correction dictionary
             key = engine_name.lower()
             if "assemblyai" in key:
                 engine_profiles.append(
-                    f"- **{engine_name}** (AssemblyAI Universal-3 / SLAM-1, 3.2% AA-WER): "
+                    f"- **{engine_name}** (AssemblyAI Universal-3 Pro, 3.2% AA-WER): "
                     "Best speaker diarization and speaker turn detection. Provides chapters, "
                     "entity tags, and sentiment metadata. Trust speaker labels and paragraph "
                     "structure from this engine. May miss rare proper nouns."
@@ -1417,59 +1546,54 @@ Do not use external tools. Work only from the transcript and dictionary content 
 - When genuinely uncertain about the correct form, record the passage in UNCERTAIN — do not guess.
 - Items you deliberately leave unchanged (casual speech, unverifiable names) go in PRESERVED.
 
-### Output Format
+### Output Contract
 
-Output EXACTLY four sections separated by the literal string `---SPLIT---` on its own line.
-Do NOT output any text before section 1. Begin your response with the JSON object immediately.
+If the runtime requests structured JSON output, return exactly this object shape:
+{{
+  "metadata": {{"title": "...", "speakers": ["..."], "summary": "...", "date_mentioned": "YYYY-MM-DD or unknown"}},
+  "transcript": "Corrected/merged Markdown transcript with speaker labels.",
+  "transparency_report": {{
+    "applied": ["wrong form -> Correct Form (brief context snippet)"],
+    "uncertain": ["passage you were not sure about, and why"],
+    "preserved": ["what you deliberately left unchanged and why"]
+  }},
+  "suggestions": ["Wrong -> Right (Context)", "Right (Context)"]
+}}
 
-Section 1 — Metadata JSON (no preamble, start here):
-{{"title": "Call with Beth About Budget", "speakers": ["Beth", "Oliver"], "summary": "One sentence summary.", "date_mentioned": "2026-02-05"}}
+If structured JSON output is not available, output EXACTLY four sections separated by the literal string `---SPLIT---` on its own line:
+1. Metadata JSON
+2. Corrected/merged Markdown transcript with speaker labels
+3. Transparency report with APPLIED, UNCERTAIN, and PRESERVED subsections
+4. Dictionary suggestions, one per line
 
----SPLIT---
-
-Section 2 — Corrected/merged Markdown transcript with speaker labels.
-
----SPLIT---
-
-Section 3 — Transparency report with exactly three labeled sub-sections:
-
-APPLIED:
-- "wrong form" → "Correct Form" (brief context snippet)
-- ... one line per correction applied (or "None" if no corrections)
-
-UNCERTAIN:
-- Description of passage you weren't sure about, and why (omit section if none)
-
-PRESERVED:
-- What you deliberately left unchanged and why (omit section if none)
-
----SPLIT---
-
-Section 4 — Dictionary suggestions, one per line: `Wrong → Right (Context)` or just `Right (Context)`.
 Omit corrections already in the Known Corrections list.
 """
 
     # Write prompt to temp file (avoids shell escaping issues with long text)
     prompt_file = None
+    schema_file = None
     try:
         with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
             f.write(prompt)
             prompt_file = f.name
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(MERGE_OUTPUT_SCHEMA, f)
+            schema_file = f.name
 
         with open(prompt_file, "r") as pf:
             prompt_text = pf.read()
 
         merge_info = {"runner": None, "fallback_reason": None}
         try:
-            print("🧠 Merging with Claude Code headless (Opus 4.6 + Medium Thinking)...")
-            full_text, _ = _run_merge_runner("claude", prompt_text)
+            print("🧠 Merging with Claude Code headless (opus + medium effort)...")
+            full_text, _ = _run_merge_runner("claude", prompt_text, schema_file)
             merge_info["runner"] = "claude"
         except Exception as exc:
             error_text = str(exc)
             if shutil.which("codex"):
                 print(f"   ⚠️  Claude merge unavailable: {error_text[:200]}", file=sys.stderr)
                 print("   ↪ Falling back to Codex headless merge...", file=sys.stderr)
-                full_text, _ = _run_merge_runner("codex", prompt_text)
+                full_text, _ = _run_merge_runner("codex", prompt_text, schema_file)
                 merge_info["runner"] = "codex"
                 merge_info["fallback_reason"] = error_text
             else:
@@ -1488,7 +1612,10 @@ Omit corrections already in the Known Corrections list.
             transparency_report = ""
             suggestions: list = []
 
-            if "---SPLIT---" in full_text:
+            structured = _coerce_structured_merge(full_text)
+            if structured:
+                transcript_text, suggestions, metadata, transparency_report = structured
+            elif "---SPLIT---" in full_text:
                 parts = [p.strip() for p in full_text.split("---SPLIT---") if p.strip()]
 
                 if len(parts) >= 4:
@@ -1543,7 +1670,7 @@ Omit corrections already in the Known Corrections list.
             print(f"   💡 Found {len(suggestions)} new dictionary candidates")
             print(f"   🤖 Merge runner: {_merge_runner_label(merge_info['runner'])}")
             if transparency_report:
-                applied_count = transparency_report.upper().count("→")
+                applied_count = transparency_report.upper().count("->") + transparency_report.upper().count("→")
                 print(f"   📋 Transparency report: ~{applied_count} correction(s) applied")
             return transcript_text, suggestions, metadata, transparency_report, merge_info
         else:
@@ -1556,6 +1683,8 @@ Omit corrections already in the Known Corrections list.
     finally:
         if prompt_file:
             Path(prompt_file).unlink(missing_ok=True)
+        if schema_file:
+            Path(schema_file).unlink(missing_ok=True)
 
 
 # =============================================================================
@@ -1658,8 +1787,9 @@ def append_suggestions(suggestions: list, source_file: str | None = None):
             }
             
             # Try to parse "wrong → right (context)" format
-            if "→" in item:
-                parts = item.split("→", 1)
+            arrow = "→" if "→" in item else "->" if "->" in item else None
+            if arrow:
+                parts = item.split(arrow, 1)
                 entry["wrong"] = parts[0].strip()
                 right_part = parts[1].strip()
                 if "(" in right_part:
@@ -1683,7 +1813,7 @@ def main():
     
     Pipeline stages:
     1. Load dictionary
-    2. Run the default trio: AssemblyAI Universal-3, ElevenLabs Scribe v2, Cohere local
+    2. Run default engines: Cohere local, Mistral Voxtral, ElevenLabs Scribe v2, AssemblyAI Universal-3 Pro
     3. Merge transcripts with headless Claude (Codex fallback on rate limits)
     5. Save suggestions for dictionary learning
     6. Generate title if not provided
@@ -1729,14 +1859,14 @@ Examples:
         "--model",
         choices=["claude"],
         default="claude",
-        help="LLM for merging: claude (default, Claude Code headless Opus 4.6 + Medium Thinking; Codex headless fallback on rate limits)",
+        help="LLM for merging: claude (default, Claude Code headless opus + medium effort; Codex headless fallback on rate limits)",
     )
     parser.add_argument(
         "--engines",
         metavar="E1,E2,...",
         default=",".join(DEFAULT_ENGINES),
         help=(
-            "Comma-separated engine IDs (default: assemblyai-u3-pro,scribe-v2,cohere-transcribe). "
+            "Comma-separated engine IDs (default: cohere-transcribe,voxtral-small,scribe-v2,assemblyai-u3-pro). "
             f"Available: {', '.join(ENGINES)}"
         ),
     )
@@ -1745,8 +1875,8 @@ Examples:
     parser.add_argument("--transcribe-only", action="store_true",
                         help="Run transcription only, output raw JSON (no merge)")
     parser.add_argument("--transcripts-out", help="Path for raw transcripts JSON (with --transcribe-only)")
-    parser.add_argument("--merge-mode", choices=["claude", "manual"], default="claude",
-                        help="Merge with Claude (default) or emit a manual comparison bundle")
+    parser.add_argument("--merge-mode", choices=["agent", "claude", "manual"], default="claude",
+                        help="agent writes a merge bundle for the current chat agent; claude uses headless Claude/Codex; manual emits a comparison bundle")
     parser.add_argument("--resume", action="store_true", help="Reuse existing per-engine outputs in the run directory")
     parser.add_argument("--rerun-engine", action="append", default=[],
                         help="Engine ID to rerun even when --resume is set; may be passed multiple times")
@@ -1849,7 +1979,10 @@ Examples:
             sys.exit(1)
 
         print(f"🔧 Fix-transcript mode: {fix_path.name}", file=sys.stderr)
-        print("🧠 Review runner: Claude Code headless (Codex fallback if rate-limited)", file=sys.stderr)
+        if args.merge_mode == "agent":
+            print("🧠 Review mode: agent bundle for current chat agent", file=sys.stderr)
+        else:
+            print("🧠 Review runner: Claude Code headless (Codex fallback if rate-limited)", file=sys.stderr)
 
         raw_text = parse_transcript_file(fix_path)
         if not raw_text.strip():
@@ -1857,6 +1990,21 @@ Examples:
             sys.exit(1)
 
         print(f"   ✅ Parsed {len(raw_text)} chars from {fix_path.suffix} file", file=sys.stderr)
+
+        if args.merge_mode == "agent":
+            base_dir = Path(args.output).expanduser().resolve() if args.output else fix_path.parent
+            bundle_dir = base_dir / ".smart-transcribe-runs" / fix_path.stem
+            bundle_path = emit_agent_merge_bundle(
+                bundle_dir,
+                {"Source": raw_text},
+                dictionary,
+                source_file=str(fix_path),
+                speakers=speakers_list,
+                mode="fix",
+            )
+            print("\n📦 Agent review bundle ready")
+            print(f"📄 {bundle_path}")
+            return str(bundle_path)
 
         final_text, suggestions, metadata, transparency_report, merge_info = merge_with_llm(
             {"Source": raw_text},
@@ -1972,7 +2120,9 @@ Examples:
         sys.exit(1)
 
     print(f"📁 Transcribing: {audio_path.name}", file=sys.stderr)
-    if not args.transcribe_only:
+    if args.merge_mode == "agent" and not args.transcribe_only:
+        print("🧠 Merge mode: agent bundle for current chat agent", file=sys.stderr)
+    elif not args.transcribe_only:
         print("🧠 Merge runner: Claude Code headless (Codex fallback if rate-limited)", file=sys.stderr)
     else:
         print("📤 Mode: transcribe-only (raw output)", file=sys.stderr)
@@ -2012,7 +2162,7 @@ Examples:
     transcripts: dict = {}
     engine_results: dict[str, dict] = {}
     use_diarization = not args.no_diarization
-    local_engine_ids = {"voxtral-mini-local", "cohere-transcribe"}
+    local_engine_ids = LOCAL_ENGINE_IDS
     rerun_engine_ids = {resolve_engine(item) or item for item in args.rerun_engine}
 
     def _run_one_engine(engine_id: str) -> tuple[str, dict]:
@@ -2036,7 +2186,12 @@ Examples:
                 log_path=engine_log,
             )
         elif engine_id == "voxtral-small":
-            text = transcribe_mistral(str(upload_path), context_bias)
+            text = transcribe_mistral(
+                str(upload_path),
+                context_bias,
+                python_bin=python_bin,
+                log_path=engine_log,
+            )
         else:
             text = func(str(upload_path), context_bias, python_bin=python_bin, log_path=engine_log)  # type: ignore[operator]
 
@@ -2110,8 +2265,8 @@ Examples:
             sys.exit(1)
 
     print(f"\n✅ {len(successful)}/{len(transcripts)} engines succeeded", file=sys.stderr)
-    if len(successful) < 3 and set(selected_engine_ids) == set(DEFAULT_ENGINES):
-        print(f"⚠️  default trio degraded: used {len(successful)}/3 engines", file=sys.stderr)
+    if len(successful) < len(DEFAULT_ENGINES) and set(selected_engine_ids) == set(DEFAULT_ENGINES):
+        print(f"⚠️  default engine set degraded: used {len(successful)}/{len(DEFAULT_ENGINES)} engines", file=sys.stderr)
     print(file=sys.stderr)
 
     # ==========================================================================
@@ -2134,6 +2289,29 @@ Examples:
         else:
             print(json_output)
         sys.exit(0)
+
+    if args.merge_mode == "agent":
+        bundle_path = emit_agent_merge_bundle(
+            run_dir,
+            successful,
+            dictionary,
+            source_file=str(audio_path),
+            speakers=speakers_list,
+            mode="merge",
+        )
+        write_status(status_path, {
+            "source_file": str(audio_path),
+            "selected_engines": selected_engine_ids,
+            "state": "needs_agent_merge",
+            "updated_at": datetime.now().isoformat(),
+            "engines": engine_results,
+            "agent_merge_bundle": str(bundle_path),
+        })
+        with run_log_path.open("a", encoding="utf-8") as fh:
+            fh.write(f"{datetime.now().isoformat()} needs_agent_merge bundle={bundle_path}\n")
+        print("\n📦 Agent merge bundle ready")
+        print(f"📄 {bundle_path}")
+        return str(bundle_path)
 
     # ==========================================================================
     # STAGE 4: LLM Merge

@@ -53,6 +53,11 @@ DEFAULT_ENGINE_PYTHONS = {
     "scribe-v2": "python3",
     "assemblyai-u3-pro": "python3",
     "cohere-transcribe": "python3",
+    "voxtral-small": "python3",
+    "gemini-3-pro": "python3",
+    "gpt4o-transcribe": "python3",
+    "gpt4o-mini-transcribe": "python3",
+    "voxtral-mini-local": "python3",
 }
 
 
@@ -96,6 +101,10 @@ def require_supported_python(python_path: str | Path | None = None) -> None:
 
 def inspect_python(python_path: str) -> dict[str, Any]:
     path = Path(python_path).expanduser()
+    if not path.exists():
+        resolved = shutil.which(str(python_path))
+        if resolved:
+            path = Path(resolved)
     info: dict[str, Any] = {"path": str(path), "exists": path.exists()}
     if not path.exists():
         return info
@@ -686,6 +695,7 @@ def retry_engine(func, max_retries: int = 3) -> dict:
 # =============================================================================
 
 _compiled_corrections: list[tuple[re.Pattern, str]] | None = None
+_compiled_corrections_key: tuple[tuple[str, str], ...] | None = None
 
 
 def compile_corrections(dictionary: dict) -> list[tuple[re.Pattern, str]]:
@@ -699,11 +709,13 @@ def compile_corrections(dictionary: dict) -> list[tuple[re.Pattern, str]]:
 
 def apply_dictionary_corrections(text: str, dictionary: dict) -> str:
     """Apply dictionary corrections using pre-compiled regex patterns."""
-    global _compiled_corrections
+    global _compiled_corrections, _compiled_corrections_key
     if not dictionary.get("corrections"):
         return text
-    if _compiled_corrections is None:
+    corrections_key = tuple(sorted((str(k), str(v)) for k, v in dictionary.get("corrections", {}).items()))
+    if _compiled_corrections is None or _compiled_corrections_key != corrections_key:
         _compiled_corrections = compile_corrections(dictionary)
+        _compiled_corrections_key = corrections_key
     for pattern, replacement in _compiled_corrections:
         text = pattern.sub(replacement, text)
     return text

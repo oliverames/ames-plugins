@@ -370,14 +370,14 @@ Worklog
 
 ## 2026-04-09 — bcbs-meeting-notes skill v1.2.0; BCBS archive reorganization
 
-**What changed**: Created new `bcbs-meeting-notes` skill in `ames-standalone-skills`. Skill processes SmartTranscribe `.md` transcripts into structured meeting notes with three-pass generation (theme extraction → per-theme elaboration → compile), intelligent routing to Ashley & Oliver Meetings / Projects / Calls, standard file renaming (`YYYY-MM-DD – Name – Transcript.md` / `– Notes.md`), and Asana task creation for Oliver's action items. Ran full skill-creator eval loop across 3 test cases (Ashley 1:1, project routing, borderline routing). Shipped v1.0 → v1.1.0 → v1.2.0 based on eval findings. Also reorganized entire BCBS archive: zero-padded folder dates, replaced all em dashes and spaced hyphens with en dashes, renamed files to match file-organization conventions throughout Ashley & Oliver Meetings and Projects.
+**What changed**: Created new `bcbs-meeting-notes` skill in `ames-standalone-skills`. Skill processes SmartTranscribe `.md` transcripts into structured meeting notes with three-pass generation (theme extraction → per-theme elaboration → compile), intelligent routing to Ashley & Oliver Meetings / Projects / Calls, standard file renaming (`YYYY-MM-DD – Name – Transcript.md` / `– Notes.md`), and Jira issue creation for Oliver's action items. Ran full skill-creator eval loop across 3 test cases (Ashley 1:1, project routing, borderline routing). Shipped v1.0 → v1.1.0 → v1.2.0 based on eval findings. Also reorganized entire BCBS archive: zero-padded folder dates, replaced all em dashes and spaced hyphens with en dashes, renamed files to match file-organization conventions throughout Ashley & Oliver Meetings and Projects.
 
 **Decisions made**:
 - Ashley & Oliver routing uses a tiebreaker: route to Ashley & Oliver Meetings ONLY if no strong project identity AND they are the sole/primary participants — any project meeting Ashley attends routes to the project
 - "Routing context stays out of the notes file" added explicitly after eval found subagent embedding routing metadata in the generated notes
 - Notes folder eliminated: notes live alongside their paired transcript (same destination folder), distinguished by `– Notes.md` vs `– Transcript.md` suffix
 - Calls/ is "last resort only" — policy documented aggressively in skill to prevent over-routing general calls
-- Asana graceful fallback: if MCP auth fails, skip and report — don't abort the whole run
+- Jira graceful fallback: if MCP auth fails, skip and report — don't abort the whole run
 - `Sprout/` project folder created separately (user moved Sprout Social file there intentionally, not Digital Infrastructure)
 
 **Left off at**:

@@ -48,7 +48,7 @@
     {
       "id": 4,
       "prompt": "Transcribe /Users/oliverames/Desktop/Granger Rd.m4a",
-      "expected_output": "Actual transcription of the 7.7-minute audio file using the smart-transcribe pipeline. With skill: runs the default 3-engine pipeline (AssemblyAI U3 + Scribe v2 + Cohere). Produces a transcript markdown file. If engines fail, reports clearly with --doctor output.",
+      "expected_output": "Actual transcription of the 7.7-minute audio file using the smart-transcribe pipeline. With skill: runs the default 4-engine pipeline (Cohere local + Mistral Voxtral + Scribe v2 + AssemblyAI U3). Produces an agent merge bundle or transcript markdown file. If engines fail, reports clearly with --doctor output.",
       "files": ["/Users/oliverames/Desktop/Granger Rd.m4a"],
       "expectations": [
         "The smart-transcribe.py script is invoked (or --doctor is run to diagnose setup)",

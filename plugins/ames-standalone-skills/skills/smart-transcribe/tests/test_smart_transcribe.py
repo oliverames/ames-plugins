@@ -19,15 +19,16 @@ spec.loader.exec_module(smart_transcribe)
 
 
 class SmartTranscribeTests(unittest.TestCase):
-    def test_default_engine_trio(self):
+    def test_default_engine_set(self):
         self.assertEqual(
             smart_transcribe.DEFAULT_ENGINES,
-            ["assemblyai-u3-pro", "scribe-v2", "cohere-transcribe"],
+            ["cohere-transcribe", "voxtral-small", "scribe-v2", "assemblyai-u3-pro"],
         )
 
     def test_python_version_supported(self):
         self.assertTrue(common.python_version_supported((3, 13, 0)))
-        self.assertFalse(common.python_version_supported((3, 14, 0)))
+        self.assertTrue(common.python_version_supported((3, 14, 0)))
+        self.assertFalse(common.python_version_supported((3, 12, 9)))
 
     def test_parse_engine_python_overrides(self):
         overrides = smart_transcribe.parse_engine_python_overrides("scribe-v2=/tmp/py,cohere-transcribe=/usr/bin/python3.13")
@@ -53,10 +54,49 @@ class SmartTranscribeTests(unittest.TestCase):
             self.assertIn("Recommended base transcript: AssemblyAI Universal-3 Pro", text)
             self.assertIn("boom", text)
 
+    def test_agent_merge_bundle_generation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output_dir = Path(tmp)
+            bundle = smart_transcribe.emit_agent_merge_bundle(
+                output_dir,
+                {"Cohere Transcribe (local)": "hello", "Mistral Voxtral Small": "hallo"},
+                {"corrections": {"hallo": "hello"}, "entities": ["Cohere"], "notes": ["test note"]},
+                source_file="/tmp/audio.m4a",
+                mode="merge",
+            )
+            text = bundle.read_text()
+            self.assertIn("Agent Merge Bundle", text)
+            self.assertIn("hallo -> hello", text)
+            self.assertIn("Cohere Transcribe (local)", text)
+
     def test_rate_limit_detection(self):
         self.assertTrue(smart_transcribe._is_rate_limited_merge_error("429 rate limit exceeded"))
         self.assertTrue(smart_transcribe._is_rate_limited_merge_error("service overloaded, try again later"))
         self.assertFalse(smart_transcribe._is_rate_limited_merge_error("invalid prompt format"))
+
+    def test_structured_merge_output_parser(self):
+        payload = {
+            "metadata": {
+                "title": "Budget Call",
+                "speakers": ["Oliver", "Beth"],
+                "summary": "Budget discussion.",
+                "date_mentioned": "2026-04-21",
+            },
+            "transcript": "**Oliver:** Hello",
+            "transparency_report": {
+                "applied": ["assemblee ai -> AssemblyAI"],
+                "uncertain": [],
+                "preserved": ["yeah"],
+            },
+            "suggestions": ["AssemblyAI (company name)"],
+        }
+        parsed = smart_transcribe._coerce_structured_merge(json.dumps(payload))
+        self.assertIsNotNone(parsed)
+        transcript, suggestions, metadata, transparency = parsed
+        self.assertEqual(transcript, "**Oliver:** Hello")
+        self.assertEqual(metadata["title"], "Budget Call")
+        self.assertIn("AssemblyAI", suggestions[0])
+        self.assertIn("APPLIED:", transparency)
 
     @mock.patch.object(smart_transcribe.shutil, "which")
     @mock.patch.object(smart_transcribe, "_run_merge_runner")

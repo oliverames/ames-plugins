@@ -4,10 +4,11 @@ BCBS VT Proposal Report Reference-Doc Builder
 
 Builds ``data/letterhead/assets/reference-proposal-report.docx`` from the
 authoritative Blue Cross VT Proposal Report Portrait Template
-(``proposal-report-template.dotx``). This is the **opt-in** reference doc
-for formal reports, proposals, and strategy decks.
+(``proposal-report-template.dotx``). This is the default reference doc for
+memos, formal reports, proposals, strategy documents, and polished BCBS Word
+deliverables.
 
-For everyday letters and short-form letterhead, use the default
+For explicitly requested plain/simple documents, use the simple fallback
 ``reference.docx`` produced by ``style-reference-doc.py``.
 
 ### Design principle: preserve the official template
@@ -225,7 +226,7 @@ def main():
     doc.save(str(OUTPUT_PATH))
     print(f"\n✓ Saved: {OUTPUT_PATH}")
     print()
-    print("Use with: build-letterhead.sh --template=proposal-report input.md [output.docx]")
+    print("Use with: build-letterhead.sh input.md [output.docx]")
 
 
 if __name__ == "__main__":

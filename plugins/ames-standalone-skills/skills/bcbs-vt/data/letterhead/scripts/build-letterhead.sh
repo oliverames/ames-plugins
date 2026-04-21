@@ -4,14 +4,15 @@
 # Converts markdown to a branded Blue Cross VT .docx document.
 #
 # Templates (choose the pandoc reference-doc used):
-#   (default)              → assets/reference.docx
-#                            Simple Blue Cross VT letterhead — best for
-#                            letters, member communications, short-form docs.
+#   (default), --template=default,
 #   --template=proposal-report
 #                          → assets/reference-proposal-report.docx
 #                            Formal template with the Proposal Report header
-#                            (BCBS logo + title band). Use for reports,
-#                            proposals, strategy documents.
+#                            (BCBS logo + title band). Use for memos, reports,
+#                            proposals, strategy documents, and polished docs.
+#   --template=simple,
+#   --template=reference    → assets/reference.docx
+#                            Plain/simple fallback only when explicitly requested.
 
 set -euo pipefail
 
@@ -19,7 +20,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_DIR="$(dirname "$SCRIPT_DIR")"
 ASSETS_DIR="$PLUGIN_DIR/assets"
 
-TEMPLATE="default"
+TEMPLATE="proposal-report"
 
 # --- Argument parsing ---
 POSITIONAL=()
@@ -47,7 +48,7 @@ set -- "${POSITIONAL[@]}"
 
 if [[ $# -lt 1 ]]; then
   echo "Usage: build-letterhead.sh [--template=NAME] input.md [output.docx]"
-  echo "Templates: default, proposal-report"
+  echo "Templates: default, proposal-report, simple, reference"
   echo "Example:   build-letterhead.sh my-letter.md ~/Desktop/bcbsvt-letter.docx"
   exit 1
 fi
@@ -61,14 +62,14 @@ fi
 
 # --- Resolve template → reference doc ---
 case "$TEMPLATE" in
-  default|"")
-    REFERENCE_DOC="$ASSETS_DIR/reference.docx"
-    ;;
-  proposal-report)
+  default|proposal-report|"")
     REFERENCE_DOC="$ASSETS_DIR/reference-proposal-report.docx"
     ;;
+  simple|reference)
+    REFERENCE_DOC="$ASSETS_DIR/reference.docx"
+    ;;
   *)
-    echo "Error: Unknown template '$TEMPLATE'. Valid values: default, proposal-report"
+    echo "Error: Unknown template '$TEMPLATE'. Valid values: default, proposal-report, simple, reference"
     exit 1
     ;;
 esac
@@ -91,7 +92,7 @@ fi
 # --- Check reference doc ---
 if [[ ! -f "$REFERENCE_DOC" ]]; then
   echo "Reference doc not found at: $REFERENCE_DOC"
-  if [[ "$TEMPLATE" == "proposal-report" ]]; then
+  if [[ "$TEMPLATE" == "proposal-report" || "$TEMPLATE" == "default" || "$TEMPLATE" == "" ]]; then
     echo "Rebuilding via: python3 $SCRIPT_DIR/style-proposal-report.py"
     python3 "$SCRIPT_DIR/style-proposal-report.py" || {
       echo "⚠  Failed to build Proposal Report reference doc."
@@ -100,7 +101,7 @@ if [[ ! -f "$REFERENCE_DOC" ]]; then
   else
     echo "Rebuilding via: python3 $SCRIPT_DIR/style-reference-doc.py"
     python3 "$SCRIPT_DIR/style-reference-doc.py" || {
-      echo "⚠  Failed to build default reference doc."
+      echo "⚠  Failed to build simple fallback reference doc."
       exit 1
     }
   fi

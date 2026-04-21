@@ -170,7 +170,7 @@ Both plugins originated in [openai/plugins](https://github.com/openai/plugins) a
 **BCBS VT (work-specific)**
 - [`bcbs-vt`](plugins/ames-standalone-skills/skills/bcbs-vt/) — Context and guidance for BCBS VT work
 - [`bcbs-meeting-notes`](plugins/ames-standalone-skills/skills/bcbs-meeting-notes/) — Structure BCBS VT transcripts into notes with action items
-- [`bcbs-wrap-up`](plugins/ames-standalone-skills/skills/bcbs-wrap-up/) — End-of-session wrap-up, syncs to Asana
+- [`bcbs-wrap-up`](plugins/ames-standalone-skills/skills/bcbs-wrap-up/) — End-of-session wrap-up, verifies Jira-tracked action items
 
 **Workflow and tooling**
 - [`go`](plugins/ames-standalone-skills/skills/go/) — End-to-end verify/simplify/ship pipeline, triggered by `/go`

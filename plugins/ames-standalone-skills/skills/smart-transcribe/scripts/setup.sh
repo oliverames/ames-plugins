@@ -12,7 +12,7 @@ RUNTIME_DIR="$CONFIG_DIR/runtimes"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(dirname "$SCRIPT_DIR")"
 REQUIREMENTS_FILE="$SCRIPT_DIR/requirements.txt"
-ENGINES=("assemblyai-u3-pro" "scribe-v2" "cohere-transcribe")
+ENGINES=("cohere-transcribe" "voxtral-small" "scribe-v2" "assemblyai-u3-pro")
 
 # Find the highest available Python >= 3.13 on PATH
 find_python() {
@@ -95,5 +95,5 @@ CONF
 
 echo
 echo "Setup complete."
-echo "Default trio: AssemblyAI Universal-3 + ElevenLabs Scribe v2 + Cohere local"
+echo "Default engines: Cohere local + Mistral Voxtral + ElevenLabs Scribe v2 + AssemblyAI Universal-3 Pro"
 echo "Doctor check: $PYTHON_BIN $SCRIPT_DIR/smart-transcribe.py --doctor"

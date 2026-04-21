@@ -1,9 +1,9 @@
 ---
 name: bcbs-wrap-up
-version: 1.0.0
+version: 1.1.0
 description: >
   BCBS session wrap-up that updates evergreen notes, verifies meeting tasks
-  are in Asana with strikethrough in the notes files when a task IS in Asana, audits naming conventions, and ensures directory organization is clean. Use when Oliver says "BCBS wrap up",
+  are in Jira with strikethrough in the notes files when a task is tracked in Jira, audits naming conventions, and ensures directory organization is clean. Use when Oliver says "BCBS wrap up",
   "wrap up BCBS", "close out BCBS", "BCBS session done", "done with BCBS",
   "BCBS end of day", or invokes /bcbs-wrap-up. Run at the end of any BCBS
   working session.
@@ -12,8 +12,21 @@ description: >
 # BCBS Session Wrap-Up
 
 End-of-session checklist for the BCBS project directory at
-`~/Documents/BCBS`. Ensures all notes, files, Asana tasks, and naming
+`~/Documents/BCBS`. Ensures all notes, files, Jira tasks, and naming
 conventions are current and consistent.
+
+## BCBS Operating Defaults
+
+- **Task tracking is Jira.** Use the Blue Cross VT Jira workspace
+  (`bluecrossvt.atlassian.net`) and structured Jira/Atlassian MCP tools for
+  projects, issue search, issue creation, and issue updates. Do not use another
+  task system unless Oliver explicitly asks for it in the current request.
+- **Verify Jira before acting.** Confirm the accessible Jira workspace and
+  destination project before creating or updating issues. Prefer structured
+  project and JQL tools over generic search when available.
+- **Strikethrough means tracked in Jira.** A struck-through action item with a
+  `*(→ Jira: ISSUE-123)*` tag is the local note signal that the task exists in
+  Jira.
 
 Run phases in order. Auto-apply all actions without asking unless a step
 says otherwise. Use subagents for parallel work where noted.
@@ -60,31 +73,33 @@ For each file:
 
 ---
 
-## Phase 3: Asana Task Verification
+## Phase 3: Jira Task Verification
 
 For every meeting note file modified this session:
 
 1. Read the Action Items section
-2. For each action item that has an Asana routing tag and has been put in Asana`*(-> Asana: [Project])*`:
+2. For each action item that has a Jira issue tag, such as
+   `*(→ Jira: ISSUE-123)*`:
+   - Verify the issue still exists in Jira when the Jira tools are available
    - Verify the item text is struck through: `~~item text~~`
    - If not struck through, add strikethrough
-3. For action items that do NOT have Asana routing:
-   - Determine if they should be in Asana (non-trivial, owned by Oliver)
-   - If yes, first call `mcp__claude_ai_Asana__get_me` to confirm the
-     workspace, then create the task with `mcp__claude_ai_Asana__create_task_preview`
-     followed by `mcp__claude_ai_Asana__create_task_confirm`. After creation,
-     use `mcp__claude_ai_Asana__update_tasks` with `add_projects` to ensure
-     the task is properly assigned to the project (create_task_confirm can
-     orphan tasks). Add the routing tag + strikethrough to the note.
-   - Route to the correct Asana project based on content:
-     - Event/content tasks -> Q2 Content Calendar (2026)
-     - Strategy/brand tasks -> Content & Brand Strategy
-     - Relationship/onboarding tasks -> Relationship Building & Onboarding
-     - Tool evaluation tasks -> Content Calendar Tool Evaluation
-     - Platform/IT tasks -> Platform & Account Setup
+3. For action items that do NOT have Jira routing:
+   - Determine if they should be in Jira (non-trivial, owned by Oliver)
+   - If yes, confirm the Blue Cross VT Jira workspace, find the matching
+     project, verify the issue type, then create the issue. Use structured
+     Atlassian/Jira tools when available: visible-project lookup, JQL issue
+     search, issue type metadata, issue creation, and issue edit/update tools.
+     In Codex, the Atlassian Rovo tools are the preferred path. In other hosts,
+     use the equivalent Jira MCP tools discovered through the available tool
+     surface.
+   - After creation, add the issue key and strikethrough to the note:
+     `- [ ] ~~Task text~~ *(→ Jira: ISSUE-123)*`
+   - Route to the correct Jira project based on content and visible Jira
+     projects. Use local `~/Documents/BCBS/Projects/` folder names as search
+     seeds when matching project names.
 
 **Convention:** A strikethrough on an action item means it is tracked in
-Asana. This is the single source of truth for whether a task has been
+Jira. This is the single source of truth for whether a task has been
 captured.
 
 ---
@@ -140,14 +155,14 @@ You can also reference the "file-organization" skill.
 
 ---
 
-## Phase 6: Asana Project Sync
+## Phase 6: Jira Project Sync
 
-Quick check that the local `Projects/` folder and Asana are in sync:
+Quick check that the local `Projects/` folder and Jira are in sync:
 
 1. List `~/Documents/BCBS/Projects/` subdirectories
-2. Call `mcp__claude_ai_Asana__get_me` to confirm workspace, then
-   `mcp__claude_ai_Asana__get_projects` to list Asana projects
-3. Flag any new local folders without Asana projects (and vice versa)
+2. Confirm the Blue Cross VT Jira workspace, then list visible Jira projects
+   with structured Jira/Atlassian tools
+3. Flag any new local folders without Jira projects (and vice versa)
 4. Report mismatches but do NOT auto-create projects without confirmation
 
 ---
@@ -164,7 +179,7 @@ Run a final verification:
    - Evergreen files updated
    - Action items struck through
    - Naming violations fixed
-   - Asana sync status
+   - Jira sync status
 
 ---
 
@@ -176,7 +191,7 @@ Run a final verification:
 - Title Case for descriptions
 - Suffixes: `– Transcript`, `– Notes` for meeting files
 
-### Asana Projects (as of 2026-04)
+### Jira Project Search Seeds (as of 2026-04)
 - Platform & Account Setup
 - Content Calendar Tool Evaluation
 - Content & Brand Strategy

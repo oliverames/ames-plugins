@@ -1,16 +1,23 @@
 ---
 name: smart-transcribe
-description: This skill should be used when the user asks to "transcribe this audio", "transcribe this recording", "convert speech to text", "transcribe voice memo", "transcribe this file", "dictation", "speech recognition", "speech-to-text", "STT", or needs to transcribe audio files, voice memos, interviews, or recordings. Provides a resilient default trio transcription pipeline (AssemblyAI Universal-3 + ElevenLabs Scribe v2 + Cohere local) with Claude-powered merge, manual-merge fallback, resumable runs, and a learning correction dictionary.
+description: This skill should be used when the user asks to "transcribe this audio", "transcribe this recording", "convert speech to text", "transcribe voice memo", "transcribe this file", "dictation", "speech recognition", "speech-to-text", "STT", or needs to transcribe audio files, voice memos, interviews, or recordings. Provides a resilient multi-engine transcription pipeline (Cohere local + Mistral Voxtral + ElevenLabs Scribe v2 + AssemblyAI Universal-3 Pro) with agent-merge bundles, optional headless merge, resumable runs, and a learning correction dictionary.
 allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
 ---
 
 # Smart Transcribe
 
-Dual-engine audio transcription with Claude-powered interactive merge and dictionary learning. Optionally scales to an eight-model ensemble pipeline with Opus 4.6 consensus merge and structural review for maximum accuracy.
+Multi-engine audio transcription with agent-led merge and dictionary learning. The script collects independent ASR outputs; the current chat agent should merge them by default using an agent merge bundle. Optional headless Claude/Codex merge remains available for unattended runs.
 
 ## Usage
 
 Invoke by saying "transcribe this audio", "transcribe [file]", "fix this transcript", or "batch transcribe [folder]". For setup, run `bash ${CLAUDE_PLUGIN_ROOT}/skills/smart-transcribe/scripts/setup.sh`.
+
+Preferred agent workflow:
+1. Run `python3 ${CLAUDE_PLUGIN_ROOT}/skills/smart-transcribe/scripts/smart-transcribe.py AUDIO --merge-mode agent`.
+2. Read the generated `agent-merge-bundle.md`.
+3. Merge the transcripts yourself in the current chat agent and save the final `.md` transcript.
+
+Use `--merge-mode claude` only when you intentionally want the script to call nested headless Claude/Codex.
 
 ### Key flags
 
@@ -19,13 +26,15 @@ Invoke by saying "transcribe this audio", "transcribe [file]", "fix this transcr
 | `--fix-transcript FILE` | Correct an existing transcript (`.srt`, `.vtt`, `.txt`, `.md`) — skips audio engines entirely |
 | `--context NAME` | Load a named per-project context overlay (e.g. `--context bcbs-vt`). First use triggers a short interview. Omit NAME to list saved contexts. |
 | `--review` | Interactively review applied corrections before saving — dispute false positives to log them for dictionary cleanup |
-| `--engines E1,E2,...` | Choose transcription engines (default: `assemblyai-u3-pro,scribe-v2,cohere-transcribe`). Run `--list-engines` for all IDs. |
+| `--engines E1,E2,...` | Choose transcription engines (default: `cohere-transcribe,voxtral-small,scribe-v2,assemblyai-u3-pro`). Run `--list-engines` for all IDs. |
 | `--list-engines` | Print all available engine IDs and aliases, then exit |
 | `--speakers "A,B"` | Comma-separated speaker names to help identification |
 | `--no-diarization` | Disable speaker diarization (faster, single-speaker recordings) |
 | `--doctor` | Verify Python runtime, API key resolution, ffmpeg/ffprobe, SDK imports, HF token presence, and Claude merge availability |
 | `--check-engine scribe-v2` | Run an engine startup self-test without transcribing |
-| `--merge-mode manual` | Skip Claude, save normalized per-engine outputs, and generate a comparison bundle with a recommended base transcript |
+| `--merge-mode agent` | Save normalized per-engine outputs plus `agent-merge-bundle.md` for the current chat agent to merge |
+| `--merge-mode claude` | Call nested headless Claude first, then Codex fallback, using structured JSON output where supported |
+| `--merge-mode manual` | Skip LLM merge and generate a comparison bundle with a recommended base transcript |
 | `--resume` | Reuse completed per-engine outputs from the run directory |
 | `--rerun-engine ENGINE_ID` | Re-run just one engine while resuming |
 | `--use-system-python` / `--engine-python scribe-v2=/path/to/python` | Escape hatches for runtime selection |
@@ -45,9 +54,9 @@ Accepts an existing transcript file (`.srt`, `.vtt`, `.txt`, `.md`) and runs it 
 
 ### Standard Mode (default)
 
-Three-engine pipeline. Engines run in parallel (cloud) or sequentially (local), then Claude Code headless merges all transcripts with per-engine weighting: AssemblyAI for speaker structure, ElevenLabs for word accuracy, Cohere as tiebreaker. If headless Claude is unavailable or rate-limited, the script falls back to headless Codex when it is installed.
+Default four-engine pipeline. Cloud engines run in parallel and local engines run sequentially, then the current chat agent merges all transcripts from `agent-merge-bundle.md`: AssemblyAI for speaker structure, ElevenLabs and Mistral for word accuracy, Cohere as the local/private tiebreaker. If `--merge-mode claude` is used, the script calls headless Claude and falls back to headless Codex when installed.
 
-**Default engines:** AssemblyAI Universal-3 Pro (SLAM-1, diarization + chapters + entities) + ElevenLabs Scribe v2 (best cloud accuracy) + Cohere Transcribe (local, #1 HF-WER, free). If one engine fails, the run continues, marks the failure clearly, and emits `default trio degraded`. It can optionally retry with Voxtral Small as a fallback.
+**Default engines:** Cohere Transcribe (local/private) + Mistral Voxtral (`voxtral-small`) + ElevenLabs Scribe v2 + AssemblyAI Universal-3 Pro. If one engine fails, the run continues, marks the failure clearly, and emits `default engine set degraded`.
 
 ### Ensemble Mode
 
@@ -55,8 +64,8 @@ An eight-model pipeline for maximum accuracy. Invoked via the `transcribe` comma
 
 **Phases:**
 1. **Transcription** - All selected models run in parallel (cloud) or sequentially (local)
-2. **Merge** - Opus 4.6 performs consensus merge using speaker scaffolding
-3. **Review** - Opus 4.6 performs structural/flow correction pass
+2. **Merge** - current agent or optional headless model performs consensus merge using speaker scaffolding
+3. **Review** - current agent or optional headless model performs structural/flow correction pass
 4. **Format** - Dictionary corrections applied, output saved
 
 **Available Models:**
@@ -69,7 +78,7 @@ Benchmarks use two different methodologies — results are not directly comparab
 |---|-------|------|-------------|-------|
 | 1 | ElevenLabs Scribe v2 | Cloud | $6.67 | 2.3% AA-WER (#1), 5.83% HF-WER (#6); best overall for cloud accuracy |
 | 2 | Mistral Voxtral Small | Cloud | $4.00 | 2.9% AA-WER; context biasing via prompt |
-| 3 | Google Gemini 3 Pro | Cloud | $18.40 | 2.9% AA-WER; multimodal, most expensive cloud option |
+| 3 | Google Gemini audio | Cloud | Varies | Optional multimodal audio transcription path; model can be overridden with `ST_GEMINI_MODEL` |
 | 4 | AssemblyAI Universal-3 Pro | Cloud | $3.50 | 3.2% AA-WER; best speaker diarization (used for speaker scaffolding) |
 | 5 | OpenAI GPT-4o Transcribe | Cloud | ~$6.00 | ~2.46% WER (OpenAI self-reported); RL-trained ASR |
 | 6 | OpenAI GPT-4o Mini Transcribe | Cloud | ~$3.00 | Decorrelated errors from GPT-4o full; budget option |
@@ -78,7 +87,7 @@ Benchmarks use two different methodologies — results are not directly comparab
 
 **Presets:**
 - **Quick (1 model):** Voxtral Small only
-- **Standard (3 models, default):** AssemblyAI U3 Pro + Scribe v2 + Cohere (local) — best accuracy/cost balance
+- **Standard (4 models, default):** Cohere local + Mistral Voxtral + Scribe v2 + AssemblyAI Universal-3 Pro — best resilience/accuracy balance
 - **Full (all 8):** Maximum accuracy, all models
 
 ### Model Profiles
@@ -97,13 +106,13 @@ Detailed strengths and weaknesses for each engine. Use these to choose the right
 
 **2. Mistral Voxtral Small** (`voxtral-small`)
 
-- **Strengths**: LLM-backed — can answer questions directly from audio (not just transcribe); context biasing accepts up to 100 words/phrases for proper nouns and domain vocabulary; outperforms Whisper on every benchmark; open-weights model available; sub-200ms streaming mode.
-- **Weaknesses**: Context biasing is English-only (experimental for other languages); overlapping speech collapses to a single speaker; training data provenance partially undisclosed; newer and less battle-tested in high-volume production.
+- **Strengths**: LLM-backed — can answer questions directly from audio (not just transcribe); context biasing accepts up to 100 single-token terms for proper nouns and domain vocabulary; outperforms Whisper on every benchmark; open-weights model available; sub-200ms streaming mode.
+- **Weaknesses**: Context biasing rejects spaces and commas, so multi-word dictionary phrases must be filtered out; overlapping speech collapses to a single speaker; training data provenance partially undisclosed; newer and less battle-tested in high-volume production.
 - **Best for**: Recordings with specialized terminology or names that other engines mangle; when you want to ask follow-up questions about the audio content directly.
 
 ---
 
-**3. Google Gemini 3 Pro** (`gemini-pro`)
+**3. Google Gemini audio** (`gemini`)
 
 - **Strengths**: True multimodal — can reason about audio alongside video/image content in the same prompt; strong accent handling; emotion, sentiment, and intent detection; native live speech-to-speech translation with mid-conversation language switching; 90+ languages; supports up to ~2 hours of audio per request.
 - **Weaknesses**: Most expensive option by far (~$18.40/1K min); Gemini API does not support real-time streaming transcription (use Google Cloud Speech-to-Text for that); noise handling is slightly weaker than dedicated ASR models; 25MB file upload limits apply via the standard file API.
@@ -113,8 +122,8 @@ Detailed strengths and weaknesses for each engine. Use these to choose the right
 
 **4. AssemblyAI Universal-3 Pro** (`assemblyai-u3-pro`)
 
-- **Strengths**: Best-in-class speaker diarization (64% fewer speaker-counting errors; 30% better in noisy environments); plain-language prompting up to 1,000 words for per-recording context; automatic chapters, entity detection, sentiment analysis, and IAB categories; handles utterances as short as one word; built-in code-switching; multichannel support.
-- **Weaknesses**: 3.2% AA-WER puts it behind Scribe v2 and Voxtral on raw word accuracy; SLAM-1 (the prior LLM-reasoning model) is now deprecated and replaced by Universal-3 Pro; slightly higher latency than streaming-first models.
+- **Strengths**: Best-in-class speaker diarization (64% fewer speaker-counting errors; 30% better in noisy environments); plain-language prompting up to 1,000 words for per-recording context; entity detection, sentiment analysis, and IAB categories; handles utterances as short as one word; built-in code-switching; multichannel support.
+- **Weaknesses**: 3.2% AA-WER puts it behind Scribe v2 and Voxtral on raw word accuracy; slightly higher latency than streaming-first models.
 - **Best for**: Multi-speaker meetings, interviews, or panels where correctly attributing who said what matters most; recordings where downstream structure (chapters, entities) is needed.
 
 ---
@@ -147,7 +156,7 @@ Detailed strengths and weaknesses for each engine. Use these to choose the right
 
 - **Strengths**: #1 on HF Open ASR Leaderboard (5.42% WER, beating all cloud dedicated ASR alternatives in academic benchmarks); 524x real-time factor — roughly 3x faster than Whisper Large; Conformer-based encoder-decoder with >90% parameters in the acoustic encoder for high efficiency; Apache 2.0 license (freely deployable); 14 enterprise languages; free after local setup.
 - **Weaknesses**: No timestamps; no speaker diarization; no automatic language detection (language must be pre-specified); does not handle code-switching or mixed-language audio; no keyterm biasing; "eager transcription" — hallucinates on floor noise and non-speech sounds without a VAD preprocessing step; requires HF token for gated model access.
-- **Best for**: Tiebreaker in the default trio ensemble; single-language recordings where pure word accuracy matters and timestamps/diarization are not needed; high-volume local batch processing where API costs would add up.
+- **Best for**: Private/local tiebreaker in the default engine set; single-language recordings where pure word accuracy matters and timestamps/diarization are not needed; high-volume local batch processing where API costs would add up.
 
 ## Architecture
 
@@ -168,12 +177,13 @@ Named contexts (e.g. `bcbs-vt`) live in `~/.config/smart-transcribe/contexts/<na
 - Entities and notes are additive (union, no duplicates)
 - First use of a new context name triggers a 3-question setup interview
 
-### Standard (3-engine, default)
+### Standard (4-engine, default)
 
-1. **AssemblyAI Universal-3 Pro** (SLAM-1 is deprecated): Structure, speaker diarization, chapters, entity detection, sentiment, IAB categories. Dictionary terms injected via `keyterms_prompt`.
-2. **ElevenLabs Scribe v2**: Highest word-level cloud accuracy. Dictionary terms injected via `keyterms`.
-3. **Cohere Transcribe** (local, free): Runs on Apple Silicon via MPS. No keyterm biasing; used as tiebreaker.
-4. **Claude Code headless merge**: `claude -p --model opus --effort medium` — reads per-engine capability profiles and produces structured 4-section output (metadata, transcript, transparency report, suggestions). If Claude is rate-limited or unavailable, fallback is `codex exec` in headless mode.
+1. **Cohere Transcribe** (local): Runs on Apple Silicon via MLX first, then PyTorch fallback. No keyterm biasing; used as private/local tiebreaker.
+2. **Mistral Voxtral** (`voxtral-small`): Cloud transcription with context biasing and diarization.
+3. **ElevenLabs Scribe v2**: High word-level cloud accuracy. Dictionary terms injected via `keyterms`.
+4. **AssemblyAI Universal-3 Pro**: Speaker diarization, entity detection, sentiment, and IAB categories. Dictionary terms injected via `keyterms_prompt`; auto-chapters are disabled because the current API rejects them with Universal-3 Pro.
+5. **Agent merge**: Default skill behavior is to read `agent-merge-bundle.md` and merge in the current chat agent. Optional `--merge-mode claude` uses `claude -p --model opus --effort medium --json-schema ...`; fallback is `codex exec --output-schema ...`.
 
 ### Ensemble (up to 8 engines)
 
@@ -194,19 +204,19 @@ All 8 engines available via `--engines`. Cloud engines run in parallel; local en
 
 All keys resolved at runtime from 1Password (`Development` vault) via `op item get`. Environment variables are also checked first as a fallback.
 
-**Required for standard 3-engine mode:**
-- `ASSEMBLYAI_API_KEY` — AssemblyAI Universal-3 / SLAM-1
+**Required for standard 4-engine mode:**
+- `HF_TOKEN` — Required for Cohere Transcribe (gated HuggingFace repo)
+- `MISTRAL_API_KEY` — Voxtral transcription
 - `ELEVENLABS_API_KEY` — Scribe v2
+- `ASSEMBLYAI_API_KEY` — AssemblyAI Universal-3 Pro
 
 **Optional (additional engines):**
-- `MISTRAL_API_KEY` — Voxtral Small
-- `GOOGLE_API_KEY` — Gemini 3 Pro
+- `GOOGLE_API_KEY` — Gemini audio
 - `OPENAI_API_KEY` — GPT-4o Transcribe + Mini
-- `HF_TOKEN` — Required for Cohere Transcribe (gated HuggingFace repo)
 
-**Merge (always required):**
-- Claude Code CLI (`claude`) should be authenticated — merge uses `claude -p --model opus --effort medium`
-- Codex CLI (`codex`) is the automatic fallback merge runner when Claude headless is unavailable or rate-limited
+**Merge:**
+- Preferred: the current chat agent reads `agent-merge-bundle.md` and writes the final transcript.
+- Optional headless mode: Claude Code CLI (`claude`) authenticated for `--merge-mode claude`; Codex CLI (`codex`) is fallback.
 
 ### Tools
 - `ffmpeg` — Audio format conversion (installed via Homebrew); handles .qta, .m4a, .mp3, etc.
