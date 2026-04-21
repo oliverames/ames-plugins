@@ -1,6 +1,6 @@
 # ames-claude
 
-Oliver's personal plugin marketplace for Claude Code with experimental Codex dual-host support. Ships 7 plugins, 46 skills, 15 MCP servers.
+Oliver's personal plugin marketplace for Claude Code with experimental Codex dual-host support. Ships 5 plugins, 46 skills, 13 MCP servers. First-party API connectors (`ames-ynab`, `ames-lytho`) live in the separate [ames-connectors](https://github.com/oliverames/ames-connectors) marketplace as of 2026-04-21.
 
 ## Structure
 
@@ -14,7 +14,7 @@ plugins/build-macos-apps-codex/skills/      macOS skills converted from OpenAI's
 .agents/plugins/marketplace.json            Codex marketplace manifest (experimental)
 plugins/<name>/.codex-plugin/plugin.json    Codex plugin manifest (for dual-host plugins)
 sync                                        Regenerates marketplace.json from plugin manifests
-bump-and-sync                               Bumps ames-ynab version + runs sync + pushes
+bump-and-sync                               Bumps a plugin version + runs sync + pushes (generic; previously wired to ames-ynab, now in ames-connectors)
 ```
 
 ## Workflow
@@ -44,8 +44,6 @@ When bumping a plugin version, update all three spots: `plugins/<name>/.claude-p
 |--------|-------|-------------|
 | `ames-standalone-skills` | Claude + Codex | 28 original skills covering writing, dev, Apple workflows, finance, automation |
 | `ames-preferred-mcps` | Claude + Codex | 13 curated third-party MCP servers (Apple Docs, Drafts, Excel, Google Workspace, XcodeBuildMCP, etc.) |
-| `ames-ynab` | Claude + Codex | Custom YNAB MCP connector (`@oliverames/ynab-mcp-server`) |
-| `ames-lytho` | Claude + Codex | Custom Lytho Workflow MCP connector (`@oliverames/lytho-mcp-server`) |
 | `ames-community-skills` | Claude + Codex | Third-party skills without upstream marketplaces (currently 1: humanizer by blader) |
 | `build-ios-apps-codex` | Claude only | 6 iOS dev skills converted from OpenAI's `build-ios-apps` Codex plugin (MIT) |
 | `build-macos-apps-codex` | Claude only | 11 macOS dev skills + 3 commands converted from OpenAI's `build-macos-apps` Codex plugin (MIT) |
@@ -74,7 +72,7 @@ When bumping a plugin version, update all three spots: `plugins/<name>/.claude-p
 - **Minor** (1.0.0 → 1.1.0): new skills, commands, or MCP servers added; new user-facing capability
 - **Major** (1.0.0 → 2.0.0): breaking changes or full rewrites
 
-`bump-and-sync` handles version bumping + sync + push for `ames-ynab` automatically (called by the npm postpublish hook in the ynab-mcp-server repo).
+`bump-and-sync` is a generic version-bump + sync + push helper. The `ynab-mcp-server` postpublish hook previously targeted this repo; after the 2026-04-21 connector split that hook now chains into `ames-connectors` instead.
 
 When bumping a plugin under dual-host, keep Claude and Codex plugin.json versions in lockstep. The root marketplace.json entry must also match.
 
