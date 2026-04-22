@@ -1,12 +1,12 @@
 # ames-claude
 
-Oliver's personal plugin marketplace for Claude Code with experimental Codex dual-host support. Ships 5 plugins, 46 skills, 13 MCP servers. First-party API connectors (`ames-ynab`, `ames-lytho`) live in the separate [ames-connectors](https://github.com/oliverames/ames-connectors) marketplace as of 2026-04-21.
+Oliver's personal plugin marketplace for Claude Code with experimental Codex dual-host support. Ships 5 plugins, 47 skills, 13 MCP servers. First-party API connectors (`ames-ynab`, `ames-lytho`) live in the separate [ames-connectors](https://github.com/oliverames/ames-connectors) marketplace as of 2026-04-21.
 
 ## Structure
 
 ```
 plugins/<name>/                             Plugins (each has .claude-plugin/plugin.json)
-plugins/ames-standalone-skills/skills/      Original skills (28)
+plugins/ames-standalone-skills/skills/      Original skills (29)
 plugins/ames-community-skills/skills/       Curated third-party skills (1: humanizer)
 plugins/build-ios-apps-codex/skills/        iOS skills converted from OpenAI's Codex plugin (6)
 plugins/build-macos-apps-codex/skills/      macOS skills converted from OpenAI's Codex plugin (11)
@@ -42,7 +42,7 @@ When bumping a plugin version, update `plugins/<name>/.claude-plugin/plugin.json
 
 | Plugin | Hosts | Description |
 |--------|-------|-------------|
-| `ames-standalone-skills` | Claude + Codex | 28 original skills covering writing, dev, Apple workflows, finance, automation |
+| `ames-standalone-skills` | Claude + Codex | 29 original skills covering writing, dev, Apple workflows, finance, automation |
 | `ames-preferred-mcps` | Claude + Codex | 13 curated third-party MCP servers (Apple Docs, Drafts, Excel, Google Workspace, XcodeBuildMCP, etc.) |
 | `ames-community-skills` | Claude + Codex | Third-party skills without upstream marketplaces (currently 1: humanizer by blader) |
 | `build-ios-apps-codex` | Claude only | 6 iOS dev skills converted from OpenAI's `build-ios-apps` Codex plugin (MIT) |
@@ -50,7 +50,8 @@ When bumping a plugin version, update `plugins/<name>/.claude-plugin/plugin.json
 
 ## Plugin conventions
 
-- Every plugin needs `.claude-plugin/plugin.json` with `name`, `version`, `description`, `author`
+- Every plugin needs `.claude-plugin/plugin.json` with `name`, `version`, `description`, `author`. Optional but recommended: `homepage`, `repository`, `license`, `keywords`, `category` — these propagate into the marketplace entry at `./sync` time
+- `.claude-plugin/plugin.json` is the single source of truth for metadata; never hand-edit the generated marketplace entry
 - For Codex support, also add `.codex-plugin/plugin.json` with the Codex schema (includes `interface`, `category`, `capabilities` fields)
 - `version` is required — bump it whenever content changes so clients detect an update
 - Claude Code MCP plugins declare servers in a flat `.mcp.json` at the plugin root (no outer `mcpServers` wrapper, no `"type": "stdio"`)
