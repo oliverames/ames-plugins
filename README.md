@@ -294,7 +294,7 @@ A complete snapshot of `~/.claude/settings.json`, documented here so this repo d
 | `karpathy-skills` | [`forrestchang/andrej-karpathy-skills`](https://github.com/forrestchang/andrej-karpathy-skills) | Karpathy-inspired coding guidelines |
 | `swiftui-agent-skill` | [`twostraws/SwiftUI-Agent-Skill`](https://github.com/twostraws/SwiftUI-Agent-Skill) | Paul Hudson's SwiftUI Pro (replaced previously vendored copy) |
 
-### Enabled plugins (44 total)
+### Enabled plugins (43 total)
 
 Grouped by source marketplace. Each `plugin@marketplace` key in `enabledPlugins` is listed below with its purpose.
 
@@ -335,7 +335,7 @@ Grouped by source marketplace. Each `plugin@marketplace` key in `enabledPlugins`
 
 **`claudeskillz` (4):** `bash-output-styler`, `python-output-styler`, `project-readme-author`, `project-spec-extractor`
 
-**`anthropic-agent-skills` (2):** `claude-api` (Claude API and SDK best practices), `document-skills` (pptx, docx, xlsx, pdf, frontend-design, mcp-builder)
+**`anthropic-agent-skills` (1):** `document-skills` (pptx, docx, xlsx, pdf, frontend-design, mcp-builder)
 
 **`apple-notes-mcp` (1):** `apple-notes` — Apple Notes MCP
 **`addy-agent-skills` (1):** `agent-skills` — Addy Osmani's agent skills pack
