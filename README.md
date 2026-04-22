@@ -6,7 +6,7 @@
 
 <p align="center">
   <code>5 plugins</code> &bull;
-  <code>46 skills</code> &bull;
+  <code>47 skills</code> &bull;
   <code>13 MCP servers</code> &bull;
   <code>dual-host</code>
 </p>
