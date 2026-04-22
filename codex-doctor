@@ -8,10 +8,17 @@ Codex mirror, generated wrappers, cache, and optional live MCP visibility.
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+try:
+    import tomllib
+    _HAVE_TOMLLIB = True
+except ImportError:
+    _HAVE_TOMLLIB = False
 
 
 ROOT = Path(__file__).resolve().parent
@@ -96,9 +103,21 @@ def parse_enabled_plugins():
     if not CODEX_CONFIG.exists():
         return enabled
 
+    if _HAVE_TOMLLIB:
+        try:
+            with open(CODEX_CONFIG, "rb") as f:
+                data = tomllib.load(f)
+            for key, val in data.get("plugins", {}).items():
+                if isinstance(val, dict) and "enabled" in val:
+                    enabled[key] = bool(val["enabled"])
+            return enabled
+        except Exception:
+            pass  # fall through to line-based parser on any parse error
+
+    # Fallback: strip inline comments and parse by line for Python < 3.11
     current = None
     for raw in CODEX_CONFIG.read_text(errors="replace").splitlines():
-        line = raw.strip()
+        line = raw.split("#", 1)[0].strip()
         if line.startswith("[plugins.") and line.endswith("]"):
             current = None
             marker = '[plugins."'
@@ -347,7 +366,10 @@ def check_live_mcp(plugins, reporter, timeout):
         expected.extend(plugin["mcp_names"])
 
     for mcp_name in sorted(set(expected)):
-        if mcp_name not in output:
+        # Match per-line with word boundary to avoid e.g. "pandoc" matching
+        # inside "mcp-pandoc". re.escape handles names with special characters.
+        pattern = re.compile(rf"(?m)^\s*{re.escape(mcp_name)}\b")
+        if not pattern.search(output):
             reporter.warn(f"live Codex MCP list is missing expected server: {mcp_name}")
         else:
             reporter.ok(f"live Codex MCP visible: {mcp_name}")

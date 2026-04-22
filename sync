@@ -40,6 +40,15 @@ PLUGINS_DIR = HERE / "plugins"
 CLAUDE_MARKETPLACE = HERE / ".claude-plugin" / "marketplace.json"
 CODEX_MARKETPLACE = HERE / ".agents" / "plugins" / "marketplace.json"
 
+
+def read_json(path):
+    """Load JSON from path, exiting with a readable error on parse failure."""
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except json.JSONDecodeError as exc:
+        sys.exit(f"error: invalid JSON in {path}: {exc}")
+
 parser = argparse.ArgumentParser(description="Regenerate ames-claude marketplace manifests")
 parser.add_argument(
     "--check-codex",
@@ -51,8 +60,7 @@ args = parser.parse_args()
 _header("sync", "ames-claude marketplaces")
 
 # Read current Claude marketplace to preserve top-level metadata
-with open(CLAUDE_MARKETPLACE) as f:
-    claude_current = json.load(f)
+claude_current = read_json(CLAUDE_MARKETPLACE)
 
 # Pass 1: propagate Claude plugin.json versions into matching Codex plugin.json
 # files so the two sides never drift. Claude side is authoritative. Also create
@@ -71,14 +79,14 @@ propagated = 0
 codex_metadata_synced = 0
 codex_mcp_wrapped = 0
 for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
+    if not plugin_dir.is_dir():
+        continue
     claude_json = plugin_dir / ".claude-plugin" / "plugin.json"
     codex_json = plugin_dir / ".codex-plugin" / "plugin.json"
     if not claude_json.exists() or not codex_json.exists():
         continue
-    with open(claude_json) as f:
-        claude_meta = json.load(f)
-    with open(codex_json) as f:
-        codex_meta = json.load(f)
+    claude_meta = read_json(claude_json)
+    codex_meta = read_json(codex_json)
     claude_version = claude_meta.get("version")
     codex_changed = False
     if codex_meta.get("version") != claude_version:
@@ -94,17 +102,18 @@ for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
     claude_mcp = plugin_dir / ".mcp.json"
     codex_mcp = plugin_dir / ".codex-plugin" / "mcp.json"
     if claude_mcp.exists():
-        with open(claude_mcp) as f:
-            mcp_data = json.load(f)
+        mcp_data = read_json(claude_mcp)
         if isinstance(mcp_data, dict) and "mcpServers" in mcp_data:
-            codex_mcp_data = mcp_data
-        else:
-            codex_mcp_data = {"mcpServers": mcp_data}
+            sys.exit(
+                f"error: {claude_mcp} contains a top-level 'mcpServers' wrapper. "
+                "Claude Code .mcp.json must be flat (no outer mcpServers key). "
+                "See CLAUDE.md 'Plugin conventions'."
+            )
+        codex_mcp_data = {"mcpServers": mcp_data}
         codex_mcp.parent.mkdir(parents=True, exist_ok=True)
         current_codex_mcp = None
         if codex_mcp.exists():
-            with open(codex_mcp) as f:
-                current_codex_mcp = json.load(f)
+            current_codex_mcp = read_json(codex_mcp)
         if current_codex_mcp != codex_mcp_data:
             with open(codex_mcp, "w") as f:
                 json.dump(codex_mcp_data, f, indent=2)
@@ -133,11 +142,12 @@ OPTIONAL_PROPAGATED = (
 )
 claude_plugins = []
 for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
+    if not plugin_dir.is_dir():
+        continue
     plugin_json = plugin_dir / ".claude-plugin" / "plugin.json"
     if not plugin_json.exists():
         continue
-    with open(plugin_json) as f:
-        meta = json.load(f)
+    meta = read_json(plugin_json)
     entry = {
         "name": meta["name"],
         "version": meta["version"],
@@ -149,6 +159,9 @@ for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
             entry[field] = meta[field]
     claude_plugins.append(entry)
 
+for required_key in ("name", "owner", "metadata"):
+    if required_key not in claude_current:
+        sys.exit(f"error: {CLAUDE_MARKETPLACE} is missing required top-level key '{required_key}'")
 claude_output = {
     "name": claude_current["name"],
     "owner": claude_current["owner"],
@@ -167,17 +180,18 @@ for p in claude_plugins:
 # (e.g. build-ios-apps-codex, build-macos-apps-codex) and are correctly
 # excluded from the Codex manifest.
 if CODEX_MARKETPLACE.exists():
-    with open(CODEX_MARKETPLACE) as f:
-        codex_current = json.load(f)
+    codex_current = read_json(CODEX_MARKETPLACE)
     codex_plugins = []
     for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
+        if not plugin_dir.is_dir():
+            continue
         codex_json = plugin_dir / ".codex-plugin" / "plugin.json"
         if not codex_json.exists():
             continue
-        with open(codex_json) as f:
-            meta = json.load(f)
-        codex_plugins.append({
+        meta = read_json(codex_json)
+        entry = {
             "name": meta["name"],
+            "version": meta.get("version"),
             "source": {
                 "source": "local",
                 "path": f"./plugins/{plugin_dir.name}",
@@ -187,10 +201,15 @@ if CODEX_MARKETPLACE.exists():
                 "authentication": "ON_INSTALL",
             },
             "category": meta.get("category", "productivity"),
-        })
+        }
+        codex_plugins.append(entry)
+    # Preserve root metadata.version from existing file; bootstrap from Claude
+    # side if not present yet.
+    codex_metadata = codex_current.get("metadata") or claude_current.get("metadata", {})
     codex_output = {
         "name": codex_current["name"],
         "interface": codex_current.get("interface", {"displayName": codex_current["name"]}),
+        "metadata": codex_metadata,
         "plugins": codex_plugins,
     }
     with open(CODEX_MARKETPLACE, "w") as f:

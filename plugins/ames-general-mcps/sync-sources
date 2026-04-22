@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install and update non-npm MCP dependencies for ames-preferred-mcps.
+"""Install and update non-npm MCP dependencies for ames-general-mcps.
 
 npm/uvx-based servers self-update via @latest — this script handles
 the remaining dependencies that require explicit installation:
@@ -105,7 +105,7 @@ def check_npm_versions() -> None:
 
 
 def main() -> None:
-    _header("sync-sources", "ames-preferred-mcps")
+    _header("sync-sources", "ames-general-mcps")
 
     _section("iMCP  (Messages, Contacts, Reminders)")
     install_brew_cask("imcp", tap="mattt/tap")

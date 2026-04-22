@@ -71,7 +71,7 @@ Codex work must be additive. Do not change Claude Code's `.claude-plugin/marketp
 - SKILL.md frontmatter: `name` and `description` are required
 - **`name` MUST be kebab-case matching the directory name** (e.g. `name: apple-notes-formatting` for `skills/apple-notes-formatting/`). Display-name style values like `"Apple Notes Formatting"` cause Cowork's marketplace validator to reject the entire plugin with a generic "Failed to update marketplace" error; see memory `ref_claude_skill_md_schema.md`.
 - `./sync` regenerates `marketplace.json` from plugin.json files. Skills are auto-discovered by Claude Code at install time from the `skills/` directory — do NOT list them explicitly in marketplace.json (causes path resolution issues).
-- Every subdirectory of `skills/` MUST contain a `SKILL.md`. Dev workspaces without a SKILL.md belong elsewhere (Cowork's validator trips on them).
+- Every subdirectory of `skills/` MUST contain a `SKILL.md`. Dev workspaces, workspace/state directories (like `.a5c/`, `.remember/`, and similar runtime caches), and any other dot-dirs without a `SKILL.md` belong at the plugin root, not inside `skills/` — Cowork's validator rejects the entire plugin if any non-skill directory appears there.
 
 ## Version bumping
 
@@ -109,3 +109,6 @@ For Codex (experimental): `codex plugin marketplace add oliverames/ames-claude`,
 - **Do not disturb Claude to fix Codex**: if Codex needs a workaround, keep it in the Codex mirror/generator and verify with `./codex-doctor`; do not mutate the Claude marketplace contract.
 - **`build-ios-apps-codex` and `build-macos-apps-codex` are Claude Code only** by design. Their skills were converted from OpenAI's Codex plugins and cannot be republished to Codex (they already exist upstream in `openai/plugins` in their original form). Both are promoted to top-level plugins (rather than nested inside an umbrella plugin) so Claude Code's shallow auto-discovery finds each sub-skill directly.
 - **Version parity across manifests** is enforced by `./sync`, with the Claude Code plugin manifest as the source of truth.
+- **`bump-and-sync` atomicity**: `bump-and-sync` writes a `.bak` of `plugin.json` before mutating it and restores on `./sync` failure. If a stale `.bak` file is left behind after an interrupted run, delete it manually before the next invocation.
+- **Flat `.mcp.json` enforced at sync time**: `./sync` exits with an error if any Claude plugin's `.mcp.json` contains a top-level `mcpServers` key. Claude's `.mcp.json` must always be flat; the Codex wrapper is generated into `.codex-plugin/mcp.json`.
+- **`"category"` vs `interface.category` in `.codex-plugin/plugin.json`**: The top-level `"category"` field uses kebab-case (`"developer-tools"`, `"productivity"`) to match Claude Code's schema. The nested `interface.category` field uses title case (`"Developer Tools"`, `"Productivity"`) for Codex's UI renderer. Both are intentional and refer to different consumers.

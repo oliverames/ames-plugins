@@ -8,10 +8,15 @@
 #   ./bump-and-sync <plugin-name>
 #
 # Examples:
-#   ./bump-and-sync ames-preferred-mcps
 #   ./bump-and-sync ames-standalone-skills
+#   ./bump-and-sync ames-general-mcps
 
-set -e
+set -euo pipefail
+
+# Dependency check: fail fast with a clear message if required tools are missing
+for dep in python3 git; do
+    command -v "$dep" >/dev/null 2>&1 || { echo "  ✗ $dep not found on PATH"; exit 1; }
+done
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/style.sh" 2>/dev/null || {
@@ -48,7 +53,10 @@ if [ ! -f "$PLUGIN_JSON" ]; then
     exit 1
 fi
 
-# Bump patch version and capture the new value
+# Bump patch version and capture the new value.
+# Back up plugin.json first; restore it if ./sync fails so the manifest is
+# never left permanently mutated with no commit.
+cp "$PLUGIN_JSON" "$PLUGIN_JSON.bak"
 NEW_VERSION=$(python3 -c "
 import json, pathlib, sys
 p = pathlib.Path(sys.argv[1])
@@ -62,10 +70,14 @@ print(d['version'])
 
 success "$PLUGIN → v$NEW_VERSION"
 
-# Regenerate marketplace.json
+# Regenerate marketplace.json; restore plugin.json backup on failure
 step "Syncing marketplace..."
-cd "$MARKETPLACE"
-python3 sync --check-codex
+if ! "$SCRIPT_DIR/sync" --check-codex; then
+    mv "$PLUGIN_JSON.bak" "$PLUGIN_JSON"
+    error "sync failed; plugin.json restored from backup"
+    exit 1
+fi
+rm "$PLUGIN_JSON.bak"
 
 # Commit and push if there are changes
 git add "plugins/$PLUGIN/.claude-plugin/plugin.json" .claude-plugin/marketplace.json
@@ -79,7 +91,7 @@ if git diff --cached --quiet; then
 fi
 
 git commit -m "sync: $PLUGIN $NEW_VERSION" >/dev/null
-if git push 2>/dev/null; then
+if git push; then
     banner "Marketplace updated — Claude Code will auto-update on next startup"
 else
     warn "Committed locally, push failed"

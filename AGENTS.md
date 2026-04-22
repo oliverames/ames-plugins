@@ -1,6 +1,6 @@
 # ames-claude
 
-Oliver's personal plugin marketplace for Claude Code with experimental Codex dual-host support. Ships 5 plugins, 47 skills, 13 MCP servers. First-party API connectors (`ames-ynab`, `ames-lytho`) live in the separate [ames-connectors](https://github.com/oliverames/ames-connectors) marketplace as of 2026-04-21.
+Oliver's personal plugin marketplace for Claude Code with experimental Codex dual-host support. Ships 6 plugins, 47 skills, 13 MCP servers (split across `ames-dev-mcps` and `ames-general-mcps`). First-party API connectors (`ames-ynab`, `ames-lytho`) live in the separate [ames-connectors](https://github.com/oliverames/ames-connectors) marketplace as of 2026-04-21.
 
 ## Structure
 
@@ -33,7 +33,7 @@ The repo carries two parallel manifest namespaces under a shared plugin tree:
 
 | Host | Marketplace manifest | Per-plugin manifest | Plugins |
 |------|----------------------|---------------------|---------|
-| Claude Code (primary) | `.claude-plugin/marketplace.json` | `.claude-plugin/plugin.json` | 5 |
+| Claude Code (primary) | `.claude-plugin/marketplace.json` | `.claude-plugin/plugin.json` | 6 |
 | Codex (experimental) | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | 3 (excludes `build-ios-apps-codex`, `build-macos-apps-codex`, and first-party connectors now in `ames-connectors`) |
 
 Skill content (`SKILL.md`) is portable across hosts. MCP config starts as Claude Code's flat root `.mcp.json`; `./sync` generates a Codex-native `.codex-plugin/mcp.json` wrapper with a top-level `mcpServers` key. `build-ios-apps-codex` and `build-macos-apps-codex` are Claude-only because their skills were converted from OpenAI's Codex plugins (which exist upstream in `openai/plugins`) and cannot round-trip.
@@ -47,7 +47,8 @@ Codex work must be additive. Do not change Claude Code's `.claude-plugin/marketp
 | Plugin | Hosts | Description |
 |--------|-------|-------------|
 | `ames-standalone-skills` | Claude + Codex | 29 original skills covering writing, dev, Apple workflows, finance, automation |
-| `ames-preferred-mcps` | Claude + Codex | 13 curated third-party MCP servers (Apple Docs, Drafts, Excel, Google Workspace, XcodeBuildMCP, etc.) |
+| `ames-dev-mcps` | Claude + Codex | 6 development-focused MCP servers (Apple Docs, Apple Notifier, macOS Automator, XcodeBuildMCP, Sim Genie, Sosumi) |
+| `ames-general-mcps` | Claude + Codex | 7 day-to-day general-purpose MCP servers (Drafts, Excel, Google Workspace, iMCP, MarkItDown, Pandoc, Peekaboo) |
 | `ames-community-skills` | Claude + Codex | Third-party skills without upstream marketplaces (currently 1: humanizer by blader) |
 | `build-ios-apps-codex` | Claude only | 6 iOS dev skills converted from OpenAI's `build-ios-apps` Codex plugin (MIT) |
 | `build-macos-apps-codex` | Claude only | 11 macOS dev skills + 3 commands converted from OpenAI's `build-macos-apps` Codex plugin (MIT) |

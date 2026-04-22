@@ -106,7 +106,7 @@ Custom first-party MCP connectors moved to [ames-connectors](https://github.com/
 
 ### `ames-standalone-skills`
 
-Oliver's original Claude Code skills covering writing, development, automation, finance, and Apple platform work. 28 skills organized by theme (see [Skills catalog](#skills-catalog)).
+Oliver's original Claude Code skills covering writing, development, automation, finance, and Apple platform work. 29 skills organized by theme (see [Skills catalog](#skills-catalog)).
 
 ### `ames-dev-mcps`
 
@@ -157,7 +157,7 @@ Both plugins originated in [openai/plugins](https://github.com/openai/plugins) a
 
 ## Skills catalog
 
-28 skills in `ames-standalone-skills`, grouped by theme:
+29 skills in `ames-standalone-skills`, grouped by theme:
 
 **Writing and communications**
 - [`oliver-tone`](plugins/ames-standalone-skills/skills/oliver-tone/) — Apply Oliver's writing voice to drafts, emails, blog posts, announcements
