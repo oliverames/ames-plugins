@@ -144,6 +144,29 @@ For LinkedIn posts, memos, announcements, and anything with institutional contex
 
 **He names what's hard.** He doesn't smooth over complications: "The infrastructure gaps described in this memo — while real and impactful — are solvable problems. Culture is the hard problem, and we already have it."
 
+### Internal Team Chat (Teams / Slack)
+
+For professional channel messages to colleagues, managers, and skip-level leadership. The register is warm and collegial but not casual -- full sentences, no emoji in serious channels, no bullet points unless listing discrete items.
+
+**Characteristics:**
+- Opens with context, not pleasantries. He doesn't write "Hope you're well" -- he states what happened and why it matters.
+- Builds a short narrative arc: here's what I did, here's what I learned, here's what it means for us.
+- Uses personal framing without over-hedging: "before I'd gotten up to speed on the history here" rather than "during a period of limited knowledge."
+- Names people with their full title on first reference, first name after: "Elias LaCount (Senior Cybersecurity IAM Engineering, Information Security)... Elias said..."
+- Directs specific sub-points at named recipients mid-message when appropriate: "Ashley, the cybersecurity folks are in favor of..."
+- Ends with a concrete action or clear next step, not a vague positive close.
+- Confident about his own contributions without inflating them.
+
+**Example (April 2026, Teams channel to Ashley and Teresa):**
+
+> Good morning! As I mentioned yesterday, I had a really productive conversation with Elias LaCount (Senior Cybersecurity IAM Engineering, Information Security) on a wide array of technology modernization and security items, all stemming from a few things I flagged while auditing the security status of our social accounts a few weeks back. His team is excited to work with us on our workflows, and Elias said nothing is off the table. He seemed particularly glad there's someone with this background on the Brand & Engagement team.
+>
+> The first weekend after I started in early March, I'd written up a document with some initial observations about our digital infrastructure -- written before I'd gotten up to speed on the history here. Now that I've met with Elias and gained more context, I've turned it into a proper strategy document covering the areas I have visibility into. He introduced a few concepts I hadn't considered and flagged areas he wants to explore based on our conversation, so it's broader than where I started. That document is at the bottom of this chat and can be shared with or edited by anyone in the organization.
+>
+> Ashley, the cybersecurity folks are very much in favor of us retiring the bcbsvt3@gmail.com approach for managing Google assets and moving to dedicated Google Accounts that they'd help us manage. They also like the idea of adding corporate SSO to Sprout and other tools that support it, and confirmed those tools would stay accessible outside of VDI.
+
+Note the rhythm: two paragraphs of context and framing, then a short paragraph of direct action items addressed to the person responsible. No hedging on his own work ("I've turned it into a proper strategy document" not "I tried to turn it into...").
+
 ---
 
 ## Social Media and Casual Voice
@@ -217,6 +240,7 @@ pivotal, landscape, aligns with, crucial, underscores, showcase, testament, vibr
 | Developer feedback | Enthusiastic, specific | "Oh my gosh!" energy | Short, excited |
 | LinkedIn / announcement | Professional, mission-grounded | Subtle, self-aware | Medium, human-specific |
 | Strategy memo / internal doc | Confident, direct | None | Short declarative, assertive |
+| Internal team chat (Teams/Slack) | Collegial, professional | None in serious channels | Full sentences, varied, no bullets |
 
 ---
 
