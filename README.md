@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <code>5 plugins</code> &bull;
+  <code>6 plugins</code> &bull;
   <code>47 skills</code> &bull;
   <code>13 MCP servers</code> &bull;
   <code>dual-host</code>
@@ -52,7 +52,8 @@ ames-claude takes the additive route. One tree, two manifest namespaces, identic
   },
   "enabledPlugins": {
     "ames-standalone-skills@ames-claude": true,
-    "ames-preferred-mcps@ames-claude": true,
+    "ames-dev-mcps@ames-claude": true,
+    "ames-general-mcps@ames-claude": true,
     "ames-ynab@ames-connectors": true,
     "ames-community-skills@ames-claude": true,
     "build-ios-apps-codex@ames-claude": true,
@@ -69,7 +70,8 @@ Restart Claude Code. The marketplace registers, plugins install, and `autoUpdate
 /plugin marketplace add oliverames/ames-claude
 /plugin marketplace add oliverames/ames-connectors
 /plugin install ames-standalone-skills@ames-claude
-/plugin install ames-preferred-mcps@ames-claude
+/plugin install ames-dev-mcps@ames-claude
+/plugin install ames-general-mcps@ames-claude
 /plugin install ames-ynab@ames-connectors
 /plugin install ames-community-skills@ames-claude
 /plugin install build-ios-apps-codex@ames-claude
@@ -89,14 +91,15 @@ Then install plugins through Codex's plugin UI or CLI. `build-ios-apps-codex` an
 
 ## Plugins
 
-Five plugins ship in this marketplace:
+Six plugins ship in this marketplace:
 
 Custom first-party MCP connectors moved to [ames-connectors](https://github.com/oliverames/ames-connectors), which now owns `ames-ynab` and `ames-lytho`.
 
 | Plugin | Hosts | Version | Summary |
 |--------|-------|---------|---------|
 | [`ames-standalone-skills`](plugins/ames-standalone-skills/) | Claude + Codex | 3.5.3 | Oliver's original skill pack (29 skills) |
-| [`ames-preferred-mcps`](plugins/ames-preferred-mcps/) | Claude + Codex | 2.0.2 | 13 curated third-party MCP servers |
+| [`ames-dev-mcps`](plugins/ames-dev-mcps/) | Claude + Codex | 1.0.0 | 6 development-focused MCP servers for iOS/macOS workflows |
+| [`ames-general-mcps`](plugins/ames-general-mcps/) | Claude + Codex | 3.0.0 | 7 day-to-day general-purpose MCP servers |
 | [`ames-community-skills`](plugins/ames-community-skills/) | Claude + Codex | 2.0.1 | Third-party skills without upstream marketplaces |
 | [`build-ios-apps-codex`](plugins/build-ios-apps-codex/) | **Claude only** | 1.0.1 | 6 iOS dev skills converted from OpenAI's Codex plugin |
 | [`build-macos-apps-codex`](plugins/build-macos-apps-codex/) | **Claude only** | 1.0.1 | 11 macOS dev skills + 3 commands converted from OpenAI's Codex plugin |
@@ -105,25 +108,32 @@ Custom first-party MCP connectors moved to [ames-connectors](https://github.com/
 
 Oliver's original Claude Code skills covering writing, development, automation, finance, and Apple platform work. 28 skills organized by theme (see [Skills catalog](#skills-catalog)).
 
-### `ames-preferred-mcps`
+### `ames-dev-mcps`
 
-A single plugin that activates 13 curated third-party MCP servers:
+Development-focused MCP servers for iOS and macOS workflows:
 
 | MCP | Purpose |
 |-----|---------|
 | `apple-docs` | Apple Developer documentation search and WWDC lookup |
 | `apple-notifier` | Native macOS notifications, speech, screen capture |
+| `macos-automator` | AppleScript and JXA via osascript |
+| `SimGenie` | iOS Simulator helpers |
+| `sosumi` | Apple documentation fetcher |
+| `XcodeBuildMCP` | Xcode build/run/test for simulators and devices |
+
+### `ames-general-mcps`
+
+Day-to-day general-purpose MCP servers (formerly `ames-preferred-mcps`):
+
+| MCP | Purpose |
+|-----|---------|
 | `drafts` | Drafts.app integration for note capture |
 | `excel` | Excel workbook manipulation |
 | `google-workspace` | Gmail, Calendar, Drive, Docs, Sheets, Tasks, Meet |
 | `iMCP` | Apple event bridge (calendars, reminders) |
-| `macos-automator` | AppleScript and JXA via osascript |
 | `markitdown` | Convert files to Markdown |
 | `pandoc` | Universal document conversion |
 | `peekaboo` | macOS UI automation and screen capture |
-| `SimGenie` | iOS Simulator helpers |
-| `sosumi` | Apple documentation fetcher |
-| `XcodeBuildMCP` | Xcode build/run/test for simulators and devices |
 
 Some servers depend on locally installed apps or additional credentials.
 
@@ -193,11 +203,12 @@ Plus 6 skills in `build-ios-apps-codex`, 11 skills (+ 3 commands) in `build-maco
 
 ## MCP servers catalog
 
-13 MCP servers in `ames-preferred-mcps`:
+13 MCP servers split across two plugins:
 
-| Plugin | Server | Package |
-|--------|--------|---------|
-| `ames-preferred-mcps` | 13 third-party servers | See [plugin table](#ames-preferred-mcps) above |
+| Plugin | Server count | Details |
+|--------|--------------|---------|
+| `ames-dev-mcps` | 6 development-focused servers | See [plugin table](#ames-dev-mcps) above |
+| `ames-general-mcps` | 7 day-to-day servers | See [plugin table](#ames-general-mcps) above |
 
 ## Architecture
 
@@ -218,8 +229,8 @@ ames-claude/
 
 | Host | Marketplace manifest | Per-plugin manifest | Plugins |
 |------|----------------------|---------------------|---------|
-| Claude Code | `.claude-plugin/marketplace.json` | `.claude-plugin/plugin.json` | 5 |
-| Codex (experimental) | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | 3 (excludes `build-ios-apps-codex`, `build-macos-apps-codex`, and first-party connectors now in `ames-connectors`) |
+| Claude Code | `.claude-plugin/marketplace.json` | `.claude-plugin/plugin.json` | 6 |
+| Codex (experimental) | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | 4 (excludes `build-ios-apps-codex`, `build-macos-apps-codex`, and first-party connectors now in `ames-connectors`) |
 
 ### What crosses the boundary
 
@@ -240,7 +251,8 @@ Per-plugin environment requirements:
 
 | Plugin | Variable | Required | Purpose |
 |--------|----------|----------|---------|
-| `ames-preferred-mcps` | varies | varies | Some servers require their own credentials or apps |
+| `ames-dev-mcps` | varies | varies | Some servers require their own credentials or apps |
+| `ames-general-mcps` | varies | varies | Some servers require their own credentials or apps |
 
 Credentials are never stored in the repo. MCPs reference environment variables at runtime, with secrets resolved from the user's local configuration.
 
@@ -333,7 +345,7 @@ Grouped by source marketplace. Each `plugin@marketplace` key in `enabledPlugins`
 | `mcp-server-dev` | Build MCP servers and apps |
 | `gopls-lsp` | Go language server |
 
-**`ames-claude` (3 of 5 available enabled):** `ames-standalone-skills`, `ames-preferred-mcps`, `ames-community-skills`. The remaining two plugins (`build-ios-apps-codex`, `build-macos-apps-codex`) are published in the marketplace but not currently enabled at the user level. The next `wrap-up` session will reconcile `~/.claude/settings.json` against the marketplace and may enable/disable plugins accordingly.
+**`ames-claude` (3 of 6 available enabled):** `ames-standalone-skills`, `ames-preferred-mcps`, `ames-community-skills`. The 2026-04-22 split of `ames-preferred-mcps` into `ames-dev-mcps` and `ames-general-mcps` has not yet been reflected in `~/.claude/settings.json` — the old `ames-preferred-mcps@ames-claude` entry is now stale and should be replaced with the two new plugin keys on next session. `build-ios-apps-codex` and `build-macos-apps-codex` are published in the marketplace but not currently enabled at the user level. The next `wrap-up` session will reconcile `~/.claude/settings.json` against the marketplace and may enable/disable plugins accordingly.
 
 **`ames-connectors` (1 of 2 available enabled):** `ames-ynab`. `ames-lytho` is available in the connector marketplace but not currently enabled at the user level.
 
@@ -366,7 +378,7 @@ Defined in `env` block of `~/.claude/settings.json` and at session launch. `OP_S
 
 **Plugin credentials (set in shell, not in settings.json):**
 
-Connector-specific credentials now live with [ames-connectors](https://github.com/oliverames/ames-connectors). Other plugin-specific credentials (for servers in `ames-preferred-mcps` and some third-party plugins) are resolved at runtime through local configuration rather than stored in the repo.
+Connector-specific credentials now live with [ames-connectors](https://github.com/oliverames/ames-connectors). Other plugin-specific credentials (for servers in `ames-dev-mcps`, `ames-general-mcps`, and some third-party plugins) are resolved at runtime through local configuration rather than stored in the repo.
 
 ### Permissions
 
