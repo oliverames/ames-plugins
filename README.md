@@ -254,7 +254,7 @@ Each plugin's version lives in three places that must stay in sync:
 
 The marketplace itself has a separate version at `.claude-plugin/marketplace.json`'s top-level `metadata.version`, currently `3.5.0`.
 
-Workflow scripts at the repo root (`sync`, `bump-and-sync`, `codex-doctor`) help keep these aligned after content changes. `./sync` propagates `version` and shared metadata from `.claude-plugin/plugin.json` into the matching `.codex-plugin/plugin.json`, threads enriched metadata fields into the generated marketplace entry, and refreshes Codex MCP wrappers. Use `./sync --check-codex` for static Codex validation, and `./codex-doctor --live` when you also want installed-cache and live `codex mcp list` verification. Always run one of those before committing version-bearing changes.
+Workflow scripts at the repo root (`sync`, `bump-and-sync`, `codex-doctor`) help keep these aligned after content changes. `./sync` propagates `version` and shared metadata from `.claude-plugin/plugin.json` into the matching `.codex-plugin/plugin.json`, threads enriched metadata fields into the generated marketplace entry, and refreshes Codex MCP wrappers. Use `./sync --check-codex` for generated-file and cache validation, and `./codex-doctor --live` when you also want live `codex mcp list` verification. Always run one of those before committing version-bearing changes.
 
 ## Development
 
