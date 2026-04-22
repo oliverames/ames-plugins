@@ -42,5 +42,6 @@
       "Convert this file with MarkItDown.",
       "Save this note to Drafts."
     ]
-  }
+  },
+  "license": "MIT"
 }

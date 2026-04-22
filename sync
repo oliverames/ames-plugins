@@ -12,10 +12,13 @@ Handles both hosts:
 
 Usage:
     ./sync
+    ./sync --check-codex
 """
 
+import argparse
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -37,6 +40,14 @@ PLUGINS_DIR = HERE / "plugins"
 CLAUDE_MARKETPLACE = HERE / ".claude-plugin" / "marketplace.json"
 CODEX_MARKETPLACE = HERE / ".agents" / "plugins" / "marketplace.json"
 
+parser = argparse.ArgumentParser(description="Regenerate ames-claude marketplace manifests")
+parser.add_argument(
+    "--check-codex",
+    action="store_true",
+    help="run the report-only Codex doctor after sync completes",
+)
+args = parser.parse_args()
+
 _header("sync", "ames-claude marketplaces")
 
 # Read current Claude marketplace to preserve top-level metadata
@@ -46,7 +57,18 @@ with open(CLAUDE_MARKETPLACE) as f:
 # Pass 1: propagate Claude plugin.json versions into matching Codex plugin.json
 # files so the two sides never drift. Claude side is authoritative. Also create
 # Codex-native MCP manifests from Claude's flat .mcp.json files.
+SHARED_CODEX_FIELDS = (
+    "description",
+    "author",
+    "homepage",
+    "repository",
+    "license",
+    "keywords",
+    "category",
+)
+
 propagated = 0
+codex_metadata_synced = 0
 codex_mcp_wrapped = 0
 for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
     claude_json = plugin_dir / ".claude-plugin" / "plugin.json"
@@ -64,6 +86,11 @@ for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
         codex_changed = True
         _dim(f"propagated version {claude_version} to {plugin_dir.name}/.codex-plugin/plugin.json")
         propagated += 1
+    for field in SHARED_CODEX_FIELDS:
+        if field in claude_meta and codex_meta.get(field) != claude_meta[field]:
+            codex_meta[field] = claude_meta[field]
+            codex_changed = True
+            codex_metadata_synced += 1
     claude_mcp = plugin_dir / ".mcp.json"
     codex_mcp = plugin_dir / ".codex-plugin" / "mcp.json"
     if claude_mcp.exists():
@@ -172,9 +199,22 @@ if CODEX_MARKETPLACE.exists():
     _success(f".agents/plugins/marketplace.json: {len(codex_plugins)} plugin(s) (experimental)")
     if propagated:
         _dim(f"propagated {propagated} Claude-to-Codex version(s)")
+    if codex_metadata_synced:
+        _dim(f"synced {codex_metadata_synced} Codex metadata field(s)")
     if codex_mcp_wrapped:
         _dim(f"updated {codex_mcp_wrapped} Codex MCP manifest(s)")
 else:
     _warn(".agents/plugins/marketplace.json not present; Codex side skipped")
+
+if args.check_codex:
+    doctor = HERE / "codex-doctor"
+    if doctor.exists():
+        print()
+        sys.stdout.flush()
+        result = subprocess.run([sys.executable, str(doctor), "--no-live"], cwd=str(HERE), check=False)
+        if result.returncode != 0:
+            sys.exit(result.returncode)
+    else:
+        _warn("codex-doctor not found; Codex check skipped")
 
 print()

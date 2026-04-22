@@ -1,0 +1,376 @@
+#!/usr/bin/env python3
+"""Report-only Codex marketplace doctor for ames-claude.
+
+This script validates Codex-facing files and live install state without editing
+anything. Claude Code files remain the source of truth; this only checks the
+Codex mirror, generated wrappers, cache, and optional live MCP visibility.
+"""
+
+import argparse
+import json
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parent
+PLUGINS_DIR = ROOT / "plugins"
+MARKETPLACE = ROOT / ".agents" / "plugins" / "marketplace.json"
+CODEX_CONFIG = Path.home() / ".codex" / "config.toml"
+CODEX_CACHE = Path.home() / ".codex" / "plugins" / "cache" / "ames-claude"
+
+INSTALLATION_VALUES = {"AVAILABLE", "INSTALLED_BY_DEFAULT", "NOT_AVAILABLE"}
+
+
+class Reporter:
+    def __init__(self, verbose=False):
+        self.verbose = verbose
+        self.errors = []
+        self.warnings = []
+        self.notes = []
+
+    def ok(self, message):
+        if self.verbose:
+            print(f"OK    {message}")
+
+    def note(self, message):
+        self.notes.append(message)
+        if self.verbose:
+            print(f"NOTE  {message}")
+
+    def warn(self, message):
+        self.warnings.append(message)
+        print(f"WARN  {message}")
+
+    def error(self, message):
+        self.errors.append(message)
+        print(f"ERROR {message}")
+
+    def finish(self):
+        if self.errors:
+            print(f"\nFAILED: {len(self.errors)} error(s), {len(self.warnings)} warning(s)")
+            return 1
+        print(f"\nOK: Codex marketplace checks passed with {len(self.warnings)} warning(s)")
+        return 0
+
+
+def read_json(path, reporter):
+    try:
+        with path.open() as f:
+            return json.load(f)
+    except FileNotFoundError:
+        reporter.error(f"missing file: {path.relative_to(ROOT)}")
+    except json.JSONDecodeError as exc:
+        reporter.error(f"invalid JSON in {path.relative_to(ROOT)}: {exc}")
+    return None
+
+
+def is_relative_to(path, parent):
+    try:
+        path.relative_to(parent)
+        return True
+    except ValueError:
+        return False
+
+
+def plugin_path(plugin_dir, pointer, reporter, context):
+    if not isinstance(pointer, str) or not pointer.startswith("./"):
+        reporter.error(f"{context} must be a ./-prefixed relative path")
+        return None
+    target = (plugin_dir / pointer).resolve()
+    if not is_relative_to(target, plugin_dir.resolve()):
+        reporter.error(f"{context} escapes plugin root: {pointer}")
+        return None
+    return target
+
+
+def normalize_mcp(data):
+    if isinstance(data, dict) and isinstance(data.get("mcpServers"), dict):
+        return data
+    return {"mcpServers": data}
+
+
+def parse_enabled_plugins():
+    enabled = {}
+    if not CODEX_CONFIG.exists():
+        return enabled
+
+    current = None
+    for raw in CODEX_CONFIG.read_text(errors="replace").splitlines():
+        line = raw.strip()
+        if line.startswith("[plugins.") and line.endswith("]"):
+            current = None
+            marker = '[plugins."'
+            if line.startswith(marker) and line.endswith('"]'):
+                current = line[len(marker):-2]
+            continue
+        if current and line.startswith("enabled"):
+            _, _, value = line.partition("=")
+            enabled[current] = value.strip().lower() == "true"
+    return enabled
+
+
+def validate_skill_tree(plugin_dir, skill_pointer, reporter, plugin_name):
+    skill_dir = plugin_path(plugin_dir, skill_pointer, reporter, f"{plugin_name} skills")
+    if skill_dir is None:
+        return
+    if not skill_dir.is_dir():
+        reporter.error(f"{plugin_name} skills path does not exist: {skill_pointer}")
+        return
+    missing = []
+    for child in sorted(p for p in skill_dir.iterdir() if p.is_dir()):
+        if child.name.startswith("."):
+            reporter.note(f"{plugin_name} ignored hidden skill-root directory: {child.name}")
+            continue
+        if not (child / "SKILL.md").exists():
+            missing.append(child.name)
+    if missing:
+        reporter.error(f"{plugin_name} has skill folder(s) without SKILL.md: {', '.join(missing)}")
+    else:
+        reporter.ok(f"{plugin_name} skills tree is complete")
+
+
+def validate_mcp_wrapper(plugin_dir, codex_meta, reporter, plugin_name):
+    claude_mcp = plugin_dir / ".mcp.json"
+    if not claude_mcp.exists() and "mcpServers" not in codex_meta:
+        return []
+
+    mcp_pointer = codex_meta.get("mcpServers")
+    if not mcp_pointer:
+        reporter.error(f"{plugin_name} has .mcp.json but no Codex mcpServers pointer")
+        return []
+    if mcp_pointer != "./.codex-plugin/mcp.json":
+        reporter.error(
+            f"{plugin_name} Codex mcpServers must point at ./.codex-plugin/mcp.json "
+            "so Claude's root .mcp.json stays untouched"
+        )
+        return []
+
+    codex_mcp = plugin_path(plugin_dir, mcp_pointer, reporter, f"{plugin_name} mcpServers")
+    if codex_mcp is None:
+        return []
+    if not codex_mcp.exists():
+        reporter.error(f"{plugin_name} Codex MCP wrapper is missing: {mcp_pointer}")
+        return []
+
+    codex_data = read_json(codex_mcp, reporter)
+    if codex_data is None:
+        return []
+    if not isinstance(codex_data.get("mcpServers"), dict):
+        reporter.error(f"{plugin_name} Codex MCP wrapper must contain top-level mcpServers")
+        return []
+
+    if claude_mcp.exists():
+        claude_data = read_json(claude_mcp, reporter)
+        if claude_data is not None and normalize_mcp(claude_data) != codex_data:
+            reporter.error(f"{plugin_name} Codex MCP wrapper is out of sync with root .mcp.json")
+        else:
+            reporter.ok(f"{plugin_name} Codex MCP wrapper matches root .mcp.json")
+
+    return sorted(codex_data["mcpServers"].keys())
+
+
+def validate_codex_plugin(entry, reporter):
+    name = entry.get("name")
+    if not name:
+        reporter.error("marketplace plugin entry is missing name")
+        return None
+
+    source = entry.get("source")
+    if isinstance(source, str):
+        source_path = source
+    elif isinstance(source, dict):
+        source_path = source.get("path")
+        if source.get("source") != "local":
+            reporter.warn(f"{name} uses non-local source type {source.get('source')!r}; static checks are limited")
+    else:
+        source_path = None
+
+    if not source_path or not isinstance(source_path, str) or not source_path.startswith("./"):
+        reporter.error(f"{name} source.path must be a ./-prefixed relative path")
+        return None
+
+    plugin_dir = (ROOT / source_path).resolve()
+    if not is_relative_to(plugin_dir, ROOT.resolve()):
+        reporter.error(f"{name} source.path escapes marketplace root: {source_path}")
+        return None
+    if not plugin_dir.is_dir():
+        reporter.error(f"{name} source.path does not exist: {source_path}")
+        return None
+
+    policy = entry.get("policy", {})
+    if policy.get("installation") not in INSTALLATION_VALUES:
+        reporter.error(f"{name} policy.installation is missing or unsupported")
+    if "authentication" not in policy:
+        reporter.error(f"{name} policy.authentication is missing")
+    if "category" not in entry:
+        reporter.error(f"{name} marketplace category is missing")
+
+    codex_plugin_json = plugin_dir / ".codex-plugin" / "plugin.json"
+    codex_meta = read_json(codex_plugin_json, reporter)
+    if codex_meta is None:
+        return None
+
+    if codex_meta.get("name") != name:
+        reporter.error(f"{name} manifest name does not match marketplace entry")
+    for required in ("version", "description"):
+        if not codex_meta.get(required):
+            reporter.error(f"{name} Codex manifest missing required {required}")
+
+    claude_plugin_json = plugin_dir / ".claude-plugin" / "plugin.json"
+    if claude_plugin_json.exists():
+        claude_meta = read_json(claude_plugin_json, reporter)
+        if claude_meta is not None:
+            if claude_meta.get("version") != codex_meta.get("version"):
+                reporter.error(
+                    f"{name} version mismatch: Claude {claude_meta.get('version')} "
+                    f"vs Codex {codex_meta.get('version')}"
+                )
+            for field in ("description", "author", "homepage", "repository", "license", "keywords", "category"):
+                if field in claude_meta and codex_meta.get(field) != claude_meta[field]:
+                    reporter.warn(f"{name} Codex manifest field {field} differs from Claude source of truth")
+
+    if "skills" in codex_meta:
+        validate_skill_tree(plugin_dir, codex_meta["skills"], reporter, name)
+
+    codex_plugin_dir = plugin_dir / ".codex-plugin"
+    extra_codex_files = sorted(
+        p.name for p in codex_plugin_dir.iterdir()
+        if p.is_file() and p.name not in {"plugin.json", "mcp.json"}
+    )
+    if extra_codex_files:
+        reporter.warn(f"{name} has unexpected file(s) in .codex-plugin: {', '.join(extra_codex_files)}")
+
+    mcp_names = validate_mcp_wrapper(plugin_dir, codex_meta, reporter, name)
+    reporter.ok(f"{name} Codex manifest checked")
+    return {
+        "name": name,
+        "version": codex_meta.get("version"),
+        "mcp_names": mcp_names,
+    }
+
+
+def validate_marketplace(reporter):
+    marketplace = read_json(MARKETPLACE, reporter)
+    if marketplace is None:
+        return []
+
+    if not marketplace.get("name"):
+        reporter.error("Codex marketplace missing top-level name")
+    if not marketplace.get("interface", {}).get("displayName"):
+        reporter.error("Codex marketplace missing interface.displayName")
+    plugins = marketplace.get("plugins")
+    if not isinstance(plugins, list):
+        reporter.error("Codex marketplace plugins must be a list")
+        return []
+
+    seen = set()
+    checked = []
+    for entry in plugins:
+        name = entry.get("name") if isinstance(entry, dict) else None
+        if name in seen:
+            reporter.error(f"duplicate Codex marketplace plugin entry: {name}")
+        if name:
+            seen.add(name)
+        checked_entry = validate_codex_plugin(entry, reporter)
+        if checked_entry:
+            checked.append(checked_entry)
+
+    reporter.ok(f"Codex marketplace checked with {len(checked)} plugin(s)")
+    return checked
+
+
+def check_cache(plugins, reporter):
+    if not CODEX_CACHE.exists():
+        reporter.warn(f"Codex cache not found at {CODEX_CACHE}; install or upgrade marketplace to verify cache")
+        return
+
+    expected = {p["name"]: p["version"] for p in plugins}
+    cached = {}
+    for plugin_dir in sorted(p for p in CODEX_CACHE.iterdir() if p.is_dir()):
+        cached[plugin_dir.name] = sorted(p.name for p in plugin_dir.iterdir() if p.is_dir())
+
+    for name, version in expected.items():
+        versions = cached.get(name, [])
+        if version not in versions:
+            reporter.warn(
+                f"Codex cache for {name} is not at v{version}; run "
+                "`codex plugin marketplace upgrade ames-claude` if this should be installed"
+            )
+        else:
+            reporter.ok(f"Codex cache has {name} v{version}")
+
+    for name in sorted(set(cached) - set(expected)):
+        reporter.warn(f"stale Codex cache entry under ames-claude: {name} ({', '.join(cached[name])})")
+
+    enabled = parse_enabled_plugins()
+    for key, is_enabled in sorted(enabled.items()):
+        if not key.endswith("@ames-claude"):
+            continue
+        plugin_name = key.rsplit("@", 1)[0]
+        if is_enabled and plugin_name not in expected:
+            reporter.warn(f"enabled Codex config references plugin no longer in ames-claude: {key}")
+        elif not is_enabled and plugin_name in expected:
+            reporter.note(f"{key} is installed but disabled in Codex config")
+
+
+def check_live_mcp(plugins, reporter, timeout):
+    if not shutil.which("codex"):
+        reporter.warn("codex CLI is not on PATH; live MCP visibility check skipped")
+        return
+
+    try:
+        result = subprocess.run(
+            ["codex", "mcp", "list"],
+            cwd=str(ROOT),
+            text=True,
+            capture_output=True,
+            timeout=timeout,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        reporter.warn(f"`codex mcp list` timed out after {timeout}s")
+        return
+
+    if result.returncode != 0:
+        reporter.warn(f"`codex mcp list` failed: {result.stderr.strip() or result.stdout.strip()}")
+        return
+
+    output = result.stdout
+    expected = []
+    enabled = parse_enabled_plugins()
+    for plugin in plugins:
+        key = f"{plugin['name']}@ames-claude"
+        if enabled and not enabled.get(key, False):
+            continue
+        expected.extend(plugin["mcp_names"])
+
+    for mcp_name in sorted(set(expected)):
+        if mcp_name not in output:
+            reporter.warn(f"live Codex MCP list is missing expected server: {mcp_name}")
+        else:
+            reporter.ok(f"live Codex MCP visible: {mcp_name}")
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Validate the ames-claude Codex marketplace mirror")
+    parser.add_argument("--live", action="store_true", help="run live `codex mcp list` visibility checks")
+    parser.add_argument("--no-live", action="store_true", help="skip live `codex mcp list` visibility checks")
+    parser.add_argument("--timeout", type=int, default=15, help="seconds to wait for live Codex checks")
+    parser.add_argument("-v", "--verbose", action="store_true", help="print successful checks")
+    args = parser.parse_args(argv)
+    if args.live and args.no_live:
+        parser.error("--live and --no-live cannot be used together")
+
+    print("codex-doctor: validating ames-claude Codex marketplace mirror")
+    reporter = Reporter(verbose=args.verbose)
+    plugins = validate_marketplace(reporter)
+    check_cache(plugins, reporter)
+    if not args.no_live:
+        check_live_mcp(plugins, reporter, args.timeout)
+    return reporter.finish()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

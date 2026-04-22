@@ -65,7 +65,7 @@ success "$PLUGIN → v$NEW_VERSION"
 # Regenerate marketplace.json
 step "Syncing marketplace..."
 cd "$MARKETPLACE"
-python3 sync
+python3 sync --check-codex
 
 # Commit and push if there are changes
 git add "plugins/$PLUGIN/.claude-plugin/plugin.json" .claude-plugin/marketplace.json

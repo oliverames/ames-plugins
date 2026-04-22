@@ -36,5 +36,6 @@
       "Generate an Apple Watch workout from this plan.",
       "Draft this note in Oliver's tone."
     ]
-  }
+  },
+  "license": "MIT"
 }

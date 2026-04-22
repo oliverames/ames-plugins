@@ -79,12 +79,13 @@ Restart Claude Code. The marketplace registers, plugins install, and `autoUpdate
 ### Codex (experimental)
 
 ```
-codex marketplace add https://github.com/oliverames/ames-claude
+codex plugin marketplace add oliverames/ames-claude
+codex plugin marketplace upgrade ames-claude
 ```
 
 Then install plugins through Codex's plugin UI or CLI. `build-ios-apps-codex` and `build-macos-apps-codex` are intentionally absent from the Codex side (see below).
 
-> **Heads-up:** Codex's marketplace commands are still stabilizing. Verify exact syntax with `codex --help` before scripting. File an issue if any Codex manifest in this repo falls out of spec.
+> **Heads-up:** Codex's marketplace commands are still stabilizing. Verify exact syntax with `codex plugin marketplace --help` before scripting. File an issue if any Codex manifest in this repo falls out of spec.
 
 ## Plugins
 
@@ -210,7 +211,8 @@ ames-claude/
     └── <plugin-name>/
         ├── .claude-plugin/plugin.json     # Claude Code plugin manifest
         ├── .codex-plugin/plugin.json      # Codex plugin manifest (if applicable)
-        ├── .mcp.json                      # MCP server config (portable across hosts)
+        ├── .codex-plugin/mcp.json         # Generated Codex MCP wrapper (if applicable)
+        ├── .mcp.json                      # Claude Code MCP config, source for Codex wrapper
         └── skills/<skill-name>/SKILL.md   # Skill files (portable across hosts)
 ```
 
@@ -222,12 +224,13 @@ ames-claude/
 ### What crosses the boundary
 
 - **Skill content** (`SKILL.md` and bundled resources) is portable by spec
-- **MCP configs** (`.mcp.json`) use the same shape on both hosts
+- **MCP server inventory** is shared; Claude Code keeps the root `.mcp.json`, while `./sync` generates Codex's `.codex-plugin/mcp.json` wrapper
 - **Plugin content** structurally matches on both sides
 
 ### What does not
 
 - **Plugin and marketplace manifests** differ in location and schema; they live side by side in the same repo
+- **Claude Code's marketplace implementation** is not reshaped to satisfy Codex. Codex support stays additive and isolated in `.agents/` and `.codex-plugin/`
 - **`build-ios-apps-codex` and `build-macos-apps-codex`** are Claude Code only by design (converted-from-Codex skills can't round-trip cleanly, since they already exist upstream in `openai/plugins`)
 - **Third-party marketplaces that publish only one manifest format** can't be rewrapped by ames-claude. Install those from upstream wherever the author supports
 
@@ -251,7 +254,7 @@ Each plugin's version lives in three places that must stay in sync:
 
 The marketplace itself has a separate version at `.claude-plugin/marketplace.json`'s top-level `metadata.version`, currently `3.5.0`.
 
-Workflow scripts at the repo root (`sync`, `bump-and-sync`) help keep these aligned after content changes. `./sync` propagates `version` from `.claude-plugin/plugin.json` into the matching `.codex-plugin/plugin.json`, and threads the enriched metadata fields (`author`, `homepage`, `repository`, `license`, `keywords`, `category`) from each plugin manifest into the generated marketplace entry, so `.claude-plugin/plugin.json` stays the single source of truth for metadata. Always run one of those before committing version-bearing changes.
+Workflow scripts at the repo root (`sync`, `bump-and-sync`, `codex-doctor`) help keep these aligned after content changes. `./sync` propagates `version` and shared metadata from `.claude-plugin/plugin.json` into the matching `.codex-plugin/plugin.json`, threads enriched metadata fields into the generated marketplace entry, and refreshes Codex MCP wrappers. Use `./sync --check-codex` for static Codex validation, and `./codex-doctor --live` when you also want installed-cache and live `codex mcp list` verification. Always run one of those before committing version-bearing changes.
 
 ## Development
 
@@ -266,9 +269,9 @@ Workflow scripts at the repo root (`sync`, `bump-and-sync`) help keep these alig
 
 1. Create `plugins/<plugin-name>/.claude-plugin/plugin.json` with `name`, `version`, `description`, `author`
 2. For dual-host support, also create `plugins/<plugin-name>/.codex-plugin/plugin.json` mirroring the Claude manifest with Codex-specific `interface` and `category` fields
-3. Add the plugin entry to both `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json`
+3. Run `./sync` to regenerate `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json`
 4. Add content (skills, commands, MCPs) at the plugin root per spec
-5. Run `bump-and-sync` and commit
+5. Run `./codex-doctor --live` for Codex-facing plugins, then `bump-and-sync` and commit
 
 ## My Claude Code configuration
 
