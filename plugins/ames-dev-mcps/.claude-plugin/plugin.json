@@ -1,6 +1,6 @@
 {
   "name": "ames-dev-mcps",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Development-focused MCP servers curated by Oliver Ames. Includes Apple Docs, Apple Notifier, macOS Automator, XcodeBuild, Sim Genie, and Sosumi for iOS/macOS development workflows.",
   "author": {
     "name": "Oliver Ames",

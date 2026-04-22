@@ -32,7 +32,7 @@
     },
     {
       "name": "ames-dev-mcps",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Development-focused MCP servers curated by Oliver Ames. Includes Apple Docs, Apple Notifier, macOS Automator, XcodeBuild, Sim Genie, and Sosumi for iOS/macOS development workflows.",
       "source": "./plugins/ames-dev-mcps",
       "author": {
@@ -59,7 +59,7 @@
     },
     {
       "name": "ames-general-mcps",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "description": "Day-to-day general-purpose MCP servers curated by Oliver Ames. Includes Drafts, Excel, Google Workspace, iMCP, MarkItDown, Pandoc, and Peekaboo integrations.",
       "source": "./plugins/ames-general-mcps",
       "author": {
