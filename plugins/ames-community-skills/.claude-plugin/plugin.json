@@ -1,8 +1,20 @@
 {
   "name": "ames-community-skills",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Third-party Claude Code skills curated by Oliver Ames that ship as bare SKILL.md files with no upstream marketplace. Currently includes humanizer (blader). SwiftUI Pro installs directly from the twostraws/SwiftUI-Agent-Skill marketplace; Apple platform dev skills converted from OpenAI's Codex plugins ship as their own top-level plugins (build-ios-apps-codex, build-macos-apps-codex).",
   "author": {
-    "name": "Oliver Ames"
-  }
+    "name": "Oliver Ames",
+    "email": "oliverames@gmail.com",
+    "url": "https://github.com/oliverames"
+  },
+  "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-community-skills",
+  "repository": "https://github.com/oliverames/ames-claude",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "community",
+    "humanizer",
+    "writing"
+  ],
+  "category": "productivity"
 }

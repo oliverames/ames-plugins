@@ -6,38 +6,134 @@
   },
   "metadata": {
     "description": "Oliver's personal Claude Code plugins and skills",
-    "version": "3.4.0"
+    "version": "3.5.0"
   },
   "plugins": [
     {
       "name": "ames-community-skills",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "description": "Third-party Claude Code skills curated by Oliver Ames that ship as bare SKILL.md files with no upstream marketplace. Currently includes humanizer (blader). SwiftUI Pro installs directly from the twostraws/SwiftUI-Agent-Skill marketplace; Apple platform dev skills converted from OpenAI's Codex plugins ship as their own top-level plugins (build-ios-apps-codex, build-macos-apps-codex).",
-      "source": "./plugins/ames-community-skills"
+      "source": "./plugins/ames-community-skills",
+      "author": {
+        "name": "Oliver Ames",
+        "email": "oliverames@gmail.com",
+        "url": "https://github.com/oliverames"
+      },
+      "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-community-skills",
+      "repository": "https://github.com/oliverames/ames-claude",
+      "license": "MIT",
+      "keywords": [
+        "skills",
+        "community",
+        "humanizer",
+        "writing"
+      ],
+      "category": "productivity"
     },
     {
       "name": "ames-preferred-mcps",
-      "version": "2.0.1",
-      "description": "Preferred third-party MCP servers curated by Oliver Ames. Includes Apple Docs, Apple Notifier, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, XcodeBuild, iMCP, Sim Genie, and Sosumi integrations. Run sync-sources to install or update non-npm dependencies.",
-      "source": "./plugins/ames-preferred-mcps"
+      "version": "2.0.2",
+      "description": "Preferred third-party MCP servers curated by Oliver Ames. Includes Apple Docs, Apple Notifier, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, XcodeBuild, iMCP, Sim Genie, and Sosumi integrations.",
+      "source": "./plugins/ames-preferred-mcps",
+      "author": {
+        "name": "Oliver Ames",
+        "email": "oliverames@gmail.com",
+        "url": "https://github.com/oliverames"
+      },
+      "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-preferred-mcps",
+      "repository": "https://github.com/oliverames/ames-claude",
+      "license": "MIT",
+      "keywords": [
+        "mcp",
+        "apple-docs",
+        "apple-notifier",
+        "drafts",
+        "excel",
+        "google-workspace",
+        "macos-automator",
+        "pandoc",
+        "peekaboo",
+        "xcodebuild",
+        "imcp",
+        "simgenie",
+        "sosumi",
+        "markitdown"
+      ],
+      "category": "developer-tools"
     },
     {
       "name": "ames-standalone-skills",
-      "version": "3.5.2",
-      "description": "Oliver's original Claude Code skills covering writing, development, automation, finance, and AI tools (29 skills)",
-      "source": "./plugins/ames-standalone-skills"
+      "version": "3.5.3",
+      "description": "Oliver's original Claude Code skills covering writing, development, automation, finance, and AI tools (29 skills).",
+      "source": "./plugins/ames-standalone-skills",
+      "author": {
+        "name": "Oliver Ames",
+        "email": "oliverames@gmail.com",
+        "url": "https://github.com/oliverames"
+      },
+      "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-standalone-skills",
+      "repository": "https://github.com/oliverames/ames-claude",
+      "license": "MIT",
+      "keywords": [
+        "skills",
+        "writing",
+        "automation",
+        "finance",
+        "apple",
+        "ios",
+        "macos",
+        "codex"
+      ],
+      "category": "productivity"
     },
     {
       "name": "build-ios-apps-codex",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "iOS development skills converted from OpenAI's curated build-ios-apps Codex plugin (MIT). Ships 6 skills covering App Intents/Shortcuts, SwiftUI UI patterns, Liquid Glass adoption, performance auditing, view refactoring, and simulator debugging.",
-      "source": "./plugins/build-ios-apps-codex"
+      "source": "./plugins/build-ios-apps-codex",
+      "author": {
+        "name": "Oliver Ames",
+        "email": "oliverames@gmail.com",
+        "url": "https://github.com/oliverames"
+      },
+      "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/build-ios-apps-codex",
+      "repository": "https://github.com/oliverames/ames-claude",
+      "license": "MIT",
+      "keywords": [
+        "ios",
+        "swiftui",
+        "app-intents",
+        "liquid-glass",
+        "performance",
+        "apple",
+        "codex"
+      ],
+      "category": "developer-tools"
     },
     {
       "name": "build-macos-apps-codex",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "macOS development skills and commands converted from OpenAI's curated build-macos-apps Codex plugin (MIT). Ships 11 skills plus 3 commands covering building, running, debugging, SwiftUI and AppKit patterns, signing, packaging, notarization, SwiftPM, telemetry, and window management.",
-      "source": "./plugins/build-macos-apps-codex"
+      "source": "./plugins/build-macos-apps-codex",
+      "author": {
+        "name": "Oliver Ames",
+        "email": "oliverames@gmail.com",
+        "url": "https://github.com/oliverames"
+      },
+      "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/build-macos-apps-codex",
+      "repository": "https://github.com/oliverames/ames-claude",
+      "license": "MIT",
+      "keywords": [
+        "macos",
+        "swiftui",
+        "appkit",
+        "notarization",
+        "swiftpm",
+        "signing",
+        "apple",
+        "codex"
+      ],
+      "category": "developer-tools"
     }
   ]
 }

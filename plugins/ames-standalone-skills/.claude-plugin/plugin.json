@@ -1,8 +1,24 @@
 {
   "name": "ames-standalone-skills",
-  "version": "3.5.2",
-  "description": "Oliver's original Claude Code skills covering writing, development, automation, finance, and AI tools (29 skills)",
+  "version": "3.5.3",
+  "description": "Oliver's original Claude Code skills covering writing, development, automation, finance, and AI tools (29 skills).",
   "author": {
-    "name": "Oliver Ames"
-  }
+    "name": "Oliver Ames",
+    "email": "oliverames@gmail.com",
+    "url": "https://github.com/oliverames"
+  },
+  "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-standalone-skills",
+  "repository": "https://github.com/oliverames/ames-claude",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "writing",
+    "automation",
+    "finance",
+    "apple",
+    "ios",
+    "macos",
+    "codex"
+  ],
+  "category": "productivity"
 }

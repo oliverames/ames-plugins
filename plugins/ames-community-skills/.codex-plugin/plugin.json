@@ -1,6 +1,6 @@
 {
   "name": "ames-community-skills",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Third-party Claude Code skills curated by Oliver Ames that ship as bare SKILL.md files with no upstream marketplace. Currently includes humanizer (blader).",
   "author": {
     "name": "Oliver Ames",

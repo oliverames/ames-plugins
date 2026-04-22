@@ -1,11 +1,15 @@
 {
   "name": "ames-preferred-mcps",
-  "version": "2.0.1",
-  "description": "Preferred third-party MCP servers curated by Oliver Ames. Includes Apple Docs, Apple Notifier, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, XcodeBuild, iMCP, Sim Genie, and Sosumi integrations. Run sync-sources to install or update non-npm dependencies.",
+  "version": "2.0.2",
+  "description": "Preferred third-party MCP servers curated by Oliver Ames. Includes Apple Docs, Apple Notifier, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, XcodeBuild, iMCP, Sim Genie, and Sosumi integrations.",
   "author": {
     "name": "Oliver Ames",
-    "email": "oliverames@gmail.com"
+    "email": "oliverames@gmail.com",
+    "url": "https://github.com/oliverames"
   },
+  "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-preferred-mcps",
+  "repository": "https://github.com/oliverames/ames-claude",
+  "license": "MIT",
   "keywords": [
     "mcp",
     "apple-docs",
@@ -22,5 +26,6 @@
     "sosumi",
     "markitdown"
   ],
+  "category": "developer-tools",
   "mcpServers": "./.mcp.json"
 }

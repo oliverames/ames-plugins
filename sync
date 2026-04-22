@@ -93,6 +93,17 @@ for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
             f.write("\n")
 
 # Pass 2: regenerate Claude marketplace.json from per-plugin .claude-plugin/plugin.json
+# Optional plugin.json fields (author, homepage, repository, license, keywords,
+# category) propagate into the marketplace entry when present, so plugin.json
+# remains the single source of truth for metadata.
+OPTIONAL_PROPAGATED = (
+    "author",
+    "homepage",
+    "repository",
+    "license",
+    "keywords",
+    "category",
+)
 claude_plugins = []
 for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
     plugin_json = plugin_dir / ".claude-plugin" / "plugin.json"
@@ -100,12 +111,16 @@ for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
         continue
     with open(plugin_json) as f:
         meta = json.load(f)
-    claude_plugins.append({
+    entry = {
         "name": meta["name"],
         "version": meta["version"],
         "description": meta.get("description", ""),
         "source": f"./plugins/{plugin_dir.name}",
-    })
+    }
+    for field in OPTIONAL_PROPAGATED:
+        if field in meta:
+            entry[field] = meta[field]
+    claude_plugins.append(entry)
 
 claude_output = {
     "name": claude_current["name"],

@@ -12,6 +12,9 @@
 </p>
 
 <p align="center">
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-f5a542?style=flat-square" alt="License">
+  </a>
   <a href="https://www.buymeacoffee.com/oliverames">
     <img src="https://img.shields.io/badge/Buy_Me_a_Coffee-support-f5a542?style=flat-square&logo=buy-me-a-coffee&logoColor=white" alt="Buy Me a Coffee">
   </a>
@@ -91,11 +94,11 @@ Custom first-party MCP connectors moved to [ames-connectors](https://github.com/
 
 | Plugin | Hosts | Version | Summary |
 |--------|-------|---------|---------|
-| [`ames-standalone-skills`](plugins/ames-standalone-skills/) | Claude + Codex | 3.5.0 | Oliver's original skill pack (28 skills) |
-| [`ames-preferred-mcps`](plugins/ames-preferred-mcps/) | Claude + Codex | 2.0.0 | 13 curated third-party MCP servers |
-| [`ames-community-skills`](plugins/ames-community-skills/) | Claude + Codex | 2.0.0 | Third-party skills without upstream marketplaces |
-| [`build-ios-apps-codex`](plugins/build-ios-apps-codex/) | **Claude only** | 1.0.0 | 6 iOS dev skills converted from OpenAI's Codex plugin |
-| [`build-macos-apps-codex`](plugins/build-macos-apps-codex/) | **Claude only** | 1.0.0 | 11 macOS dev skills + 3 commands converted from OpenAI's Codex plugin |
+| [`ames-standalone-skills`](plugins/ames-standalone-skills/) | Claude + Codex | 3.5.3 | Oliver's original skill pack (29 skills) |
+| [`ames-preferred-mcps`](plugins/ames-preferred-mcps/) | Claude + Codex | 2.0.2 | 13 curated third-party MCP servers |
+| [`ames-community-skills`](plugins/ames-community-skills/) | Claude + Codex | 2.0.1 | Third-party skills without upstream marketplaces |
+| [`build-ios-apps-codex`](plugins/build-ios-apps-codex/) | **Claude only** | 1.0.1 | 6 iOS dev skills converted from OpenAI's Codex plugin |
+| [`build-macos-apps-codex`](plugins/build-macos-apps-codex/) | **Claude only** | 1.0.1 | 11 macOS dev skills + 3 commands converted from OpenAI's Codex plugin |
 
 ### `ames-standalone-skills`
 
@@ -246,9 +249,9 @@ Each plugin's version lives in three places that must stay in sync:
 2. `plugins/<name>/.codex-plugin/plugin.json` — Codex mirror (must match 1)
 3. Root `.claude-plugin/marketplace.json` — per-plugin `version` (must match 1)
 
-The marketplace itself has a separate version at `.claude-plugin/marketplace.json`'s top-level `metadata.version`, currently `3.4.0`.
+The marketplace itself has a separate version at `.claude-plugin/marketplace.json`'s top-level `metadata.version`, currently `3.5.0`.
 
-Workflow scripts at the repo root (`sync`, `bump-and-sync`) help keep these aligned after content changes. Always run one of those before committing version-bearing changes.
+Workflow scripts at the repo root (`sync`, `bump-and-sync`) help keep these aligned after content changes. `./sync` propagates `version` from `.claude-plugin/plugin.json` into the matching `.codex-plugin/plugin.json`, and threads the enriched metadata fields (`author`, `homepage`, `repository`, `license`, `keywords`, `category`) from each plugin manifest into the generated marketplace entry, so `.claude-plugin/plugin.json` stays the single source of truth for metadata. Always run one of those before committing version-bearing changes.
 
 ## Development
 
