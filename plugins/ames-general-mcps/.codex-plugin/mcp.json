@@ -1,19 +1,5 @@
 {
   "mcpServers": {
-    "apple-docs": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@kimsungwhee/apple-docs-mcp@latest"
-      ]
-    },
-    "apple-notifier": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "apple-notifier-mcp@latest"
-      ]
-    },
     "drafts": {
       "command": "npx",
       "args": [
@@ -39,12 +25,8 @@
         "GOOGLE_CLIENT_SECRET": "${GOOGLE_WORKSPACE_OAUTH_CLIENT_SECRET}"
       }
     },
-    "macos-automator": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@steipete/macos-automator-mcp@latest"
-      ]
+    "iMCP": {
+      "command": "/Applications/iMCP.app/Contents/MacOS/imcp-server"
     },
     "pandoc": {
       "command": "uvx",
@@ -59,24 +41,6 @@
         "@steipete/peekaboo@latest",
         "mcp"
       ]
-    },
-    "XcodeBuildMCP": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "xcodebuildmcp@latest",
-        "mcp"
-      ]
-    },
-    "iMCP": {
-      "command": "/Applications/iMCP.app/Contents/MacOS/imcp-server"
-    },
-    "SimGenie": {
-      "command": "/Applications/Sim Genie.app/Contents/MacOS/simgenie-mcp"
-    },
-    "sosumi": {
-      "type": "http",
-      "url": "https://sosumi.ai/mcp"
     },
     "markitdown": {
       "command": "uvx",

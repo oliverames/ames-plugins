@@ -1,0 +1,26 @@
+{
+  "name": "ames-general-mcps",
+  "version": "3.0.0",
+  "description": "Day-to-day general-purpose MCP servers curated by Oliver Ames. Includes Drafts, Excel, Google Workspace, iMCP, MarkItDown, Pandoc, and Peekaboo integrations.",
+  "author": {
+    "name": "Oliver Ames",
+    "email": "oliverames@gmail.com",
+    "url": "https://github.com/oliverames"
+  },
+  "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-general-mcps",
+  "repository": "https://github.com/oliverames/ames-claude",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "drafts",
+    "excel",
+    "google-workspace",
+    "imcp",
+    "pandoc",
+    "peekaboo",
+    "markitdown",
+    "productivity"
+  ],
+  "category": "productivity",
+  "mcpServers": "./.mcp.json"
+}

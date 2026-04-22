@@ -1,0 +1,43 @@
+{
+  "name": "ames-dev-mcps",
+  "version": "1.0.0",
+  "description": "Development-focused MCP servers curated by Oliver Ames. Includes Apple Docs, Apple Notifier, macOS Automator, XcodeBuild, Sim Genie, and Sosumi for iOS/macOS development workflows.",
+  "author": {
+    "name": "Oliver Ames",
+    "email": "oliverames@gmail.com",
+    "url": "https://github.com/oliverames"
+  },
+  "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-dev-mcps",
+  "repository": "https://github.com/oliverames/ames-claude",
+  "keywords": [
+    "mcp",
+    "apple-docs",
+    "apple-notifier",
+    "macos-automator",
+    "xcodebuild",
+    "simgenie",
+    "sosumi",
+    "ios",
+    "macos",
+    "development"
+  ],
+  "category": "developer-tools",
+  "mcpServers": "./.codex-plugin/mcp.json",
+  "interface": {
+    "displayName": "Dev MCPs",
+    "shortDescription": "Development MCP pack for Apple platform workflows.",
+    "longDescription": "A curated bundle of Oliver's development-focused MCP servers: Apple Docs for framework reference, Apple Notifier for dev alerts, macOS Automator for scripting and automation, XcodeBuildMCP for builds and testing, Sim Genie for iOS Simulator automation, and Sosumi.",
+    "developerName": "Oliver Ames",
+    "category": "Developer Tools",
+    "capabilities": [
+      "MCP Servers"
+    ],
+    "websiteURL": "https://github.com/oliverames/ames-claude#ames-dev-mcps",
+    "defaultPrompt": [
+      "Look up this Apple API in Apple Docs.",
+      "Build and run the app in the simulator.",
+      "Notify me when the build finishes."
+    ]
+  },
+  "license": "MIT"
+}

@@ -31,35 +31,57 @@
       "category": "productivity"
     },
     {
-      "name": "ames-preferred-mcps",
-      "version": "2.0.2",
-      "description": "Preferred third-party MCP servers curated by Oliver Ames. Includes Apple Docs, Apple Notifier, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, XcodeBuild, iMCP, Sim Genie, and Sosumi integrations.",
-      "source": "./plugins/ames-preferred-mcps",
+      "name": "ames-dev-mcps",
+      "version": "1.0.0",
+      "description": "Development-focused MCP servers curated by Oliver Ames. Includes Apple Docs, Apple Notifier, macOS Automator, XcodeBuild, Sim Genie, and Sosumi for iOS/macOS development workflows.",
+      "source": "./plugins/ames-dev-mcps",
       "author": {
         "name": "Oliver Ames",
         "email": "oliverames@gmail.com",
         "url": "https://github.com/oliverames"
       },
-      "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-preferred-mcps",
+      "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-dev-mcps",
       "repository": "https://github.com/oliverames/ames-claude",
       "license": "MIT",
       "keywords": [
         "mcp",
         "apple-docs",
         "apple-notifier",
+        "macos-automator",
+        "xcodebuild",
+        "simgenie",
+        "sosumi",
+        "ios",
+        "macos",
+        "development"
+      ],
+      "category": "developer-tools"
+    },
+    {
+      "name": "ames-general-mcps",
+      "version": "3.0.0",
+      "description": "Day-to-day general-purpose MCP servers curated by Oliver Ames. Includes Drafts, Excel, Google Workspace, iMCP, MarkItDown, Pandoc, and Peekaboo integrations.",
+      "source": "./plugins/ames-general-mcps",
+      "author": {
+        "name": "Oliver Ames",
+        "email": "oliverames@gmail.com",
+        "url": "https://github.com/oliverames"
+      },
+      "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-general-mcps",
+      "repository": "https://github.com/oliverames/ames-claude",
+      "license": "MIT",
+      "keywords": [
+        "mcp",
         "drafts",
         "excel",
         "google-workspace",
-        "macos-automator",
+        "imcp",
         "pandoc",
         "peekaboo",
-        "xcodebuild",
-        "imcp",
-        "simgenie",
-        "sosumi",
-        "markitdown"
+        "markitdown",
+        "productivity"
       ],
-      "category": "developer-tools"
+      "category": "productivity"
     },
     {
       "name": "ames-standalone-skills",

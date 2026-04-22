@@ -1,0 +1,25 @@
+{
+  "apple-docs": {
+    "command": "npx",
+    "args": ["-y", "@kimsungwhee/apple-docs-mcp@latest"]
+  },
+  "apple-notifier": {
+    "command": "npx",
+    "args": ["-y", "apple-notifier-mcp@latest"]
+  },
+  "macos-automator": {
+    "command": "npx",
+    "args": ["-y", "@steipete/macos-automator-mcp@latest"]
+  },
+  "XcodeBuildMCP": {
+    "command": "npx",
+    "args": ["-y", "xcodebuildmcp@latest", "mcp"]
+  },
+  "SimGenie": {
+    "command": "/Applications/Sim Genie.app/Contents/MacOS/simgenie-mcp"
+  },
+  "sosumi": {
+    "type": "http",
+    "url": "https://sosumi.ai/mcp"
+  }
+}
