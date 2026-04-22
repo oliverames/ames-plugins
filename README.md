@@ -345,7 +345,7 @@ Grouped by source marketplace. Each `plugin@marketplace` key in `enabledPlugins`
 | `mcp-server-dev` | Build MCP servers and apps |
 | `gopls-lsp` | Go language server |
 
-**`ames-claude` (3 of 6 available enabled):** `ames-standalone-skills`, `ames-preferred-mcps`, `ames-community-skills`. The 2026-04-22 split of `ames-preferred-mcps` into `ames-dev-mcps` and `ames-general-mcps` has not yet been reflected in `~/.claude/settings.json` — the old `ames-preferred-mcps@ames-claude` entry is now stale and should be replaced with the two new plugin keys on next session. `build-ios-apps-codex` and `build-macos-apps-codex` are published in the marketplace but not currently enabled at the user level. The next `wrap-up` session will reconcile `~/.claude/settings.json` against the marketplace and may enable/disable plugins accordingly.
+**`ames-claude` (6 of 6 available enabled):** `ames-standalone-skills`, `ames-dev-mcps`, `ames-general-mcps`, `ames-community-skills`, `build-ios-apps-codex`, `build-macos-apps-codex`. All plugins from this marketplace are currently enabled at the user level.
 
 **`ames-connectors` (1 of 2 available enabled):** `ames-ynab`. `ames-lytho` is available in the connector marketplace but not currently enabled at the user level.
 
