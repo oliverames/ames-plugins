@@ -44,8 +44,10 @@ with open(CLAUDE_MARKETPLACE) as f:
     claude_current = json.load(f)
 
 # Pass 1: propagate Claude plugin.json versions into matching Codex plugin.json
-# files so the two sides never drift. Claude side is authoritative.
+# files so the two sides never drift. Claude side is authoritative. Also create
+# Codex-native MCP manifests from Claude's flat .mcp.json files.
 propagated = 0
+codex_mcp_wrapped = 0
 for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
     claude_json = plugin_dir / ".claude-plugin" / "plugin.json"
     codex_json = plugin_dir / ".codex-plugin" / "plugin.json"
@@ -56,13 +58,39 @@ for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
     with open(codex_json) as f:
         codex_meta = json.load(f)
     claude_version = claude_meta.get("version")
+    codex_changed = False
     if codex_meta.get("version") != claude_version:
         codex_meta["version"] = claude_version
+        codex_changed = True
+        _dim(f"propagated version {claude_version} to {plugin_dir.name}/.codex-plugin/plugin.json")
+        propagated += 1
+    claude_mcp = plugin_dir / ".mcp.json"
+    codex_mcp = plugin_dir / ".codex-plugin" / "mcp.json"
+    if claude_mcp.exists():
+        with open(claude_mcp) as f:
+            mcp_data = json.load(f)
+        if isinstance(mcp_data, dict) and "mcpServers" in mcp_data:
+            codex_mcp_data = mcp_data
+        else:
+            codex_mcp_data = {"mcpServers": mcp_data}
+        codex_mcp.parent.mkdir(parents=True, exist_ok=True)
+        current_codex_mcp = None
+        if codex_mcp.exists():
+            with open(codex_mcp) as f:
+                current_codex_mcp = json.load(f)
+        if current_codex_mcp != codex_mcp_data:
+            with open(codex_mcp, "w") as f:
+                json.dump(codex_mcp_data, f, indent=2)
+                f.write("\n")
+            _dim(f"wrapped {plugin_dir.name}/.mcp.json for Codex at .codex-plugin/mcp.json")
+            codex_mcp_wrapped += 1
+        if codex_meta.get("mcpServers") != "./.codex-plugin/mcp.json":
+            codex_meta["mcpServers"] = "./.codex-plugin/mcp.json"
+            codex_changed = True
+    if codex_changed:
         with open(codex_json, "w") as f:
             json.dump(codex_meta, f, indent=2)
             f.write("\n")
-        _dim(f"propagated version {claude_version} to {plugin_dir.name}/.codex-plugin/plugin.json")
-        propagated += 1
 
 # Pass 2: regenerate Claude marketplace.json from per-plugin .claude-plugin/plugin.json
 claude_plugins = []
@@ -129,6 +157,8 @@ if CODEX_MARKETPLACE.exists():
     _success(f".agents/plugins/marketplace.json: {len(codex_plugins)} plugin(s) (experimental)")
     if propagated:
         _dim(f"propagated {propagated} Claude-to-Codex version(s)")
+    if codex_mcp_wrapped:
+        _dim(f"updated {codex_mcp_wrapped} Codex MCP manifest(s)")
 else:
     _warn(".agents/plugins/marketplace.json not present; Codex side skipped")
 

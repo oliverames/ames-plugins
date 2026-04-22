@@ -1,6 +1,6 @@
 {
   "name": "ames-preferred-mcps",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Preferred third-party MCP servers curated by Oliver Ames. Includes Apple Docs, Apple Notifier, Drafts, Excel, Google Workspace, macOS Automator, MarkItDown, Pandoc, Peekaboo, XcodeBuild, iMCP, Sim Genie, and Sosumi integrations.",
   "author": {
     "name": "Oliver Ames",
@@ -26,7 +26,7 @@
     "markitdown"
   ],
   "category": "developer-tools",
-  "mcpServers": "./.mcp.json",
+  "mcpServers": "./.codex-plugin/mcp.json",
   "interface": {
     "displayName": "Preferred MCPs",
     "shortDescription": "Curated MCP server pack for Apple, docs, productivity, and local tooling.",

@@ -387,9 +387,11 @@ Two `PostToolUse` hooks, both in `hooks.PostToolUse`:
 
 | Setting | Value | Why |
 |---------|-------|-----|
+| `model` | `sonnet` | Main-thread model. The `sonnet` family alias auto-resolves to the latest Sonnet (currently 4.6); keeps me on the best cost-per-capability tier without manual migration when a new Sonnet ships |
+| `advisorModel` | `opus` | Family alias for the `advisor` tool; auto-resolves to the latest Opus (currently 4.7). The advisor's job is to be the *stronger* reviewer, so it stays on Opus even when the main thread is Sonnet |
 | `outputStyle` | `Explanatory` | Default to the explanatory style, which surfaces educational insights alongside changes. Useful when the point of a session is learning as much as shipping |
-| `alwaysThinkingEnabled` | `true` | Extended thinking on for every turn, not just complex ones. Opus 4.7 uses the thinking budget adaptively |
-| `effortLevel` | `xhigh` | Maximum effort tier; Claude plans harder and verifies more before acting |
+| `alwaysThinkingEnabled` | `true` | Extended thinking on for every turn, not just complex ones. Modern Claude models use the thinking budget adaptively, so leaving it on is almost free on easy turns |
+| `effortLevel` | `medium` | Balanced tier. Applies to both main-thread and advisor calls (there is no separate advisor effort key). Lower tiers ship faster; higher tiers burn more tokens verifying. Medium is the default compromise |
 | `autoDreamEnabled` | `true` | Background reflection between turns (experimental) |
 | `teammateMode` | `auto` | Auto-spawn teammate agents when the workflow obviously benefits from parallelism |
 | `viewMode` | `focus` | Focused UI mode: hide non-essential chrome |

@@ -1,314 +1,250 @@
 ---
 name: wrap-up
-version: 4.3.0
-description: This skill should be used when the user says "wrap up", "close
-  session", "end session", "wrap things up", "close out this task", or invokes
-  /wrap-up, "done for the day", or "session complete". Runs an end-of-session
-  checklist covering shipping, memory, self-improvement, and a config-drift
-  check that keeps ames-claude's configuration record in sync with
-  ~/.claude/settings.json.
+version: 4.4.0
+description: >
+  Use when Oliver says "wrap up", "close session", "end session", "wrap
+  things up", "close out this task", "done for the day", "session complete",
+  or invokes /wrap-up. Runs a host-aware end-of-session closeout for Claude
+  Code and Codex: verification, commits, worklogs, memory or notes follow-up,
+  config drift checks, backups, and a concise final report.
 ---
 
 # Session Wrap-Up
 
-Based on [jonathanmalkin's self-improvement loop](https://www.reddit.com/r/ClaudeCode/comments/1r89084/selfimprovement_loop_my_favorite_claude_code_skill/).
+End the session in a way that leaves Oliver's work trustworthy and easy to
+resume. This skill is intentionally host-aware: Claude Code and Codex share
+the same standards, but not the same settings files, memory systems, MCP
+tools, or backup commands.
 
-**Convention for session start** (not auto-triggered by this skill): When
-beginning work in a project repo, check for `WORKLOG.md` and read the most
-recent entry to orient on where the last session left off. Especially
-valuable when switching between projects or picking up after days away.
+## Prime Directive
 
----
+Run a deterministic preflight first, then execute only the phases that are
+valid for the current host and repo state. Missing optional tools are not
+failures. Skip them, say why, and keep closing the session.
 
-## Phase 0: Triage
+Use bundled helper:
 
-Assess what happened this session before running phases:
+```bash
+python3 scripts/wrap-up-preflight.py --host auto --json
+```
 
-- **Trivial** (typo fix, config tweak, single small commit): Run Phase 1
-  commit + push only, then Phase 4 reminder. Skip everything else. Say
-  "Quick session — committed and pushed."
-- **Standard** (single repo, clear scope, meaningful changes): Run all
-  phases.
-- **Deep** (multi-repo, major feature, audit, or architecture session): Run
-  all phases. Pay extra attention to Phase 1.5 (multiple repos may need
-  worklogs) and Phase 2 (more likely to have learnings worth persisting).
+If the helper path is not obvious, resolve it relative to this `SKILL.md`.
+If the helper is missing from an installed cache, continue manually using the
+same checks listed below and report that the helper was unavailable.
 
-Classify based on: number of repos touched, number of commits, whether
-the session involved decisions or just execution, and overall duration
-implied by the conversation length.
+## Safety Rules
 
----
+- Never read or print secret values. For `~/.claude/settings.json`, read only
+  targeted non-secret fields such as `enabledPlugins`, `extraKnownMarketplaces`,
+  `permissions`, `hooks`, and top-level behavior keys. Do not read `env`.
+- For Codex, treat `~/.codex/config.toml` as the live config file. Inspect keys
+  and structure only; do not dump credentials or token-like values.
+- Do not blindly run destructive or catch-all commands. `commit-push-all` is a
+  final safety net only when preflight and git status show expected repos and
+  no unrelated dirty work.
+- Before editing skills, configs, or user documents during wrap-up, back up the
+  original file or make an explicit rename first.
+- Preserve user changes. If a repo already has unrelated dirty files, work
+  around them and mention the residual state instead of staging everything.
+- Use subagents only when the active host policy allows it. In Codex, follow the
+  current system and developer instructions even if Oliver's general workflow
+  says to use subagents liberally.
 
-Run phases in order. Each phase is conversational and inline — no separate
-documents. Auto-apply all actions without asking.
+## Phase 0: Preflight
 
-## Phase 1: Ship It
+1. Run `wrap-up-preflight.py`.
+2. Identify the active host:
+   - **Claude Code**: likely uses `~/.claude/settings.json`, Claude session
+     artifacts under `~/.claude/projects`, Claude memory, and Claude MCP tools.
+   - **Codex**: likely uses `~/.codex/config.toml`, Codex memories under
+     `~/.codex/memories`, Codex sessions under `~/.codex/sessions`, and
+     available Codex app/tool surfaces.
+   - If ambiguous, infer from current tool names and session context, then say
+     which host was assumed.
+3. Identify touched repos:
+   - Start with the current git root.
+   - Add any repo paths clearly modified or discussed in the session.
+   - For recent Claude Code sessions, prefer fresh `WORKLOG.md` entries and
+     `~/.claude/projects/*/*.jsonl` summaries over old memories.
+   - For Codex sessions, prefer the current conversation, current cwd, and
+     recent `~/.codex/sessions` entries.
+4. Classify scope:
+   - **Trivial**: one small config/docs/code change and no new decisions.
+   - **Standard**: one repo with meaningful implementation or documentation.
+   - **Deep**: multiple repos, plugin/config changes, audits, architecture,
+     automation, credentials, or significant decisions.
 
-**Commit:**
-1. Run `git status` in each repo directory that was touched during the session
-2. If uncommitted changes exist, auto-commit to main with a descriptive message
-3. Push to remote
+Stop and re-plan if preflight finds a real contradiction, such as a missing
+repo, malformed manifest, failed required verification, or dirty files that
+would be unsafe to stage.
 
-**File placement check:**
-4. If any **document-type files** (.md, .docx, .pdf, .xlsx, .pptx, media
-   files) were created or saved outside of source code directories:
-   - Invoke the `file-organization` skill to verify naming conventions
-   - Auto-fix naming violations by renaming the file
-   - Move misplaced files to their correct location
-5. Skip for source code files — those follow language/project conventions,
-   not document naming rules
+## Phase 1: Verify And Ship
 
-**README check:**
-6. If the session made significant changes (new features, renamed things,
-   changed APIs, added/removed tools), check if `README.md` is stale:
-   - Compare what the README claims (feature counts, tool lists, config
-     options, usage examples) against the actual current state
-   - If stale, update the affected sections to match reality
-   - Common staleness: tool/feature counts, config tables missing new env
-     vars, outdated usage examples, architecture sections missing new files
-7. Skip if changes were purely internal (bug fixes, refactors) with no
-   user-facing impact
+For each touched repo:
 
-**CLAUDE.md freshness check:**
-8. If the session made changes that affect project conventions, structure,
-   or workflows: check if `CLAUDE.md` in the affected repo is stale
-9. Update any sections that no longer match reality
-10. CLAUDE.md files can become very stale — if you notice significant drift,
-    flag it and fix it
+1. Run `git status --short --branch`.
+2. Review the diff for accidental secrets, debug leftovers, unrelated files,
+   generated cache files, or changes made by someone else.
+3. Run verification appropriate to the change:
+   - **Web app**: typecheck, lint, build, and hit relevant local routes when a
+     server is practical.
+   - **CLI/script**: invoke the changed entry point with representative input.
+   - **Skill/plugin**: run `validate-skill` when available, run repo `./sync`
+     when marketplace manifests depend on it, and validate changed JSON.
+   - **Docs only**: re-read the modified files and check links/paths/counts.
+4. Commit only intended changes in each repo. Use a clear message with the
+   local convention (`fix:`, `docs:`, `chore:`, `worklog:`, etc.).
+5. Push only after verification passes. If push fails, report the exact failure
+   and leave the local commit in place.
 
-**Claude Code config drift check (ames-claude README):**
-11. Reflect on the session: did anything change in `~/.claude/settings.json`,
-    or was any plugin or marketplace installed, enabled, disabled, or removed?
-    Also count as drift: new env vars, changed hooks, new permissions, or any
-    settings override added/removed/modified.
-12. If yes, the `## My Claude Code configuration` section of
-    `~/Developer/Projects/ames-claude/README.md` is now stale. Update the
-    affected tables to match the current `~/.claude/settings.json`:
-    - `Installed marketplaces` — add or remove rows for `extraKnownMarketplaces` changes
-    - `Enabled plugins` — update per-marketplace groupings to match `enabledPlugins`
-    - `Environment variables` — reflect changes to `env` or plugin credentials
-    - `Permissions` — update the allowlist if it changed
-    - `Hooks` — update rows for any added/removed/modified hook
-    - `UI and agent behavior` and `Miscellaneous` — update any changed values
-    - Update totals in section headers ("X marketplaces", "N enabled plugins")
-13. When updating, cross-check with a fresh read of `~/.claude/settings.json`
-    rather than relying on memory, then verify the README tables render
-    correctly (pipe counts, missing columns).
-14. Commit the README change to ames-claude with a `docs:` prefix, e.g.
-    `docs: sync config record with settings.json (added X plugin)`.
-15. Push to origin. The configuration record is only useful if it stays
-    current; a stale record is worse than none.
-16. If nothing changed in the config this session, skip this step entirely.
+### ames-claude Plugin Special Case
 
-**Apple Notes "💻 Tech" check:**
-17. Use the `apple-notes` MCP to search notes in the "💻 Tech" folder that
-    are related to what was worked on this session (search by project name,
-    tool name, or key terms from the session)
-18. For each matching note found, evaluate whether its content is stale or
-    incomplete given the session's changes:
-    - New setup steps added, removed, or changed?
-    - Config values, paths, or commands that have changed?
-    - Gotchas or workarounds that have been resolved?
-    - New gotchas or learnings that aren't yet captured?
-19. If a note needs updating, **invoke the `apple-notes-formatting` skill
-    first** to produce correctly-styled content (headings, checklists,
-    code blocks, spacing per the user's canonical rules), then use
-    `apple-notes` to write the update. Never write raw markdown or
-    model-default formatting — always route through the formatting skill
-20. If a new topic was covered that warrants a new note (e.g. a tool or
-    workflow not yet documented), draft the body through
-    `apple-notes-formatting` first, then create it in the "💻 Tech" folder
-21. Report what was found and changed (or "No matching Tech notes")
-22. Skip this step for trivial sessions (Phase 0 triage)
+When the session changed `~/Developer/Projects/ames-claude` or its iCloud
+resolved path:
 
-**Deploy:**
-23. Check if the project has a deploy skill or script
-24. If one exists, run it
-25. If not, skip deployment entirely — do not ask about manual deployment
-
-**Publish:**
-26. If `package.json` exists in the project root:
-    - Run `npm view <package-name> version` to get the published version
-    - Compare against the local `package.json` version
-    - If the local version is newer (bumped during this session), run
-      `npm publish` to push the new version
-    - If the versions match, skip — nothing to publish
-    - If no published version exists (404), this is a new package — ask
-      the user before first publish
-27. If no `package.json` exists, skip entirely
-
-**Task cleanup:**
-28. Check the task list for in-progress or stale items
-29. Mark completed tasks as done, flag orphaned ones
-
-## Phase 1.5: WORKLOG.md
-
-If this session worked in a project repo (not just `~/.claude/` or standalone
-scripts), generate a worklog entry:
-
-1. **Read the previous WORKLOG entry** (if one exists). Check:
-   - Were any "Left off at" items completed this session? Note them as
-     resolved.
-   - Are any "Left off at" items still undone? Carry them forward explicitly
-     in the new entry's "Left off at" rather than re-inventing them.
-   - Have any "Open questions" been answered? Note the resolution.
-   - Have any "Open questions" appeared in 3+ consecutive entries without
-     progress? Either promote them to a GitHub issue / Things task, or
-     explicitly drop them with a note ("Dropped — not worth pursuing
-     because...").
-2. Run `git log --oneline -10` and `git diff HEAD~5..HEAD --stat` (or similar)
-   to review what changed during this session
-3. Generate an entry with four fields:
-   - **What changed** — human-readable summary of the session's changes
-   - **Decisions made** — key decisions and WHY (the things git log doesn't capture)
-   - **Left off at** — where to pick up next session. **This is the most
-     valuable field** — be specific about what the next session should start
-     with. Clearly distinguish:
-     - NEW items from this session
-     - CARRIED items from the previous entry (prefix with "Still open:")
-   - **Open questions** — parking lot for things to revisit
-4. Prepend the entry to `WORKLOG.md` in the project root. If the file doesn't
-   exist, create it starting with `# Worklog\n\n`
-5. Use this format:
+1. Keep `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and the
+   regenerated marketplace entries in version parity.
+2. Run `./sync` from the repo root after plugin version changes.
+3. Validate both host manifests:
+   ```bash
+   python3 -m json.tool .claude-plugin/marketplace.json >/dev/null
+   python3 -m json.tool .agents/plugins/marketplace.json >/dev/null
    ```
-   ## YYYY-MM-DD — [Brief summary]
+4. Do not hand-edit generated marketplace JSON except to recover from a failed
+   sync.
 
-   **What changed**: ...
+## Phase 2: Documentation Drift
 
-   **Decisions made**: ...
+Update documentation only when the session changed behavior, setup, public
+commands, plugin layout, API surface, or config.
 
-   **Left off at**: ...
+Check in this order:
 
-   **Open questions**: ...
+1. `README.md`: user-facing capabilities, setup commands, tool counts, paths,
+   examples, env var names, and plugin or MCP inventories.
+2. `CLAUDE.md`: Claude Code workflow conventions, plugin hygiene, settings
+   expectations, and host-specific notes.
+3. `AGENTS.md`: Codex workflow conventions, plugin manifests, Codex settings,
+   and host-specific notes.
+4. Project-specific docs: only the section made stale by this session.
 
-   ---
-   ```
-6. Commit the entry: `git add WORKLOG.md && git commit -m "worklog: [brief summary]"`
+For config-record drift:
 
-**Multi-repo sessions**: If this session made meaningful changes in
-multiple project repos:
-- Write a worklog entry in each project repo that had substantive changes
-- Each entry should cover only what changed in THAT repo
-- Add a cross-reference line: "Part of a broader session that also
-  touched [list other repos]"
-- `Developer/Scripts` doesn't need a worklog — it's not a git repo
+- **Claude Code**: if `~/.claude/settings.json`, Claude plugins, MCPs,
+  marketplaces, hooks, permissions, model defaults, or UI behavior changed,
+  update the repo's Claude Code config reference. Use targeted reads and do not
+  expose `env` values. If Apple Notes tools are available, also consider the
+  `💻 Claude Code Setup` note or related `💻 Tech` notes.
+- **Codex**: if `~/.codex/config.toml`, Codex plugins, marketplaces, app
+  automations, or Codex-only manifests changed, update Codex-facing docs such
+  as `AGENTS.md`, `.agents/plugins/marketplace.json` source docs, or the
+  relevant README section. Do not rewrite Claude-only config records.
+- If a docs target is intentionally duplicated in README and Apple Notes,
+  update both only when the required tool is available. Otherwise update the
+  repo source of truth and report the skipped note update.
 
-**Skip this phase** if the session only touched config files, memory, or
-non-project work.
+## Phase 3: Worklog
 
-## Phase 2: Remember It
+Write a `WORKLOG.md` entry for every project repo with meaningful work. Skip
+for one-off config-only sessions unless the config lives in a project repo and
+future context would otherwise be lost.
 
-Scan the conversation for knowledge worth persisting. This is a structured
-review, not a vague pass.
+Before writing:
 
-**Step 1 — Scan for these specific signals:**
-- User corrections ("no, that's wrong", "don't do it that way", "actually...")
-- User confirmations of non-obvious approaches ("yes exactly", "perfect",
-  accepting an unusual choice)
-- Facts about project setup, architecture, or quirks that weren't
-  previously known
-- External system locations (URLs, API endpoints, dashboard links)
-- Preferences expressed (tool choices, style opinions, workflow preferences)
+1. Read the latest existing entry.
+2. Check whether carried items were resolved, still open, or obsolete.
+3. Use `git log --oneline -10`, `git diff --stat`, and the session context to
+   avoid inventing a narrative.
 
-**Step 2 — Classify each finding:**
-- Already documented somewhere? → Skip
-- Permanent project convention? → CLAUDE.md or `.claude/rules/`
-- Scoped to specific file types/paths? → `.claude/rules/` with `paths:`
-- Pattern or insight Claude discovered? → Auto memory
-- Personal/ephemeral context? → `CLAUDE.local.md`
-- Duplicating content from another file? → `@import` instead
+Entry format:
 
-**Step 3 — Apply and report:**
-Write the applicable items. Report in one line per item:
+```markdown
+## YYYY-MM-DD - Brief summary
 
-```
-Memory: Saved 2, updated 1, skipped 3 (already known)
-- [NEW] feedback: user prefers X over Y
-- [NEW] reference: dashboard URL for service Z
-- [UPDATED] project: added new teammate info
-```
+**What changed**: ...
 
-If nothing worth persisting was learned, say "Nothing new to remember"
-and move on.
+**Decisions made**: ...
 
-## Phase 3: Review & Apply
+**Left off at**: ...
 
-Analyze the conversation for self-improvement findings. If the session was
-short or routine with nothing notable, say "Nothing to improve" and proceed
-to Phase 4.
-
-Auto-apply all actionable findings immediately — do not ask for approval on
-each one. Apply the changes, commit them, then present a summary.
-
-**Finding categories:**
-- **Skill gap** — Things Claude struggled with, got wrong, or needed multiple
-  attempts
-- **Friction** — Repeated manual steps, things user had to ask for explicitly
-  that should have been automatic
-- **Knowledge** — Facts about projects, preferences, or setup that Claude
-  didn't know but should have
-- **Automation** — Repetitive patterns that could become skills, hooks, or
-  scripts
-- **Validated approach** — Things that worked well and should be repeated
-  in similar situations. These are easy to miss because success is quiet.
-  Look for: approaches the user confirmed, techniques that found real bugs,
-  workflows that were efficient.
-
-**Action types:**
-- **CLAUDE.md** — Edit the relevant project or global CLAUDE.md
-- **Rules** — Create or update a `.claude/rules/` file
-- **Auto memory** — Save an insight for future sessions
-- **Skill / Hook** — Document a new skill or hook spec for implementation
-- **CLAUDE.local.md** — Create or update per-project local memory
-
-Present a summary after applying, in two sections — applied items first,
-then no-action items:
-
-```
-Findings (applied):
-
-1. done Skill gap: Cost estimates were wrong multiple times
-   -> [CLAUDE.md] Added token counting reference table
-
-2. done Validated approach: Parallel subagents cut review time by 60%
-   -> [Memory] Saved: Use parallel agents for large code reviews
+**Open questions**: ...
 
 ---
-No action needed:
-
-3. Knowledge: Discovered X works this way
-   Already documented in CLAUDE.md
 ```
 
-## Phase 4: Backup & Sign Off
+Rules:
 
-**Run backups:**
-1. Run `backup-claude` to back up memory, plans, and teams to the private repo
-2. Run `backup-telegram` if any Telegram config was changed this session
-3. Run `commit-push-all` to catch any remaining uncommitted repos
+- Put concrete verification in the entry when the project changed code.
+- Distinguish `NEW`, `Still open`, and `Resolved this session`.
+- Carry forward unresolved prior items explicitly, do not silently drop them.
+- For multi-repo sessions, write one entry per repo and mention the related
+  repos in prose.
+- Prefer concise, factual entries over blow-by-blow logs.
 
-**Print a brief session report and exit. Format:**
+## Phase 4: Memory, Notes, And Self-Improvement
 
+Persist only knowledge that will matter in future sessions.
+
+Scan for:
+
+- user corrections or durable preferences,
+- project setup quirks,
+- commands that failed and their working replacements,
+- new external URLs or dashboard locations,
+- host-specific tool limitations or capabilities,
+- validated approaches that should be repeated.
+
+Apply by host:
+
+- **Claude Code**: use the available project/global memory mechanism, local
+  `CLAUDE.local.md`, project `CLAUDE.md`, or `.claude/rules/` as appropriate.
+- **Codex**: do not edit Codex memory files unless current instructions allow
+  it. Report memory candidates in the final summary. Use existing Codex memory
+  only as read context with required citations.
+- **Apple Notes**: before declaring the tool unavailable, discover the current
+  tool surface. In Codex, use ToolSearch. In Claude Code, inspect the available
+  MCP tools. If Apple Notes write tools exist, route content through
+  `apple-notes-formatting` first. If not, skip with a clear reason.
+
+When a skill's documented command failed in practice, update the skill source
+during the session if it is safe and in scope. The skill is canonical; memory is
+only a recall cache.
+
+## Phase 5: Backups And Final Sweep
+
+Run only available and relevant commands:
+
+1. `backup-claude`: run when Claude Code memory/config changed and the command
+   exists.
+2. `backup-telegram`: run only if Telegram config changed and the command
+   exists.
+3. `commit-push-all`: use only after verifying the repos it would touch are
+   expected. If the script supports a dry run, run that first. If it does not,
+   prefer explicit repo commits unless this was a deep multi-repo cleanup.
+
+Then run a final status pass for every touched repo and note any residual dirty
+files that are unrelated or intentionally left open.
+
+## Final Report
+
+Keep the report short and concrete. Include only lines that apply:
+
+```text
+Session complete
+
+Verified: <commands and observed results>
+Shipped: <commits/pushes or "local changes only">
+Worklog: <repos updated or skipped>
+Docs: <files/notes updated or skipped>
+Memory: <saved, candidates, or nothing new>
+Backup: <commands run or skipped reason>
+Residual: <known dirty files or blockers>
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Session complete
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Commits:  3 across 2 repos
-  Memory:   1 new, 1 updated
-  Worklog:  Written to sprout-mcp-server
-  Notes:    Updated 1 Tech note, created 0
-  Backup:   Memory backed up
+If the session was trivial:
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-Adapt the stats to what actually happened. Omit lines for phases that
-had nothing to report (e.g., no memory changes = no Memory line). For
-trivial sessions (Phase 0 triage), keep it to two lines:
-
-```
+```text
 Committed and pushed. Backup complete.
 ```
 
-After printing the report, stop. Do not run any exit command.
+After the report, stop. Do not run an exit command.

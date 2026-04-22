@@ -5,11 +5,11 @@
 # via ./sync, and pushes — triggering Claude Code auto-update.
 #
 # Usage:
-#   ./bump-and-sync [plugin-name]   (default: ames-ynab)
+#   ./bump-and-sync <plugin-name>
 #
 # Examples:
-#   ./bump-and-sync            # bumps ames-ynab
-#   ./bump-and-sync ames-lytho # bumps ames-lytho
+#   ./bump-and-sync ames-preferred-mcps
+#   ./bump-and-sync ames-standalone-skills
 
 set -e
 
@@ -17,13 +17,28 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/style.sh" 2>/dev/null || {
     success() { echo "  ✓ $1"; }
     error()   { echo "  ✗ $1"; }
+    warn()    { echo "  ! $1"; }
     step()    { echo "  → $1"; }
     header()  { echo ""; echo "=== ${1}${2:+ — $2} ==="; echo ""; }
     banner()  { echo ""; echo "[ $1 ]"; echo ""; }
 }
 
-PLUGIN="${1:-ames-ynab}"
 MARKETPLACE="$SCRIPT_DIR"
+
+PLUGIN="${1:-}"
+if [ -z "$PLUGIN" ]; then
+    error "missing plugin name"
+    echo
+    echo "Usage: ./bump-and-sync <plugin-name>"
+    echo
+    echo "Available plugins:"
+    find "$MARKETPLACE/plugins" -mindepth 2 -maxdepth 2 -path "*/.claude-plugin" -print |
+        sed "s#^$MARKETPLACE/plugins/##; s#/.claude-plugin\$##" |
+        sort |
+        sed 's/^/  - /'
+    exit 2
+fi
+
 PLUGIN_JSON="$MARKETPLACE/plugins/$PLUGIN/.claude-plugin/plugin.json"
 
 header "bump-and-sync" "$PLUGIN"
@@ -56,6 +71,7 @@ python3 sync
 git add "plugins/$PLUGIN/.claude-plugin/plugin.json" .claude-plugin/marketplace.json
 # Also stage the Codex side, which sync just brought in-sync (if the plugin has a Codex manifest)
 [ -f "plugins/$PLUGIN/.codex-plugin/plugin.json" ] && git add "plugins/$PLUGIN/.codex-plugin/plugin.json"
+[ -f "plugins/$PLUGIN/.codex-plugin/mcp.json" ] && git add "plugins/$PLUGIN/.codex-plugin/mcp.json"
 [ -f .agents/plugins/marketplace.json ] && git add .agents/plugins/marketplace.json
 if git diff --cached --quiet; then
     step "Nothing changed, skipping commit"

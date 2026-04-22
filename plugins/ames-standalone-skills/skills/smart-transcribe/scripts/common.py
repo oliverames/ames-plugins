@@ -230,6 +230,37 @@ _OP_ITEMS: dict[str, tuple[str, str]] = {
 }
 
 
+def _op_command() -> str | None:
+    """Find the 1Password CLI even when Codex launches with a minimal PATH."""
+    candidates = [
+        shutil.which("op"),
+        "/opt/homebrew/bin/op",
+        "/usr/local/bin/op",
+    ]
+    for candidate in candidates:
+        if candidate and Path(candidate).exists():
+            return str(candidate)
+    return None
+
+
+def _op_env() -> dict[str, str]:
+    """Build an op subprocess env, loading Claude's service token if needed."""
+    env = {**os.environ}
+    if env.get("OP_SERVICE_ACCOUNT_TOKEN"):
+        return env
+    settings_path = Path.home() / ".claude" / "settings.json"
+    if not settings_path.exists():
+        return env
+    try:
+        settings = json.loads(settings_path.read_text())
+        token = settings.get("env", {}).get("OP_SERVICE_ACCOUNT_TOKEN")
+    except Exception:
+        token = None
+    if token:
+        env["OP_SERVICE_ACCOUNT_TOKEN"] = token
+    return env
+
+
 def resolve_key(env_var: str) -> str | None:
     """Resolve an API key lazily: env var -> 1Password -> keys.env. Caches in os.environ."""
     val = os.getenv(env_var)
@@ -238,11 +269,15 @@ def resolve_key(env_var: str) -> str | None:
 
     if env_var in _OP_ITEMS:
         vault, item = _OP_ITEMS[env_var]
+        op_cmd = _op_command()
         try:
+            if not op_cmd:
+                raise FileNotFoundError("op CLI not found")
             result = subprocess.run(
-                ["op", "item", "get", item, "--vault", vault,
+                [op_cmd, "item", "get", item, "--vault", vault,
                  "--fields", "label=credential", "--reveal"],
                 capture_output=True, text=True, timeout=10,
+                env=_op_env(),
             )
             if result.returncode == 0:
                 val = result.stdout.strip()
@@ -268,13 +303,17 @@ def resolve_key_status(env_var: str) -> dict[str, str | bool]:
         return {"name": env_var, "resolved": True, "source": "env"}
     if env_var in _OP_ITEMS:
         vault, item = _OP_ITEMS[env_var]
+        op_cmd = _op_command()
         try:
+            if not op_cmd:
+                raise FileNotFoundError("op CLI not found")
             result = subprocess.run(
-                ["op", "item", "get", item, "--vault", vault, "--fields", "label=credential", "--reveal"],
+                [op_cmd, "item", "get", item, "--vault", vault, "--fields", "label=credential", "--reveal"],
                 capture_output=True,
                 text=True,
                 timeout=10,
                 check=False,
+                env=_op_env(),
             )
             if result.returncode == 0 and result.stdout.strip() and not result.stdout.strip().startswith("["):
                 return {"name": env_var, "resolved": True, "source": "1password"}
