@@ -1,12 +1,14 @@
 ---
 name: bcbs-wrap-up
-version: 1.1.0
+version: 1.2.0
 description: >
-  BCBS session wrap-up that updates evergreen notes, verifies meeting tasks
-  are in Jira with strikethrough in the notes files when a task is tracked in Jira, audits naming conventions, and ensures directory organization is clean. Use when Oliver says "BCBS wrap up",
-  "wrap up BCBS", "close out BCBS", "BCBS session done", "done with BCBS",
-  "BCBS end of day", or invokes /bcbs-wrap-up. Run at the end of any BCBS
-  working session.
+  BCBS session wrap-up that updates evergreen notes, verifies action items
+  are tracked in Jira (the canonical task system for BCBS), migrates any
+  legacy Asana or Apple Reminders references into Jira, audits naming
+  conventions, and ensures directory organization is clean. Use when Oliver
+  says "BCBS wrap up", "wrap up BCBS", "close out BCBS", "BCBS session
+  done", "done with BCBS", "BCBS end of day", or invokes /bcbs-wrap-up. Run
+  at the end of any BCBS working session.
 ---
 
 # BCBS Session Wrap-Up
@@ -17,16 +19,34 @@ conventions are current and consistent.
 
 ## BCBS Operating Defaults
 
-- **Task tracking is Jira.** Use the Blue Cross VT Jira workspace
-  (`bluecrossvt.atlassian.net`) and structured Jira/Atlassian MCP tools for
-  projects, issue search, issue creation, and issue updates. Do not use another
-  task system unless Oliver explicitly asks for it in the current request.
+- **Jira is the canonical task system. Period.** Use the Blue Cross VT
+  Jira workspace (`bluecrossvt.atlassian.net`) and structured
+  Jira/Atlassian MCP tools for projects, issue search, issue creation, and
+  issue updates. Do not rely on Asana, Apple Reminders, Todoist, or any
+  other task system as a source of truth, and never defer a Jira action to
+  those systems. If Oliver explicitly asks for a different system in the
+  current request, follow that request and flag it as an exception.
 - **Verify Jira before acting.** Confirm the accessible Jira workspace and
   destination project before creating or updating issues. Prefer structured
   project and JQL tools over generic search when available.
-- **Strikethrough means tracked in Jira.** A struck-through action item with a
-  `*(→ Jira: ISSUE-123)*` tag is the local note signal that the task exists in
-  Jira.
+- **Strikethrough means tracked in Jira.** A struck-through action item
+  with a `*(→ Jira: ISSUE-123)*` tag is the local note signal that the task
+  exists in Jira. Strikethrough without a Jira tag is stale and should be
+  reconciled during wrap-up.
+- **Legacy Asana or Apple Reminders tags must be migrated.** Any item
+  tagged `*(→ Asana: ...)*` or `*(→ Reminders: ...)*` in notes or trackers
+  represents a task that should be re-created in Jira. Flag each legacy tag
+  encountered during wrap-up. Do not silently treat an Asana or Reminders
+  tag as equivalent to a Jira tag. Prompt Oliver to confirm migration, then
+  create the Jira issue and update the local tag to `*(→ Jira: ISSUE-123)*`.
+- **Wrap-up never closes a Jira issue.** This skill verifies existence,
+  creates missing issues, and migrates legacy tags. It does not transition
+  a Jira issue to Done, Resolved, or any terminal status, and it does not
+  mark an action item checkbox complete based on a deliverable produced in
+  the same session. Closing happens only when Oliver (or the designated
+  reviewer) confirms the work meets the acceptance criteria for that
+  ticket. If a local tracker uses checkboxes, leave items unchecked and
+  append a "Draft delivered YYYY-MM-DD at <path>" note instead.
 
 Run phases in order. Auto-apply all actions without asking unless a step
 says otherwise. Use subagents for parallel work where noted.
@@ -55,7 +75,6 @@ The evergreen reference documents in `~/Documents/BCBS/Notes/` must stay
 current. These are NOT meeting notes; they are living knowledge bases.
 
 **Evergreen files to check:**
-- `BCBS VT – Task Tracker.md` -- dates, deadlines, project status
 - `Key People & Contacts.md` -- names, titles, roles, departments
 - `Working Context & Background.md` -- org dynamics, strategy, priorities
 - `BCBS Social Media Handoff – Reference Notes.md` -- social strategy, tools
@@ -63,6 +82,12 @@ current. These are NOT meeting notes; they are living knowledge bases.
 - `Sprout Social – Audience Groups to Create.md` -- audience targeting
 - `Expenses, Reimbursements & Purchasing.md` -- financial processes
 - `Data Organization Planning.md` -- file organization decisions
+
+**Phased-out files (do not treat as active evergreens):**
+- `BCBS VT – Task Tracker.md` — phased out as of 2026-04-23. Jira is the
+  live home for open tasks. Do not append new tasks here. If the file
+  still exists, treat it as a read-only archive; surface any items in it
+  that are still live as candidates for Jira creation in Phase 3.
 
 For each file:
 1. Read the current content
@@ -75,32 +100,56 @@ For each file:
 
 ## Phase 3: Jira Task Verification
 
-For every meeting note file modified this session:
+Jira is the only task system checked. Asana and Apple Reminders tags
+encountered in notes must be migrated to Jira during this phase.
 
-1. Read the Action Items section
-2. For each action item that has a Jira issue tag, such as
+For every meeting note, tracker, or evergreen file modified this session:
+
+1. Read the Action Items section (or equivalent).
+2. For each action item that has a Jira issue tag such as
    `*(→ Jira: ISSUE-123)*`:
-   - Verify the issue still exists in Jira when the Jira tools are available
-   - Verify the item text is struck through: `~~item text~~`
-   - If not struck through, add strikethrough
-3. For action items that do NOT have Jira routing:
-   - Determine if they should be in Jira (non-trivial, owned by Oliver)
-   - If yes, confirm the Blue Cross VT Jira workspace, find the matching
-     project, verify the issue type, then create the issue. Use structured
-     Atlassian/Jira tools when available: visible-project lookup, JQL issue
-     search, issue type metadata, issue creation, and issue edit/update tools.
-     In Codex, the Atlassian Rovo tools are the preferred path. In other hosts,
-     use the equivalent Jira MCP tools discovered through the available tool
-     surface.
-   - After creation, add the issue key and strikethrough to the note:
-     `- [ ] ~~Task text~~ *(→ Jira: ISSUE-123)*`
-   - Route to the correct Jira project based on content and visible Jira
-     projects. Use local `~/Documents/BCBS/Projects/` folder names as search
-     seeds when matching project names.
+   - Verify the issue still exists in Jira using the structured
+     Atlassian/Jira MCP tools.
+   - Verify the item text is struck through: `~~item text~~`. If not
+     struck through, add the strikethrough.
+   - Do **not** transition the Jira issue to Done, Resolved, or any
+     terminal status during wrap-up. Do not toggle a local checkbox to
+     `[x]`. Wrap-up verifies capture; closure is a separate reviewer
+     action.
+3. For action items tagged with a legacy system (`*(→ Asana: ...)*`,
+   `*(→ Reminders: ...)*`, or any non-Jira tag):
+   - Flag each legacy tag in the wrap-up summary.
+   - Determine whether the task is still live. If it is, confirm the
+     Blue Cross VT Jira workspace, find the matching project, verify
+     the issue type, and re-create the issue in Jira using structured
+     Atlassian/Jira tools (visible-project lookup, JQL issue search,
+     issue type metadata, issue creation, issue edit/update). In Codex,
+     the Atlassian Rovo tools are the preferred path; in other hosts,
+     use the equivalent Jira MCP tools discovered through the available
+     tool surface.
+   - Update the local tag to the new Jira key:
+     `- [ ] ~~Task text~~ *(→ Jira: ISSUE-123)*`. Do not delete the
+     original tag history from commits or version-controlled notes;
+     overwriting in-place is fine for the working file.
+   - If the task is stale or obsolete, note "(deprecated — no Jira
+     equivalent needed)" and leave it unchecked.
+4. For action items that do not have any routing tag:
+   - Determine if they should be in Jira (non-trivial, owned by
+     Oliver).
+   - If yes, create the Jira issue as above and add the strikethrough
+     and tag to the note.
+   - Route to the correct Jira project based on content and visible
+     Jira projects. Use local `~/Documents/BCBS/Projects/` folder names
+     as search seeds when matching project names.
 
-**Convention:** A strikethrough on an action item means it is tracked in
-Jira. This is the single source of truth for whether a task has been
-captured.
+**Conventions:**
+
+- A strikethrough on an action item means it is tracked in Jira. Items
+  without a `(→ Jira: ...)` tag after wrap-up are not considered
+  captured.
+- Wrap-up never marks a Jira ticket done. Deliverables produced during
+  the session get a "Draft delivered YYYY-MM-DD at <path>" inline note
+  on the local item, with the checkbox left unchecked.
 
 ---
 
