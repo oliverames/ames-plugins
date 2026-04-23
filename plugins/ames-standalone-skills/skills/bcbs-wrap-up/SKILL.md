@@ -1,21 +1,53 @@
 ---
 name: bcbs-wrap-up
-version: 1.2.0
+version: 1.5.0
+
 description: >
-  BCBS session wrap-up that updates evergreen notes, verifies action items
-  are tracked in Jira (the canonical task system for BCBS), migrates any
-  legacy Asana or Apple Reminders references into Jira, audits naming
-  conventions, and ensures directory organization is clean. Use when Oliver
-  says "BCBS wrap up", "wrap up BCBS", "close out BCBS", "BCBS session
-  done", "done with BCBS", "BCBS end of day", or invokes /bcbs-wrap-up. Run
-  at the end of any BCBS working session.
+  BCBS session wrap-up that runs end-to-end: updates evergreen notes, verifies
+  action items are tracked in Jira (the canonical task system for BCBS),
+  migrates any legacy Asana or Apple Reminders references into Jira, audits
+  naming conventions, ensures directory organization is clean, then commits,
+  writes a worklog, persists memory, and backs up. Use when Oliver says
+  "BCBS wrap up", "wrap up BCBS", "close out BCBS", "BCBS session done",
+  "done with BCBS", "BCBS end of day", or invokes /bcbs-wrap-up. Run at
+  the end of any BCBS working session.
 ---
 
 # BCBS Session Wrap-Up
 
-End-of-session checklist for the BCBS project directory at
-`~/Documents/BCBS`. Ensures all notes, files, Jira tasks, and naming
-conventions are current and consistent.
+End the session in a way that leaves Oliver's BCBS work trustworthy and easy
+to resume. This skill is self-contained: it runs BCBS-specific cleanup (notes,
+Jira, file placement, naming), then closes out with git commits, worklog,
+memory, and backups — no chaining to `/wrap-up` needed.
+
+## Prime Directive
+
+Run a deterministic preflight first, then execute only the phases that are
+valid for the current host and directory state. Missing optional tools are not
+failures. Skip them, say why, and keep closing the session.
+
+Locate the bundled preflight helper from the wrap-up skill and run it:
+
+```bash
+WUP=$(find ~/.claude/plugins -name "wrap-up-preflight.py" 2>/dev/null | head -1)
+[ -n "$WUP" ] && python3 "$WUP" --host auto --json || echo "preflight helper unavailable, continuing manually"
+```
+
+If the helper is missing, continue manually using the checks listed below
+and report that the helper was unavailable.
+
+## Safety Rules
+
+- Never read or print secret values. For `~/.claude/settings.json`, read only
+  targeted non-secret fields such as `enabledPlugins`, `extraKnownMarketplaces`,
+  `permissions`, `hooks`, and top-level behavior keys. Do not read `env`.
+- Do not blindly run destructive or catch-all commands. `commit-push-all` is a
+  final safety net only when preflight and git status show expected repos and
+  no unrelated dirty work.
+- Before editing skills, configs, or user documents during wrap-up, back up the
+  original file or make an explicit rename first.
+- Preserve user changes. If a repo already has unrelated dirty files, work
+  around them and mention the residual state instead of staging everything.
 
 ## BCBS Operating Defaults
 
@@ -47,13 +79,49 @@ conventions are current and consistent.
   reviewer) confirms the work meets the acceptance criteria for that
   ticket. If a local tracker uses checkboxes, leave items unchecked and
   append a "Draft delivered YYYY-MM-DD at <path>" note instead.
+- **Route tasks to the correct Jira project.** Team tasks go in **BAE**
+  (Brand & Engagement) — visible to the team, has due dates, or affects
+  others. Personal or research tasks that only Oliver needs to see go in
+  **OA** (Oliver's Space). Rule of thumb: if Ashley or a teammate would
+  act on it or track it, it is BAE; if it is a personal reminder or
+  research item, it is OA.
+- **Only assign Jira issues to Oliver.** Never assign issues to other
+  team members during automated task creation. If an action item belongs
+  to someone else, capture their name in the task description rather than
+  assigning the Jira issue to them.
+- **Check for duplicates before creating.** Before creating a Jira issue,
+  run a JQL search (e.g. `project = BAE AND summary ~ "..."`) to confirm
+  no matching issue already exists. Reference the existing key instead of
+  creating a duplicate.
+- **Jira descriptions must not reveal their source.** Do not include
+  "Source: [meeting name]", "from a recording", "transcript", "from
+  audio", or any AI-generation references in Jira descriptions. Write
+  descriptions as natural task context indistinguishable from a human
+  note — the kind that could appear in any team sprint review.
 
 Run phases in order. Auto-apply all actions without asking unless a step
 says otherwise. Use subagents for parallel work where noted.
 
-**Relationship to general wrap-up:** This skill handles BCBS-specific
-cleanup. After completing all phases, invoke the general `/wrap-up` skill
-for commits, memory persistence, worklog, and backups.
+---
+
+## Phase 0: Preflight
+
+1. Run the preflight helper if available (see Prime Directive).
+2. Identify touched paths:
+   - Start with `~/Documents/BCBS/` using `find ~/Documents/BCBS -mtime -1`
+     to surface files modified today.
+   - Add any git repos clearly modified or discussed in the session.
+   - For recent Claude Code sessions, prefer fresh `WORKLOG.md` entries and
+     `~/.claude/projects/*/*.jsonl` summaries over old memories.
+3. Classify scope:
+   - **Trivial**: one small note update, no Jira actions needed, no file moves.
+   - **Standard**: one meeting processed, action items tracked, typical notes.
+   - **Deep**: multiple projects touched, Jira project sync, large file
+     organization, naming audits, or significant new context added.
+
+Stop and re-plan if preflight finds a real contradiction: missing expected
+files, malformed notes, failed required Jira verification, or dirty git state
+that would be unsafe to stage.
 
 ---
 
@@ -74,14 +142,25 @@ what was worked on this session:
 The evergreen reference documents in `~/Documents/BCBS/Notes/` must stay
 current. These are NOT meeting notes; they are living knowledge bases.
 
-**Evergreen files to check:**
-- `Key People & Contacts.md` -- names, titles, roles, departments
-- `Working Context & Background.md` -- org dynamics, strategy, priorities
-- `BCBS Social Media Handoff – Reference Notes.md` -- social strategy, tools
-- `Social Media Audit.md` -- platform status, tool access, blockers
-- `Sprout Social – Audience Groups to Create.md` -- audience targeting
-- `Expenses, Reimbursements & Purchasing.md` -- financial processes
-- `Data Organization Planning.md` -- file organization decisions
+**Discovering evergreen files:**
+The evergreen file list changes over time. Do not assume any fixed set of
+filenames. Instead, discover what actually exists:
+
+```bash
+find ~/Documents/BCBS/Notes -maxdepth 1 -name "*.md" -not -name "Meetings" | sort
+```
+
+Review the returned files against today's session content. Update any
+file whose coverage area was touched — people, tools, decisions, strategy.
+Skip files whose topic area was not touched this session.
+
+**Common evergreen topics** (file names vary):
+- People, roles, and contacts
+- Working context and org dynamics
+- Social media strategy and tool access
+- Platform audit and blockers
+- Expenses and purchasing process
+- File organization decisions
 
 **Phased-out files (do not treat as active evergreens):**
 - `BCBS VT – Task Tracker.md` — phased out as of 2026-04-23. Jira is the
@@ -145,8 +224,7 @@ For every meeting note, tracker, or evergreen file modified this session:
 **Conventions:**
 
 - A strikethrough on an action item means it is tracked in Jira. Items
-  without a `(→ Jira: ...)` tag after wrap-up are not considered
-  captured.
+  without a `(→ Jira: ...)` tag after wrap-up are not considered captured.
 - Wrap-up never marks a Jira ticket done. Deliverables produced during
   the session get a "Draft delivered YYYY-MM-DD at <path>" inline note
   on the local item, with the checkbox left unchecked.
@@ -170,11 +248,20 @@ Transcripts and notes about a specific project should be in:
 ```
 ~/Documents/BCBS/Projects/[Project Name]/
 ```
-Not in `Notes/Meetings/` unless the meeting is genuinely general-purpose
-(onboarding intro, multi-team event, no single project home).
+Route to a project folder if the meeting's subject matter maps to an
+existing project — even if the project name never appears in the meeting
+title. Read the transcript content to determine the subject. When in
+doubt, route to a project rather than to Notes/Meetings.
+
+### General Meetings (last resort)
+Use `Notes/Meetings/` only when the meeting genuinely spans multiple
+projects with no single clear home, or is an onboarding intro, all-hands,
+or external multi-team call. This is the fallback of last resort; do not
+default to it when a project folder is a reasonable fit.
 
 ### Social Folder
-General Social folder files stay in Social. If posts or strategies are project specific, they should be moved to Projects. 
+General Social folder files stay in Social. If posts or strategies are
+project-specific, they should be moved to Projects.
 
 ---
 
@@ -192,7 +279,7 @@ find ~/Documents/BCBS -not -path '*/.a5c/*' -not -path '*/.codex-tasks/*' \
   -not -path '*/.remember/*' \( -name '*.md' -o -name '*.txt' -o -name '*.docx' \) \
   -type f | while read f; do
     b=$(basename "$f")
-    if echo "$b" | grep -q $'\u2014'; then echo "EM-DASH: $f"; fi
+    if echo "$b" | grep -q $'—'; then echo "EM-DASH: $f"; fi
     if echo "$b" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [^–]'; then echo "MISSING EN-DASH: $f"; fi
   done
 ```
@@ -216,19 +303,174 @@ Quick check that the local `Projects/` folder and Jira are in sync:
 
 ---
 
-## Phase 7: Verification
+## Phase 7: Verify And Ship
 
-Run a final verification:
+For each touched git repo:
 
-1. Confirm all files modified this session exist at their expected paths
-2. Spot-check 2-3 evergreen files for the updates made in Phase 2
-3. Spot-check 2-3 meeting notes for correct strikethrough in Phase 3
-4. Report a summary:
-   - Files touched this session
-   - Evergreen files updated
-   - Action items struck through
-   - Naming violations fixed
-   - Jira sync status
+1. Run `git status --short --branch`.
+2. Review the diff for accidental secrets, debug leftovers, unrelated files,
+   generated cache files, or changes made by someone else.
+3. Run verification appropriate to the change:
+   - **Skill/plugin**: run `validate-skill` when available, run repo `./sync`
+     when marketplace manifests depend on it, and validate changed JSON.
+   - **Docs only**: re-read the modified files and check links/paths/counts.
+   - **CLI/script**: invoke the changed entry point with representative input.
+4. Commit only intended changes in each repo. Use a clear message with the
+   local convention (`fix:`, `docs:`, `chore:`, `worklog:`, etc.).
+5. Push only after verification passes. If push fails, report the exact failure
+   and leave the local commit in place.
+
+### ames-claude Plugin Special Case
+
+When the session changed `~/Developer/Projects/ames-claude` or its iCloud
+resolved path:
+
+1. Keep `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and the
+   regenerated marketplace entries in version parity.
+2. Run `./sync` from the repo root after plugin version changes.
+3. Validate both host manifests:
+   ```bash
+   python3 -m json.tool .claude-plugin/marketplace.json >/dev/null
+   python3 -m json.tool .agents/plugins/marketplace.json >/dev/null
+   ```
+4. Do not hand-edit generated marketplace JSON except to recover from a failed
+   sync.
+
+---
+
+## Phase 8: Documentation Drift
+
+Update documentation only when the session changed behavior, setup, public
+commands, plugin layout, API surface, or config.
+
+Check in this order:
+
+1. `README.md`: user-facing capabilities, setup commands, tool counts, paths,
+   examples, env var names, and plugin or MCP inventories.
+2. `CLAUDE.md`: Claude Code workflow conventions, plugin hygiene, settings
+   expectations, and host-specific notes.
+3. `AGENTS.md`: Codex workflow conventions, plugin manifests, Codex settings,
+   and host-specific notes.
+4. Project-specific docs: only the section made stale by this session.
+
+For config-record drift:
+
+- **Claude Code**: if `~/.claude/settings.json`, Claude plugins, MCPs,
+  marketplaces, hooks, permissions, model defaults, or UI behavior changed,
+  update the repo's Claude Code config reference. Use targeted reads and do not
+  expose `env` values. If Apple Notes tools are available, also consider the
+  `💻 Claude Code Setup` note or related `💻 Tech` notes.
+- If a docs target is intentionally duplicated in README and Apple Notes,
+  update both only when the required tool is available. Otherwise update the
+  repo source of truth and report the skipped note update.
+
+---
+
+## Phase 9: Worklog
+
+Write a `WORKLOG.md` entry for every project repo with meaningful work. Skip
+for one-off config-only sessions unless the config lives in a project repo and
+future context would otherwise be lost.
+
+Before writing:
+
+1. Read the latest existing entry.
+2. Check whether carried items were resolved, still open, or obsolete.
+3. Use `git log --oneline -10`, `git diff --stat`, and the session context to
+   avoid inventing a narrative.
+
+Entry format:
+
+```markdown
+## YYYY-MM-DD - Brief summary
+
+**What changed**: ...
+
+**Decisions made**: ...
+
+**Left off at**: ...
+
+**Open questions**: ...
+
+---
+```
+
+Rules:
+
+- Put concrete verification in the entry when the project changed code.
+- Distinguish `NEW`, `Still open`, and `Resolved this session`.
+- Carry forward unresolved prior items explicitly, do not silently drop them.
+- For multi-repo sessions, write one entry per repo and mention the related
+  repos in prose.
+- Prefer concise, factual entries over blow-by-blow logs.
+
+---
+
+## Phase 10: Memory, Notes, And Self-Improvement
+
+Persist only knowledge that will matter in future sessions.
+
+Scan for:
+
+- user corrections or durable preferences,
+- project setup quirks,
+- commands that failed and their working replacements,
+- new external URLs or dashboard locations,
+- validated approaches that should be repeated.
+
+Apply by host:
+
+- **Claude Code**: use the available project/global memory mechanism, local
+  `CLAUDE.local.md`, project `CLAUDE.md`, or `.claude/rules/` as appropriate.
+- **Apple Notes**: before declaring the tool unavailable, discover the current
+  tool surface. If Apple Notes write tools exist, route content through
+  `apple-notes-formatting` first. If not, skip with a clear reason.
+
+When a skill's documented command failed in practice, update the skill source
+during the session if it is safe and in scope. The skill is canonical; memory is
+only a recall cache.
+
+---
+
+## Phase 11: Backups And Final Sweep
+
+Run only available and relevant commands:
+
+1. `backup-claude`: run when Claude Code memory/config changed and the command
+   exists.
+2. `commit-push-all`: use only after verifying the repos it would touch are
+   expected. If the script supports a dry run, run that first. If it does not,
+   prefer explicit repo commits unless this was a deep multi-repo cleanup.
+
+Then run a final status pass for every touched repo and note any residual dirty
+files that are unrelated or intentionally left open.
+
+---
+
+## Final Report
+
+Keep the report short and concrete. Include only lines that apply:
+
+```text
+Session complete
+
+Verified: <commands and observed results>
+Shipped: <commits/pushes or "local changes only">
+Worklog: <repos updated or skipped>
+Docs: <files/notes updated or skipped>
+Memory: <saved, candidates, or nothing new>
+Backup: <commands run or skipped reason>
+Residual: <known dirty files or blockers>
+BCBS: <evergreen files updated, Jira actions taken, naming fixes applied>
+```
+
+If the session was trivial:
+
+```text
+Committed and pushed. Backup complete.
+```
+
+After the report, stop. Do not run an exit command.
 
 ---
 
@@ -240,17 +482,25 @@ Run a final verification:
 - Title Case for descriptions
 - Suffixes: `– Transcript`, `– Notes` for meeting files
 
-### Jira Project Search Seeds (as of 2026-04)
-- Platform & Account Setup
-- Content Calendar Tool Evaluation
-- Content & Brand Strategy
-- Q2 Content Calendar (2026)
-- Strategic Initiatives (Q3-Q4 2026)
-- Relationship Building & Onboarding
-- Reporting
-- BeWell at Work
-- Beth Roberts Executive Social
-- Beth Roberts CEO Brand Building / Q3 / Q4 / (2026)
+### Jira Projects
+
+| Project | Key | Use for |
+|---------|-----|---------|
+| Brand & Engagement | BAE | All team-facing tasks; workstreams, events, campaigns, social, content |
+| Oliver's Space | OA | Personal/research tasks not ready for team visibility |
+| Photography | PICS | Photo shoots, headshots, event photography logistics |
+
+**Do not hardcode workstream names or issue numbers in this skill.**
+Workstreams are added and archived regularly. Always discover the current
+list at runtime before creating a task:
+
+```jql
+project = BAE AND issuetype = Workstream AND status != Done ORDER BY created DESC
+```
+
+Match the new task's subject matter against the returned workstream
+summaries. If no match is obvious, create the task directly under BAE
+without a parent and note the ambiguity in the wrap-up report.
 
 ### Directory Structure (this may have been updated)
 ```
