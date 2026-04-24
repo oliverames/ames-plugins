@@ -1,5 +1,22 @@
 # Worklog
 
+## 2026-04-24 — bcbs-wrap-up v1.6.0: Phase 5 naming check ported to Python
+
+**What changed**: Replaced the bash `grep -qE` naming convention check in Phase 5 of `bcbs-wrap-up/SKILL.md` with a Python3 `os.walk` implementation. The bash version used `[^–]` in a grep extended-regex character class — macOS's BSD grep handles the en-dash as a multibyte UTF-8 sequence and produces false positives. The Python version uses native `str` Unicode comparisons (`'\u2013'`, `'\u2014'`) and is reliable across shells and locales. Confirmed 0 violations across the full BCBS directory with the new script. Plugin bumped 3.5.9 → 3.5.10; skill bumped v1.5.0 → v1.6.0. `./sync` regenerated both marketplace manifests.
+
+**Decisions made**:
+- **Python over fixed bash.** Could have fixed the bash by using `LC_ALL=C grep` or a raw byte check, but Python's unicode string model is the correct tool for filename character-class checks — no encoding surprises.
+- **Update skill source, not just memory.** Per CLAUDE.md skill-maintenance rule: the skill is canonical; memory is only a recall cache. Both updated this session.
+
+**Left off at**:
+- **Resolved this session**: bash en-dash false-positive in Phase 5 (was open since 2026-04-23 entry).
+- **Still open from prior entries**: sync-count auto-regen, publish script, postpublish hooks, legacy Asana-tagged items in BCBS notes still need Oliver triage, `ames-connectors` LICENSE, `codex-doctor --only-enabled` flag.
+
+**Open questions**:
+- Should `build-letterhead.sh` validate all expected pandoc styleIds are present in the reference doc before running pandoc?
+
+---
+
 ## 2026-04-24 — bcbs-vt: pandoc styleId coverage 0% → 100%, BCBS typography fixed
 
 **What changed**: `style-proposal-report.py` rewritten to cover every pandoc paragraph styleId (`Title`, `Subtitle`, `Author`, `Date`, `Heading1–4`, `BodyText`, `FirstParagraph`, `Compact`, `Caption`, `IntenseQuote`) plus a `Table` table-type style injected via raw XML (python-docx's paragraph-style API can't express table borders or firstRow conditional formatting). Design principle shifted from "preserve template styles, add missing" to "meet pandoc where it writes": the script now upserts each missing styleId by ID so Word never silently falls back to Normal. `Heading1` is left untouched — it's the load-bearing BCBS blue-band visual signature defined in the official `.dotx`. Typography corrected to Calibri 10pt body, navy `#00355E` titles. `SKILL.md` bumped v1.3.0 → v1.4.0 with a new "Canonical markdown shape for BCBS .docx output" section documenting the full pandoc shape contract. `reference-proposal-report.docx` regenerated and verified via Quick Look PNG (blue banner, navy title, blue-band headings, bordered table). Plugin bumped 3.5.8 → 3.5.9.
