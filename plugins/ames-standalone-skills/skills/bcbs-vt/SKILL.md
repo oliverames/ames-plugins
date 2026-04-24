@@ -16,7 +16,7 @@ description: >
   "remote work policy", "triage a ticket", "draft a customer response",
   "write a KB article", "campaign plan for Blue Cross",
   "BCBS VT", "Blue Cross Vermont".
-version: 1.3.0
+version: 1.4.0
 ---
 
 # Blue Cross and Blue Shield of Vermont
@@ -54,6 +54,59 @@ Two files under `data/brand/` are the canonical sources of truth, sourced verbat
   copy of `/Users/oliverames/Library/CloudStorage/OneDrive-Personal/Documents/BCBS/Templates/Proposal Report Portrait Template.dotx`.
   Use the simple reference document only when Oliver explicitly asks for a
   plain/simple document.
+
+## Canonical markdown shape for BCBS `.docx` output
+
+The reference doc is tuned so pandoc-to-docx produces BCBS-branded output
+automatically. Follow this shape in the markdown you pass to
+`build-letterhead.sh` — the shape is what makes the output look right, not
+extra formatting hints in the prompt.
+
+**YAML front matter (required for a cover block):**
+
+```yaml
+---
+title: "Proposal: Short descriptive title"
+subtitle: "Team name | Prepared by Author | Absolute Date"
+---
+```
+
+`title:` renders as bold dark-navy Calibri 15pt (styleId `Title`).
+`subtitle:` renders as a small gray byline (styleId `Subtitle`).
+Do not use both a YAML `title:` and an inline `# Title` — pick one.
+
+**Section headings:** use a single `#` per section. The reference memo
+(`BCBS Digital Infrastructure Strategy Memo - V2.docx`) and the Jira
+One-Sheet both use only one level of heading: `EXECUTIVE SUMMARY`,
+`DECISIONS NEEDED`, etc. Each `# Heading` renders on a light-blue shading
+band in all caps, which is the BCBS visual signature.
+
+Only reach for `##` when a section genuinely needs a subheading. `##`
+renders as bold dark-navy Calibri 12pt (no band). `###` and `####` are
+available as BCBS-primary-blue accents but should be rare.
+
+**Tables:** pipe-tables convert cleanly. The table style `Table` in the
+reference doc gives every cell a light-gray (`#BFBFBF`) 0.5pt border and
+puts the header row in bold navy on a light-blue tint.
+
+**Body paragraphs:** plain prose. Body text inherits Calibri 10pt 1.15
+line-spacing from the template's Normal style — do not add direct font
+formatting. Bulleted and numbered lists work as expected.
+
+**Quote callouts:** `> text` renders as an intense quote in italic navy
+(styleId `IntenseQuote`).
+
+**Captions:** use pandoc's image caption syntax or a line starting with
+`Caption:` — renders italic gray 9pt.
+
+**What NOT to put in the markdown:**
+
+- No inline HTML for colors, fonts, or sizes. The reference doc handles it.
+- No `<br/>` or hard line breaks for spacing. Use paragraph breaks.
+- No Heading 1 ALL-CAPS in the markdown itself — write `# Executive Summary`;
+  the Heading1 style applies the caps transform automatically.
+- No page breaks inside the body. Let the reference doc's margins and the
+  template's page frame do the work.
 
 ## Before Delivering Any Draft — Run the Linter
 
@@ -200,11 +253,11 @@ and polished `.docx` outputs.**
 
 | File | Role | Contents |
 |------|------|----------|
-| `data/letterhead/assets/reference-proposal-report.docx` | **DEFAULT** | Formal template with the Proposal Report header band (BCBS logo + title area). Use for memos, reports, proposals, strategy documents, formal internal documents, and polished `.docx` outputs. Built by `style-proposal-report.py` from the .dotx below. |
+| `data/letterhead/assets/reference-proposal-report.docx` | **DEFAULT** | Formal template with the Proposal Report header band (BCBS logo + title area). Use for memos, reports, proposals, strategy documents, formal internal documents, and polished `.docx` outputs. Built by `style-proposal-report.py` from the .dotx below. Covers every styleId pandoc emits (`Title`, `Subtitle`, `Author`, `Date`, `Heading1-4`, `BodyText`, `FirstParagraph`, `Compact`, `Caption`, `IntenseQuote`, and the `Table` table style). |
 | `data/letterhead/assets/proposal-report-template.dotx` | Source | Authoritative Blue Cross VT Proposal Report Portrait Template (Word .dotx). Copy of the canonical file at `/Users/oliverames/Library/CloudStorage/OneDrive-Personal/Documents/BCBS/Templates/Proposal Report Portrait Template.dotx` and `~/Documents/BCBS/Templates/Proposal Report Portrait Template.dotx`. Do not edit directly; regenerate the reference docx via `style-proposal-report.py`. |
 | `data/letterhead/assets/reference.docx` | Simple fallback | Simple Blue Cross VT pandoc reference for plain/simple documents only when Oliver explicitly asks for that style. Built by `style-reference-doc.py`. |
 | `data/letterhead/scripts/build-letterhead.sh` | Build | Runs pandoc against the selected reference doc. Omitting `--template` or passing `--template=default` uses the Proposal Report Portrait template. Use `--template=simple` only for explicitly requested plain/simple documents. |
-| `data/letterhead/scripts/style-proposal-report.py` | Regenerate default | Python script that converts the .dotx to .docx, strips placeholder body, applies the authoritative palette, and writes the footer. |
+| `data/letterhead/scripts/style-proposal-report.py` | Regenerate default | Python+lxml script that converts the .dotx to .docx, strips the placeholder body (keeping the header banner and margins), **preserves the template's Normal and Heading1 styles untouched** (Heading1 is the BCBS blue-band signature), **upserts every other pandoc-expected paragraph styleId** by styleId (so Word doesn't silently fall back to Normal), injects a `Table` table-type style with BCBS gray gridlines and a bold-navy header row, and writes the Independent Licensee footer. Re-run after any brand-palette change. |
 | `data/letterhead/scripts/style-reference-doc.py` | Regenerate simple fallback | Python script that styles `reference.docx` with Blue Cross VT colors, fonts, and margins. |
 
 **Letterhead usage (default Proposal Report Portrait template):**

@@ -1,5 +1,41 @@
 # Worklog
 
+## 2026-04-24 — bcbs-vt: pandoc styleId coverage 0% → 100%, BCBS typography fixed
+
+**What changed**: `style-proposal-report.py` rewritten to cover every pandoc paragraph styleId (`Title`, `Subtitle`, `Author`, `Date`, `Heading1–4`, `BodyText`, `FirstParagraph`, `Compact`, `Caption`, `IntenseQuote`) plus a `Table` table-type style injected via raw XML (python-docx's paragraph-style API can't express table borders or firstRow conditional formatting). Design principle shifted from "preserve template styles, add missing" to "meet pandoc where it writes": the script now upserts each missing styleId by ID so Word never silently falls back to Normal. `Heading1` is left untouched — it's the load-bearing BCBS blue-band visual signature defined in the official `.dotx`. Typography corrected to Calibri 10pt body, navy `#00355E` titles. `SKILL.md` bumped v1.3.0 → v1.4.0 with a new "Canonical markdown shape for BCBS .docx output" section documenting the full pandoc shape contract. `reference-proposal-report.docx` regenerated and verified via Quick Look PNG (blue banner, navy title, blue-band headings, bordered table). Plugin bumped 3.5.8 → 3.5.9.
+
+**Decisions made**:
+- **upsert-by-styleId rather than name.** Pandoc looks up styles by their XML `styleId` attribute (e.g. `FirstParagraph`), not by the human-readable name. Matching by ID is the reliable path; matching by name is fragile against localized Word installs.
+- **Table style via raw XML.** python-docx exposes no API for `w:tblStylePr` (conditional formatting) or `w:tblBorders`. Direct `lxml` injection is the only path that produces a properly styled header row and full grid borders.
+- **Preserve Heading1 unconditionally.** The `.dotx` Heading1 (blue band, bold ALL-CAPS, `#00355E`) is the BCBS visual signature. Overwriting it — even to "fix" typography — would strip the brand identity. The script now documents this explicitly and makes it non-negotiable.
+
+**Left off at**:
+- **Still open from prior entries**: sync-count auto-regen, publish script, postpublish hooks, `bcbs-wrap-up` cache still at v3.5.3 (will update on next marketplace refresh), legacy Asana-tagged items in BCBS notes still need Oliver triage.
+- **Still open**: bash en-dash check in Phase 5 produces false positives in zsh (UTF-8 multibyte); replace with Python snippet.
+
+**Open questions**:
+- Should `build-letterhead.sh` validate that all expected pandoc styleIds are present in the reference doc before running pandoc? A pre-flight check would surface this class of bug instantly.
+
+---
+
+## 2026-04-23 — bcbs-wrap-up skill evergreened: routing rules, dynamic discovery, Jira hygiene defaults
+
+**What changed**: Second update to `bcbs-wrap-up/SKILL.md` in the same day, bumping skill v1.3.0 → v1.5.0 and plugin 3.5.6 → 3.5.8. Five new BCBS Operating Defaults added: (1) route to BAE vs OA by audience (team-facing vs personal); (2) only assign Jira issues to Oliver, never to teammates; (3) JQL duplicate check before creating any issue; (4) Jira descriptions must not reference source recordings, transcripts, or AI generation; (5) additional routing guidance explicitly making `Notes/Meetings/` a last-resort folder. Removed brittleness: replaced the hardcoded BAE workstream list (issue numbers + names) with a live JQL discovery instruction (`project = BAE AND issuetype = Workstream AND status != Done`); replaced the hardcoded evergreen-file list with a `find ~/Documents/BCBS/Notes -maxdepth 1 -name "*.md"` discovery + topic guidance; removed "as of 2026-04" date stamps; softened the "only assign Oliver" rule from naming specific teammates to the general principle (avoids stale names). `./sync` committed and pushed under `1ee91f0 publish: sync sources and update marketplace`. The motivation was a BCBS transcription session that produced 13 Jira issues across BAE and OA — the new defaults codify the lessons from that real-world run.
+
+**Decisions made**:
+- **Dynamic discovery over static lists.** The hardcoded workstream list would have been stale within weeks as issues close and new ones open. JQL is the live source of truth; the skill should delegate to it rather than encode a snapshot.
+- **No source/recording references in Jira.** Confirmed preference during session: descriptions should read as natural task context indistinguishable from a human note — never reveal they came from a meeting recording.
+- **v1.4.0 → v1.5.0 in one session.** Two rounds of edits were needed (1.4 added the new rules, 1.5 removed the brittleness). Separate version bumps keep the changelog readable if the git history is inspected later.
+
+**Left off at**:
+- **Still open from prior entry**: sync-count auto-regen, publish script, postpublish hooks, `bcbs-wrap-up` cache still at v3.5.3 (will update on next marketplace refresh), legacy Asana-tagged items in BCBS notes still need Oliver triage.
+- **NEW**: The bash naming-convention check script in Phase 5 produces false positives on en-dash detection in zsh — the `[^\xe2]` character class doesn't handle UTF-8 multibyte chars correctly. A Python replacement confirmed 0 real violations. The skill's bash snippet should be rewritten with Python for reliability (or a pre-built script).
+
+**Open questions**:
+- Should the naming audit section in Phase 5 be replaced with a Python snippet rather than the fragile bash `grep -qE` approach?
+
+---
+
 ## 2026-04-23 — bcbs-wrap-up skill hardened: Jira canonical, never-close rule, legacy-tag migration
 
 **What changed**: Updated `plugins/ames-standalone-skills/skills/bcbs-wrap-up/SKILL.md` from v1.1.0 to v1.2.0 with four new operating rules: (1) Jira is the canonical task system; Asana, Apple Reminders, Todoist, and other systems are not sources of truth; (2) strikethrough without a `(→ Jira: ...)` tag is stale and must be reconciled during wrap-up; (3) legacy `(→ Asana: ...)` and `(→ Reminders: ...)` tags must be migrated into Jira (flag during Phase 3, prompt for confirmation, create the Jira issue, overwrite the local tag); (4) wrap-up never closes a Jira issue — it verifies existence, creates missing, migrates legacy tags, but does not transition anything to Done or toggle local checkboxes to `[x]` based on a same-session deliverable; deliverables get an inline "Draft delivered YYYY-MM-DD at <path>" note with the checkbox left unchecked. Phase 3 rewritten end-to-end to match. Evergreen list updated to move `BCBS VT – Task Tracker.md` into a new "Phased-out files" subsection (do not append new tasks; treat as read-only archive; surface live items during Phase 3). Plugin package bumped 3.5.4 → 3.5.5 on both `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`. `./sync` regenerated `.claude-plugin/marketplace.json` (6 plugins) and `.agents/plugins/marketplace.json` (4 plugins). Both manifests validate as JSON. `validate-skill` passes on the modified skill. Session producer work occurred outside this repo at `~/Documents/BCBS/` (social media strategy deliverables); only the skill source and plugin metadata are in this worklog scope.
