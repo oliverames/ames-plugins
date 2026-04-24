@@ -1,6 +1,6 @@
 ---
 name: bcbs-wrap-up
-version: 1.5.0
+version: 1.6.0
 
 description: >
   BCBS session wrap-up that runs end-to-end: updates evergreen notes, verifies
@@ -273,15 +273,34 @@ YYYY-MM-DD – [Description] – [Type].ext
 ```
 Where `–` is an en-dash (U+2013), not a hyphen (-) or em-dash (U+2014).
 
-Run this check:
+Run this check (Python — the bash `grep -qE` approach produces false positives on macOS for multibyte Unicode):
 ```bash
-find ~/Documents/BCBS -not -path '*/.a5c/*' -not -path '*/.codex-tasks/*' \
-  -not -path '*/.remember/*' \( -name '*.md' -o -name '*.txt' -o -name '*.docx' \) \
-  -type f | while read f; do
-    b=$(basename "$f")
-    if echo "$b" | grep -q $'—'; then echo "EM-DASH: $f"; fi
-    if echo "$b" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [^–]'; then echo "MISSING EN-DASH: $f"; fi
-  done
+python3 - << 'EOF'
+import os, re
+
+BCBS = os.path.expanduser("~/Documents/BCBS")
+EM_DASH = '\u2014'
+EN_DASH = '\u2013'
+date_prefix = re.compile(r'^\d{4}-\d{2}-\d{2} ')
+
+em_dash_files = []
+missing_en_dash = []
+
+for root, dirs, files in os.walk(BCBS):
+    dirs[:] = [d for d in dirs if not d.startswith('.')]
+    for f in files:
+        if not f.endswith(('.md', '.txt', '.docx')):
+            continue
+        if EM_DASH in f:
+            em_dash_files.append(os.path.join(root, f))
+        if date_prefix.match(f) and not f[11:].startswith(EN_DASH):
+            missing_en_dash.append(os.path.join(root, f))
+
+print("=== EM-DASH violations ===")
+for p in em_dash_files: print(p)
+print(f"\n=== MISSING EN-DASH violations ({len(missing_en_dash)}) ===")
+for p in missing_en_dash: print(p)
+EOF
 ```
 
 Fix any violations by renaming with `mv`. Replace hyphens and em-dashes
