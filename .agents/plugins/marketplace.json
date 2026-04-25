@@ -49,7 +49,7 @@
     },
     {
       "name": "ames-standalone-skills",
-      "version": "3.5.10",
+      "version": "3.6.0",
       "source": {
         "source": "local",
         "path": "./plugins/ames-standalone-skills"
