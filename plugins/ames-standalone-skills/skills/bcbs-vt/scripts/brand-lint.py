@@ -82,6 +82,14 @@ SELF_REFERENCE_RULES = [
     (re.compile(r"\bour premiums?\b", re.IGNORECASE),
      "SELF-REFERENCE",
      'Use "subscription rates" (internal) or "rates" (external). We do not charge premiums.'),
+    # We don't say "we charge premiums" — same rule, broader phrasing.
+    # Gated by _is_about_us so Medicare-context use elsewhere isn't flagged.
+    (re.compile(r"\b(charge|charging|charges|charged)\s+(?:a\s+|the\s+|monthly\s+|annual\s+)?premiums?\b", re.IGNORECASE),
+     "SELF-REFERENCE",
+     'Use "rate(s)" — we charge subscription rates, not premiums.'),
+    (re.compile(r"\bpremium\s+rates?\b", re.IGNORECASE),
+     "SELF-REFERENCE",
+     '"Premium" and "rate" describe the same thing for us — pick one. Prefer "rate(s)."'),
 ]
 
 # People-first / inclusive-language hotspots — only the highest-confidence

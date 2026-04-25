@@ -16,7 +16,7 @@ description: >
   "remote work policy", "triage a ticket", "draft a customer response",
   "write a KB article", "campaign plan for Blue Cross",
   "BCBS VT", "Blue Cross Vermont".
-version: 1.4.0
+version: 1.5.0
 ---
 
 # Blue Cross and Blue Shield of Vermont
@@ -54,6 +54,19 @@ Two files under `data/brand/` are the canonical sources of truth, sourced verbat
   copy of `/Users/oliverames/Library/CloudStorage/OneDrive-Personal/Documents/BCBS/Templates/Proposal Report Portrait Template.dotx`.
   Use the simple reference document only when Oliver explicitly asks for a
   plain/simple document.
+- **Memos in the Proposal Report family use the memo exemplar.** For memos
+  specifically (TO/FROM/DATE/RE routing, 9pt body, 15pt navy title, graphic
+  banner with a short uppercase subject), use the bundled exemplar at
+  `data/letterhead/assets/exemplar-proposal-report-memo.docx` via
+  `build-letterhead.sh --template=memo --banner-title="..." input.md out.docx`.
+  The plain `reference-proposal-report.docx` ships without the graphic header
+  band for reports; memos need the banner and the exemplar carries it.
+- **Named references override skill defaults.** If Oliver names a specific
+  existing document ("use the Gap Analysis Memo", "clone the V2 strategy
+  memo", "match that onboarding letter"), clone THAT file via
+  `build-letterhead.sh --exemplar=PATH`. Do not silently substitute the
+  default template for a named reference — the named file already carries the
+  target visual family, and the default often won't.
 
 ## Canonical markdown shape for BCBS `.docx` output
 
@@ -67,12 +80,17 @@ extra formatting hints in the prompt.
 ```yaml
 ---
 title: "Proposal: Short descriptive title"
-subtitle: "Team name | Prepared by Author | Absolute Date"
+subtitle: "Team name | Prepared by Oliver Ames | Absolute Date"
+author: "Oliver Ames"
 ---
 ```
 
 `title:` renders as bold dark-navy Calibri 15pt (styleId `Title`).
 `subtitle:` renders as a small gray byline (styleId `Subtitle`).
+`author:` populates `dc:creator` in the output's `docProps/core.xml`, so
+File → Properties attributes the memo to Oliver. Without it, pandoc clears
+`dc:creator` to empty — attribution silently disappears from the document
+metadata. Override only when authoring on someone else's behalf.
 Do not use both a YAML `title:` and an inline `# Title` — pick one.
 
 **Section headings:** use a single `#` per section. The reference memo
@@ -118,7 +136,7 @@ python3 scripts/brand-lint.py path/to/draft.md
 echo "$draft" | python3 scripts/brand-lint.py -
 ```
 
-The linter flags: forbidden names (BCBSVT, BCBS Vermont, etc.), forbidden self-references ("insurance company," "our policy," "our premiums"), phones missing the TTY/TDD: 711 annotation, `--` instead of em dash, double-space between sentences, `!!`, generic link text ("click here", "learn more"), wrong domain (bcbsvt.com vs bluecrossvt.org), and top inclusive-language violations ("the elderly," "hearing impaired," etc.).
+The linter flags: forbidden names (BCBSVT, BCBS Vermont, etc.), forbidden self-references ("insurance company," "our policy," "our premiums," "we charge premiums," "premium rates"), phones missing the TTY/TDD: 711 annotation, `--` instead of em dash, double-space between sentences, `!!`, generic link text **inside markdown link brackets** (`[click here](url)`, `[learn more](url)` — naked-prose uses like "called to learn more" are intentionally not flagged because the authoritative guide itself uses that phrasing), wrong domain (bcbsvt.com vs bluecrossvt.org), and top inclusive-language violations ("the elderly," "hearing impaired," etc.).
 
 Exit code `0` means the draft passes; `1` means there are violations to fix before returning it. For judgment-based checks (reading level, tone, inclusiveness beyond the top-confidence phrases), load `data/brand/authoritative-writing-and-tone-guide.md` and review manually.
 
@@ -130,10 +148,11 @@ Exit code `0` means the draft passes; `1` means there are violations to fix befo
 | insurance company (for us) | health service organization |
 | policy / policies (for our products) | subscription(s) |
 | premium(s) (for us, external) | rate(s) |
+| "we charge premiums" / "premium rates" | "we charge rates" / "subscription rates" |
 | the elderly | older adults, older Vermonters |
 | hearing impaired | deaf, hard of hearing |
 | `--` (double-hyphen) | `—` (true em dash) |
-| "click here", "learn more" | descriptive link text ("Find a doctor") |
+| `[click here](url)`, `[learn more](url)` (markdown link text) | `[Find a doctor](url)` — descriptive link text |
 | (802) 555-1234 alone | (802) 555-1234 (TTY/TDD: 711) |
 
 ## Verifying a Letter's Format
@@ -147,11 +166,76 @@ python3 scripts/letter-check.py --medicare path/to/letter.docx  # 12pt expected
 
 The checker reports pass/fail for: approved font family (Calibri / DIN 2014 / Arial), point size, single-spacing, 1" top/bottom + 1.25" left/right margins, left-justification, and logo-bearing header presence. Exit code `0` means all mechanical checks pass.
 
-**Template rule:** memos and formal BCBS Word deliverables use the Proposal
-Report Portrait template by default. Run `build-letterhead.sh input.md
-output.docx`, which now selects `reference-proposal-report.docx`. Use the
-simple `reference.docx` only when Oliver explicitly asks for a plain/simple
-document.
+**Don't run letter-check.py on memos.** The Letter Checklist expects 11pt
+body with 1.25" side margins; memos in the Proposal Report family run 9pt
+with 1" side margins and a 0.5" bottom margin. Letter-check will "fail"
+memos that are correct conformance to the memo template. Use
+`memo-check.py` instead.
+
+## Verifying a Memo's Format
+
+For any `.docx` built from the Proposal Report memo exemplar, run:
+
+```bash
+python3 scripts/memo-check.py path/to/memo.docx
+```
+
+Checks: graphic header banner is present (header1.xml references an image
+relationship), Title is 15pt bold navy `#00355E`, Subtitle is 8pt italic
+gray `#595959`, Heading1 is navy on light-blue `#99D6EA` band with
+ALL-CAPS, Normal body is 9pt, page bottom margin is 720 twips (0.5"), and
+BlockText callout (if present) has pale-blue `#EBF4FA` fill with navy
+`#00355E` left border. Exit code `0` means all mechanical checks pass.
+
+### Memo visual checklist
+
+A correctly built BCBS memo in the Proposal Report family has:
+
+| Element | Expected |
+|---------|----------|
+| Header | Graphic banner (logo + title band) with short uppercase subject |
+| Title | 15pt bold navy `#00355E`, left-aligned, directly below banner |
+| Subtitle / tagline | 8pt italic gray `#595959`, pipe-separated (Team \| Author \| Date) |
+| Routing | TO / FROM / DATE / RE rows at 9pt |
+| Section headings | Heading1: ALL-CAPS navy on `#99D6EA` light-blue band |
+| Body | 9pt black Calibri, 1.15 line spacing |
+| Callouts | BlockText: pale-blue `#EBF4FA` fill, navy `#00355E` left border |
+| Page | 1" top + sides, **0.5" bottom**, 0.5" header distance |
+
+### Template decision tree
+
+1. **Oliver named a specific reference file?** → Clone that file directly.
+   ```bash
+   bash data/letterhead/scripts/build-letterhead.sh \
+     --exemplar=/path/to/named-reference.docx \
+     --banner-title="..." input.md output.docx
+   ```
+   Never silently substitute a default for a named reference.
+2. **Oliver described a memo** (TO/FROM/RE, action items, routing)?
+   → Use the bundled memo exemplar.
+   ```bash
+   bash data/letterhead/scripts/build-letterhead.sh \
+     --template=memo --banner-title="STRATEGY MEMO" input.md output.docx
+   ```
+3. **Oliver described a report, proposal, or polished formal doc?**
+   → Default Proposal Report Portrait template.
+   ```bash
+   bash data/letterhead/scripts/build-letterhead.sh input.md output.docx
+   ```
+4. **Oliver explicitly asked for plain / simple?** → Simple fallback.
+   ```bash
+   bash data/letterhead/scripts/build-letterhead.sh \
+     --template=simple input.md output.docx
+   ```
+
+### Page-count caveat
+
+Don't sink time into programmatic page counting for one-off memos. The
+macOS Word AppleScript `count of pages of active document` returns 0 before
+pagination is computed, and `repaginate` doesn't reliably force it. For
+visual verification, `qlmanage -t` thumbnails give a fast first-page check.
+Memos that need two pages to breathe are fine; don't squeeze content to
+hit an artificial one-page target.
 
 ## Organization Quick Reference
 
@@ -197,7 +281,8 @@ Operational tools live in `scripts/` at the skill root. Run them — don't reinv
 | File | Purpose |
 |------|---------|
 | `scripts/brand-lint.py` | Flag forbidden names, self-references, phone-without-TTY, em-dash mis-use, and top inclusive-language violations in draft markdown or plain text. Run before delivering any draft. |
-| `scripts/letter-check.py` | Verify a built `.docx` against the authoritative Letter Checklist format section (font, size, line spacing, margins, alignment, logo). |
+| `scripts/letter-check.py` | Verify a built `.docx` against the authoritative Letter Checklist format section (font, size, line spacing, margins, alignment, logo). For **letters**, not memos. |
+| `scripts/memo-check.py` | Verify a memo `.docx` built from the Proposal Report memo exemplar (graphic banner, 15pt navy Title, 8pt gray Subtitle, 9pt body, 0.5" bottom margin, navy-on-band Heading1, pale-blue callout). For **memos**, not letters. |
 
 ## Data Files
 
@@ -247,37 +332,57 @@ All reference data lives in `data/` next to this file. Load as needed — don't 
 
 ### Letterhead
 
-Two templates are available. **Default to the Proposal Report Portrait template
-for memos, reports, proposals, strategy documents, formal internal documents,
-and polished `.docx` outputs.**
+Three references are available. Pick via the template decision tree above.
 
 | File | Role | Contents |
 |------|------|----------|
-| `data/letterhead/assets/reference-proposal-report.docx` | **DEFAULT** | Formal template with the Proposal Report header band (BCBS logo + title area). Use for memos, reports, proposals, strategy documents, formal internal documents, and polished `.docx` outputs. Built by `style-proposal-report.py` from the .dotx below. Covers every styleId pandoc emits (`Title`, `Subtitle`, `Author`, `Date`, `Heading1-4`, `BodyText`, `FirstParagraph`, `Compact`, `Caption`, `IntenseQuote`, and the `Table` table style). |
+| `data/letterhead/assets/reference-proposal-report.docx` | **DEFAULT** (reports/proposals) | Formal template with the Proposal Report header band (BCBS logo + title area). Use for reports, proposals, strategy documents, formal internal documents, and polished `.docx` outputs that aren't memos. Built by `style-proposal-report.py` from the .dotx below. Covers every styleId pandoc emits (`Title`, `Subtitle`, `Author`, `Date`, `Heading1-4`, `BodyText`, `FirstParagraph`, `Compact`, `Caption`, `IntenseQuote`, and the `Table` table style). |
+| `data/letterhead/assets/exemplar-proposal-report-memo.docx` | **Memo exemplar** | Memo variant of the Proposal Report family, sanitized and safe to ship. Carries the graphic header banner (with `PROPOSAL MEMO` placeholder text — rewrite per-memo via `--banner-title`), 15pt navy Title, 8pt gray Subtitle, 9pt Normal body, 0.5" bottom margin, and the augmented pandoc-expected styles (Title, Subtitle, FirstParagraph, BlockText). Built by `build-exemplar-memo.py` from the private V2 memo at `~/Documents/BCBS/Projects/Digital Infrastructure Strategy/BCBS Digital Infrastructure Strategy Memo - V2.docx`. |
 | `data/letterhead/assets/proposal-report-template.dotx` | Source | Authoritative Blue Cross VT Proposal Report Portrait Template (Word .dotx). Copy of the canonical file at `/Users/oliverames/Library/CloudStorage/OneDrive-Personal/Documents/BCBS/Templates/Proposal Report Portrait Template.dotx` and `~/Documents/BCBS/Templates/Proposal Report Portrait Template.dotx`. Do not edit directly; regenerate the reference docx via `style-proposal-report.py`. |
 | `data/letterhead/assets/reference.docx` | Simple fallback | Simple Blue Cross VT pandoc reference for plain/simple documents only when Oliver explicitly asks for that style. Built by `style-reference-doc.py`. |
-| `data/letterhead/scripts/build-letterhead.sh` | Build | Runs pandoc against the selected reference doc. Omitting `--template` or passing `--template=default` uses the Proposal Report Portrait template. Use `--template=simple` only for explicitly requested plain/simple documents. |
+| `data/letterhead/scripts/build-letterhead.sh` | Build entry point | Top-level builder. Accepts `--template={default,memo,simple}`, `--exemplar=PATH` for a user-named reference file, and `--banner-title="..."` (memo/exemplar paths only). Delegates memo/exemplar builds to `clone-exemplar.py`. |
+| `data/letterhead/scripts/clone-exemplar.py` | Pandoc + banner rewrite + bullet tighten | Invoked by build-letterhead.sh for memo and exemplar builds. Runs `pandoc --reference-doc=<exemplar>`. Optional flags: `--banner-title="..."` rewrites header1.xml's banner text in both the `wps:txbx` and `mc:Fallback` `v:textbox` copies; `--tight-bullets` rewrites every level-0 numbering entry to `left=360 hanging=180` so pandoc-appended bullet entries don't render at the looser Word-default 720/360. `build-letterhead.sh` auto-passes `--tight-bullets` for memo and exemplar paths because the Proposal Report family expects tight bullets; pass `--exemplar=PATH` directly to `clone-exemplar.py` (bypassing build-letterhead.sh) if you want to opt out for a non-memo exemplar. Warns if the exemplar is missing pandoc-expected styles (Title, Subtitle, Heading1, FirstParagraph). |
+| `data/letterhead/scripts/build-exemplar-memo.py` | Regenerate memo exemplar | Clones V2, sanitizes `document.xml`, `header1.xml` (banner text → `PROPOSAL MEMO`), and `docProps/core.xml` metadata; augments `styles.xml` with Title/Subtitle/FirstParagraph/BlockText; fixes ListParagraph indent (720 → 360/180) and numbering level-0 `ind`. Re-run when V2 changes or the sanitization rules change. |
 | `data/letterhead/scripts/style-proposal-report.py` | Regenerate default | Python+lxml script that converts the .dotx to .docx, strips the placeholder body (keeping the header banner and margins), **preserves the template's Normal and Heading1 styles untouched** (Heading1 is the BCBS blue-band signature), **upserts every other pandoc-expected paragraph styleId** by styleId (so Word doesn't silently fall back to Normal), injects a `Table` table-type style with BCBS gray gridlines and a bold-navy header row, and writes the Independent Licensee footer. Re-run after any brand-palette change. |
 | `data/letterhead/scripts/style-reference-doc.py` | Regenerate simple fallback | Python script that styles `reference.docx` with Blue Cross VT colors, fonts, and margins. |
 
-**Letterhead usage (default Proposal Report Portrait template):**
+**Letterhead usage:**
+
 ```bash
+# Default report / proposal / strategy doc:
 bash data/letterhead/scripts/build-letterhead.sh input.md output.docx
+
+# Memo (graphic banner + routing table + 9pt body):
+bash data/letterhead/scripts/build-letterhead.sh \
+  --template=memo --banner-title="STRATEGY MEMO" input.md memo.docx
+
+# User named a specific reference file — clone it:
+bash data/letterhead/scripts/build-letterhead.sh \
+  --exemplar=/path/to/named-reference.docx \
+  --banner-title="CAMPAIGN BRIEF" input.md out.docx
+
+# Plain/simple (only when Oliver explicitly asks):
+bash data/letterhead/scripts/build-letterhead.sh \
+  --template=simple input.md output.docx
 ```
 
-**Letterhead usage (plain/simple fallback only when explicitly requested):**
-```bash
-bash data/letterhead/scripts/build-letterhead.sh --template=simple input.md output.docx
-```
+All outputs inherit Calibri body text, navy Blue Cross VT headings, and the
+Independent Licensee footer disclosure (when the chosen reference doc carries
+it). The default Proposal Report reference carries the formal title band;
+the memo exemplar carries the graphic banner ribbon.
 
-Both outputs inherit Calibri body text, Arial blue headings, and the Independent
-Licensee footer disclosure. The default Proposal Report Portrait template also
-carries the formal header band with the BCBS logo.
+**Header-banner details (memo path):** the banner title text lives in
+`word/header1.xml` **twice** — once inside the modern `<wps:txbx>` shape and
+once inside the `<mc:Fallback><v:textbox>` legacy-Word construct. Both copies
+get rewritten together when `--banner-title` is supplied. The exemplar ships
+with `PROPOSAL MEMO` as the placeholder string so clone-exemplar.py can find
+and replace it.
 
-**To regenerate either reference doc** (after brand changes or a template update):
+**To regenerate any reference doc** (after brand changes or a template update):
 ```bash
 python3 data/letterhead/scripts/style-proposal-report.py        # default
 python3 data/letterhead/scripts/style-reference-doc.py          # simple fallback
+python3 data/letterhead/scripts/build-exemplar-memo.py          # memo exemplar
 ```
 
 ## Source Documents on Disk
