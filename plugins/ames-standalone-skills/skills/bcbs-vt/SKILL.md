@@ -16,7 +16,7 @@ description: >
   "remote work policy", "triage a ticket", "draft a customer response",
   "write a KB article", "campaign plan for Blue Cross",
   "BCBS VT", "Blue Cross Vermont".
-version: 1.5.0
+version: 1.6.0
 ---
 
 # Blue Cross and Blue Shield of Vermont
@@ -46,27 +46,40 @@ Two files under `data/brand/` are the canonical sources of truth, sourced verbat
   workspace (`bluecrossvt.atlassian.net`) and structured Jira/Atlassian MCP
   tools. Do not use another task system unless Oliver explicitly asks for it in
   the current request.
-- **Word deliverables use the Proposal Report Portrait template by default.**
-  Memos, reports, proposals, strategy documents, formal internal documents,
-  and polished `.docx` outputs must use
-  `data/letterhead/assets/reference-proposal-report.docx`, built from
-  `data/letterhead/assets/proposal-report-template.dotx`, which is the bundled
-  copy of `/Users/oliverames/Library/CloudStorage/OneDrive-Personal/Documents/BCBS/Templates/Proposal Report Portrait Template.dotx`.
-  Use the simple reference document only when Oliver explicitly asks for a
-  plain/simple document.
-- **Memos in the Proposal Report family use the memo exemplar.** For memos
-  specifically (TO/FROM/DATE/RE routing, 9pt body, 15pt navy title, graphic
-  banner with a short uppercase subject), use the bundled exemplar at
-  `data/letterhead/assets/exemplar-proposal-report-memo.docx` via
-  `build-letterhead.sh --template=memo --banner-title="..." input.md out.docx`.
-  The plain `reference-proposal-report.docx` ships without the graphic header
-  band for reports; memos need the banner and the exemplar carries it.
+- **Word deliverables: pick the right path FIRST, before drafting.** The
+  default is not always right. Misrouting produces a doc that looks like a
+  presentation handout (wrong) instead of a tight Blue Cross VT memo (right).
+  Use this routing test:
+
+  | Content shape | Path | Output style |
+  |---|---|---|
+  | TO/FROM/DATE/RE routing, action items, recommendations, decision tables, **strategy documents that read like memos** (response management, ownership plans, gap analyses, escalation paths) | `--template=memo` | 15pt navy Title, 8pt gray Subtitle, 9pt body, 0.5" bottom margin, graphic banner, dense memo look |
+  | Reports, proposals, formal internal write-ups, **standalone reference documents** without routing or recommendations | default (no flag) | Formal title band, no graphic banner, report look |
+  | Plain/simple — only when Oliver explicitly asks | `--template=simple` | Letter-style minimal |
+
+  **When in doubt between memo and default, choose memo.** Most BCBS internal
+  strategy documents Oliver writes are memo-shaped. The default is for
+  outward-facing reports and standalone proposals.
+
 - **Named references override skill defaults.** If Oliver names a specific
   existing document ("use the Gap Analysis Memo", "clone the V2 strategy
   memo", "match that onboarding letter"), clone THAT file via
   `build-letterhead.sh --exemplar=PATH`. Do not silently substitute the
   default template for a named reference — the named file already carries the
   target visual family, and the default often won't.
+
+- **Visual-verify before delivering any `.docx`.** Render a thumbnail and
+  compare to the canonical reference for the chosen path. The pandoc-built
+  default and the V2 memo exemplar look noticeably different at a glance —
+  catch the misroute on the first build, not after the user notices.
+
+  ```bash
+  qlmanage -t -s 1600 -o /tmp "path/to/output.docx"
+  open "/tmp/output.docx.png"
+  ```
+
+  Reference for memo path: `~/Documents/BCBS/Projects/Digital Infrastructure Strategy/BCBS Digital Infrastructure Strategy Memo - V2.docx`
+  (render its thumbnail the same way and compare side-by-side).
 
 ## Canonical markdown shape for BCBS `.docx` output
 
