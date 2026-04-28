@@ -67,6 +67,25 @@ The Affordability Matters site is co-published with these four organizations. An
 | Vermont OPEN Imaging (VOI) | vtopenmri.com | Locally owned 15+ years; subspecialty-trained radiologists; Open and Closed MRI and CT; transparent pricing; evening and weekend hours; 4.9-star average across thousands of reviews |
 | Vermont Diagnostic Imaging (VDI) | vermontdiagnosticimaging.com | Independent, radiologist-led; CT scans, X-rays, bone density (DEXA), ultrasounds; mammography planned for later in 2026 |
 
+### Verbatim partner descriptions (for About-Us blocks)
+
+When a co-branded asset needs an "About [partner]" block, prefer the verbatim text below over paraphrasing. Source: vtaffordablecare.com (campaign landing page).
+
+**Northwestern Medical Center:**
+> Northwestern Medical Center offers convenient access to high value care by providing safe, quality care at lower cost. NMC has the lowest outpatient and second lowest inpatient charges among Vermont hospitals. Located in St. Albans (just 13 miles north of Milton), NMC's comprehensive range of services includes Orthopedics, General Surgery, ENT, Urology, MRI, CT, Mammography, Laboratory testing, Urgent Care, and more.
+
+**Green Mountain Surgery Center:**
+> Green Mountain Surgery Center is the first multi-specialty ambulatory surgery center in Vermont. We strive to offer our patients impeccable, personalized service and access to convenient, high-quality, and affordable outpatient surgeries. We were recently named to Newsweek's list of America's Best Ambulatory Surgery Centers for the third consecutive year.
+
+**Vermont OPEN Imaging:**
+> Vermont OPEN Imaging, formerly Vermont OPEN MRI, has been locally owned and operated for over 15 years and is led by subspecialty-trained radiologists. We offer high-quality Open and Closed MRI and CT imaging with affordable, transparent pricing, as well as convenient evening and weekend hours — all delivered with exceptional compassionate care. With thousands of reviews and an average rating of 4.9 stars, we're proud to have earned the trust of Vermont's providers and patients.
+
+**Blue Cross and Blue Shield of Vermont:**
+> As Vermont's only local, non-profit health plan for more than 40 years, we have a simple mission: make health care work better for all Vermonters. We're driven to help you access and receive high-quality care with greater ease. As a member, you get coverage that's focused on your health and well-being, plus support from more than 400 local staff, award-winning customer service, access to the largest network of doctors and hospitals in Vermont, and much more.
+
+**Vermont Diagnostic Imaging:**
+> Vermont Diagnostic Imaging is proud to offer a wide variety of radiology services. We're independent and radiologist-led, providing easy and quick access to high-quality CT scans, X-rays, bone density scans (DEXA), and ultrasounds, all at significant savings. We anticipate adding mammography later in 2026. You can expect quick scheduling, an easy referral process, and prompt and convenient delivery of images and reports.
+
 ## CEO Brand Building Tie-In
 
 Per the 2026 Operating Plan, CEO **Beth Roberts** is positioned as the brand's affordability thought leader. CEO-attributed content (community letters, video, blogs, speaking events) should:

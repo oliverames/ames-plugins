@@ -299,7 +299,11 @@ Email is powerful but still follows all the rules in this guide.
 
 **Email signature formats (after updates):**
 - **Internal:** Name (optional pronouns) | Title | (802) 371-XXXX (W)
-- **External:** Name (optional pronouns) | Title / Blue Cross® and Blue Shield® of Vermont / www.bcbsvt.com / (802) 371-XXXX (W)
+- **External:** Name (optional pronouns) | Title / Blue Cross® and Blue Shield® of Vermont / www.bluecrossvt.org / (802) 371-XXXX (W)
+
+> **Domain note (post-2021 update):** The November 2021 source PDF lists `www.bcbsvt.com` in the external signature. That domain now 301-redirects to `www.bluecrossvt.org`, which has been the canonical primary domain since the post-2021 migration. The example above reflects the live domain. Verified 2026-04-28 via `https://www.bcbsvt.com` → 301 → `https://www.bluecrossvt.org/`.
+
+> **2026 affiliate update — Vermont Blue Advantage:** The November 2021 source PDF describes Blue Cross VT as managing two affiliate companies, Vermont Blue Advantage and The Vermont Health Plan. **As of 2026, Vermont Blue Advantage no longer offers Medicare Advantage plans.** The Vermont Blue Advantage entity itself still exists as an affiliate, but external-facing copy must not imply MA availability. Current Medicare offerings live under Vermont Medigap Blue, Vermont Blue 65 Supplement, and Blue MedicareRx (Part D). See SKILL.md → "Medicare Warning (2026)" and `data/strategy/2026-operating-plan.md` for the current product context.
 
 ## Copyright, Trademarks, Citations
 

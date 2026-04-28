@@ -121,6 +121,17 @@ As Vermont's only local, non-profit health plan, Blue Cross VT is driven to cont
 
 **Color ratio rule:** Blue Cross VT Blue must be the **dominant** color. Use other colors as accents.
 
+**Prescribed accent pairings (Brand Style Guide Oct 2025, p. 5 "Color Ratio" sidebar):** when an accent is needed alongside Blue Cross VT Blue, draw from one of these four combinations rather than mixing across families:
+
+| # | Pairing | Use |
+|---|---|---|
+| 1 | **Deep-blue accent:** Darker Blue `#00467B` with Blue Cross VT Blue `#0077C8` | Authority, navigation, formal headers |
+| 2 | **Sky-blue pair:** Medium Blue `#009CDE` with Sky Blue `#99D6EA` | Light, accessible, calm — ideal for member-facing materials |
+| 3 | **Moss pair:** Moss Green `#5D6439` with Light Moss Green `#8C8C48` | Nature/community themes, wellness content |
+| 4 | **Autumn pair:** VT Autumn `#99592B` with VT Light Autumn `#CF7F00` | Seasonal, warmth, harvest/community-event themes |
+
+Don't mix across families (e.g., Moss Green with VT Autumn) unless the design intent specifically calls for a multi-season composition.
+
 ## Typography
 
 **Primary font (marketing):** **DIN** — use for all official communications, member-facing materials, and digital assets.
@@ -180,6 +191,8 @@ As Vermont's only local, non-profit health plan, Blue Cross VT is driven to cont
 - Descriptive link text ("Find a doctor" — not "Click here")
 - Alt text for all visuals
 - WCAG 2.0 Level AA color contrast (verify with WebAIM Contrast Checker)
+
+**User research (Brand Style Guide Oct 2025, p. 9):** User research, such as interviews, surveys, or usability testing, helps identify and understand users' needs. For digital member-facing assets and significant content changes, plan a research input rather than relying on assumptions. Coordinate with the Brand & Engagement team.
 
 ## Affiliate Licensee — The Vermont Health Plan (TVHP)
 

@@ -2,7 +2,10 @@
 
 ## Organization
 Blue Cross and Blue Shield of Vermont — Vermont's only local nonprofit health plan.
-Full brand guidelines: `~/.claude/brand-voice-guidelines.md`
+
+> **Authoritative sources** (these win over anything in this legacy file):
+> - `data/brand/authoritative-brand-style-guide-2025-10.md` — visual identity, colors, logos, typography, co-branding
+> - `data/brand/authoritative-writing-and-tone-guide.md` — voice, tone, grammar, inclusive language, letter checklist, word list
 
 ## Voice Attributes (Fixed Across All Content)
 

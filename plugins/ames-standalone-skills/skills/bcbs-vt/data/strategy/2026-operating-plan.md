@@ -8,7 +8,7 @@
 
 - **Director, Brand & Engagement Strategies:** Teresa Anderson
 - **Division:** Brand, Reputation, Engagement & Experience (BRE&E)
-- **CEO (under whose brand-building this team operates):** Beth Roberts (full name spelling pending verification — current SKILL.md says "Beth-Ann Roberts")
+- **CEO (under whose brand-building this team operates):** Beth Roberts (formal: Beth-Ann Roberts, MBA — used in HR/announcement copy only; brand voice and public-facing copy use "Beth Roberts," matching her bio at bluecrossvt.org/beth-roberts)
 
 ## Four Team Operating Goals (2026)
 

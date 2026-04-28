@@ -1,22 +1,14 @@
 ---
 name: bcbs-vt
 description: >
-  This skill should be used when the user asks anything about Blue Cross and
-  Blue Shield of Vermont (BCBS VT): "write something for Blue Cross",
-  "draft BCBS VT content", "check brand voice", "lint this draft",
-  "brand-lint this", "verify brand compliance", "does this follow the
-  BCBS style guide", "check this letter against the BCBS checklist",
-  "verify letter format", "run the letter checklist", "fix brand voice",
-  "create a social post", "plan social posts", "build a content calendar",
-  "write in the Blue Cross Vermont style", "draft a press release",
-  "write marketing copy", "review content for brand accuracy",
-  "create a memo", "create a letterhead document", "make a .docx letterhead",
-  "my benefits", "Blue Cross VT employee benefits", "how much PTO do I have",
-  "401k at Blue Cross", "health insurance at Blue Cross VT",
-  "remote work policy", "triage a ticket", "draft a customer response",
-  "write a KB article", "campaign plan for Blue Cross",
-  "BCBS VT", "Blue Cross Vermont".
-version: 1.7.0
+  Apply Blue Cross and Blue Shield of Vermont (BCBS VT) brand and
+  writing standards to drafting, brand-linting, letterhead and memo
+  .docx builds, customer-support triage, and employee benefits
+  questions. Triggers: "BCBS VT", "Blue Cross VT", "brand-lint this",
+  "check brand voice", "create a memo", "build a letterhead doc",
+  "draft a press release", "triage a ticket", "my Blue Cross benefits",
+  "remote work policy", "campaign plan", "content calendar".
+version: 1.8.0
 ---
 
 # Blue Cross and Blue Shield of Vermont
@@ -40,7 +32,14 @@ Two files under `data/brand/` are the canonical sources of truth, sourced verbat
 - **Typography tier (Brand Style Guide Oct 2025, p. 6):** **DIN** is the primary marketing/external font. **Calibri** is the secondary internal font for tools that don't render DIN (Word, PowerPoint, Excel). **Arial** is a fallback. The Letter Checklist (Writing & Tone Guide, p. 24) accepts any of the three at 11 pt body / 12 pt Medicare; brand-general digital and accessibility-focused use targets 12 pt minimum (14–18 pt for poor-vision audiences).
 - **Never refer to ourselves as an "insurance company"** — we're a **"health service organization."** We sell **subscriptions** (not policies); we charge **subscription rates** (not premiums); externally, "rates" works.
 - Letter checklist format: 11 pt (12 pt for Medicare), single-spaced, 1" top/bottom, **1.25" left/right** margins, logo on page one, include "over" on multi-page letters.
-- **Co-branded asset?** (any draft that pairs Blue Cross VT with a partner like NMC, GMSC, VOI, VDI, or another vendor.) Stop and load `data/brand/authoritative-brand-style-guide-2025-10.md` § Co-Branding before proceeding. Build **6–8 weeks** lead time for BCBSA approval; Blue Cross VT must be ≥ partner prominence; never imply endorsement, sponsorship, or partnership; include the independent-status disclosure for the partner.
+- **Co-branded asset?** (any draft that pairs Blue Cross VT with a partner like NMC, GMSC, VOI, VDI, or another vendor.) Stop and load `data/brand/authoritative-brand-style-guide-2025-10.md` § Co-Branding before proceeding. Quick checklist (full rules in the mirror, Brand Style Guide Oct 2025, p. 11):
+
+  | # | Rule | Enforcement |
+  |---|---|---|
+  | 1 | **Lead time:** build **6–8 weeks** for BCBSA approval; approval valid for 3 years; submit samples within 6 months of use | Schedule check |
+  | 2 | **Prominence:** Blue Cross VT must be **equal to or more prominent** than partner names/logos in size, color, placement, visual weight | Visual check |
+  | 3 | **Disclosure:** include the partner's independent-status disclosure: *"[Partner] is an independent company providing [service] on behalf of Blue Cross and Blue Shield of Vermont."* | Text check |
+  | 4 | **Forbidden language:** never imply "endorsed by," "in partnership with," "endorsement," "sponsorship," or that the partner is a BCBSA licensee or Blue System affiliate | Manual review (these phrases are only forbidden in co-branding contexts; not lintable without the co-brand signal) |
 - **Statistical claims need source attribution.** Any number (percentages, rankings, "lowest/highest in the country") must carry a primary-source citation with a date — same standard as Oliver's `Professional Standards → Sources` rule. The Affordability Matters 19.6%/7.9% stat traces to WalletHub, July 2025, citing US Census Bureau and Kaiser Family Foundation.
 
 ## BCBS Operating Defaults
@@ -59,9 +58,11 @@ Two files under `data/brand/` are the canonical sources of truth, sourced verbat
   | TO/FROM/DATE/RE routing, action items, recommendations, decision tables, **strategy documents that read like memos** (response management, ownership plans, gap analyses, escalation paths) | `--template=memo` | 15pt navy Title, 8pt gray Subtitle, 9pt body, 0.5" bottom margin, graphic banner, dense memo look |
   | Reports, proposals, formal internal write-ups, **standalone reference documents** without routing or recommendations | default (no flag) | Formal title band, no graphic banner, report look |
   | Plain/simple — only when Oliver explicitly asks | `--template=simple` | Letter-style minimal |
+  | **Ambiguous between memo and default — internal strategy doc, no clear shape signal** | `--template=memo` | **When in doubt, choose memo.** Most BCBS internal strategy documents are memo-shaped. The default path is for outward-facing reports and standalone proposals only. |
 
-  **When in doubt between memo and default, choose memo.** Most BCBS internal
-  strategy documents Oliver writes are memo-shaped. The default is for
+  **Backstop rule (also embedded in the table above):** When in doubt
+  between memo and default, choose memo. Most BCBS internal strategy
+  documents Oliver writes are memo-shaped; the default is for
   outward-facing reports and standalone proposals.
 
 - **Named references override skill defaults.** If Oliver names a specific
@@ -86,61 +87,14 @@ Two files under `data/brand/` are the canonical sources of truth, sourced verbat
 
 ## Canonical markdown shape for BCBS `.docx` output
 
-The reference doc is tuned so pandoc-to-docx produces BCBS-branded output
-automatically. Follow this shape in the markdown you pass to
-`build-letterhead.sh` — the shape is what makes the output look right, not
-extra formatting hints in the prompt.
-
-**YAML front matter (required for a cover block):**
-
-```yaml
----
-title: "Proposal: Short descriptive title"
-subtitle: "Team name | Prepared by Oliver Ames | Absolute Date"
-author: "Oliver Ames"
----
-```
-
-`title:` renders as bold dark-navy Calibri 15pt (styleId `Title`).
-`subtitle:` renders as a small gray byline (styleId `Subtitle`).
-`author:` populates `dc:creator` in the output's `docProps/core.xml`, so
-File → Properties attributes the memo to Oliver. Without it, pandoc clears
-`dc:creator` to empty — attribution silently disappears from the document
-metadata. Override only when authoring on someone else's behalf.
-Do not use both a YAML `title:` and an inline `# Title` — pick one.
-
-**Section headings:** use a single `#` per section. The reference memo
-(`BCBS Digital Infrastructure Strategy Memo - V2.docx`) and the Jira
-One-Sheet both use only one level of heading: `EXECUTIVE SUMMARY`,
-`DECISIONS NEEDED`, etc. Each `# Heading` renders on a light-blue shading
-band in all caps, which is the BCBS visual signature.
-
-Only reach for `##` when a section genuinely needs a subheading. `##`
-renders as bold dark-navy Calibri 12pt (no band). `###` and `####` are
-available as BCBS-primary-blue accents but should be rare.
-
-**Tables:** pipe-tables convert cleanly. The table style `Table` in the
-reference doc gives every cell a light-gray (`#BFBFBF`) 0.5pt border and
-puts the header row in bold navy on a light-blue tint.
-
-**Body paragraphs:** plain prose. Body text inherits Calibri 10pt 1.15
-line-spacing from the template's Normal style — do not add direct font
-formatting. Bulleted and numbered lists work as expected.
-
-**Quote callouts:** `> text` renders as an intense quote in italic navy
-(styleId `IntenseQuote`).
-
-**Captions:** use pandoc's image caption syntax or a line starting with
-`Caption:` — renders italic gray 9pt.
-
-**What NOT to put in the markdown:**
-
-- No inline HTML for colors, fonts, or sizes. The reference doc handles it.
-- No `<br/>` or hard line breaks for spacing. Use paragraph breaks.
-- No Heading 1 ALL-CAPS in the markdown itself — write `# Executive Summary`;
-  the Heading1 style applies the caps transform automatically.
-- No page breaks inside the body. Let the reference doc's margins and the
-  template's page frame do the work.
+Before drafting any markdown intended for `build-letterhead.sh`, load
+**`data/letterhead/markdown-shape.md`**. It covers the YAML front matter
+(`title:` / `subtitle:` / `author:`), heading levels, table style, body
+paragraphs, quote callouts, captions, and the "what NOT to include" list
+(no inline HTML, no `<br/>`, no manual page breaks). Following the shape
+is what makes the output look right — the reference doc handles all
+visual styling automatically; extra formatting hints in the markdown
+fight the template.
 
 ## Before Delivering Any Draft — Run the Linter
 
@@ -257,10 +211,12 @@ hit an artificial one-page target.
 
 - **Full name:** Blue Cross and Blue Shield of Vermont
 - **Short name:** Blue Cross VT
+- **Founded:** 1989 (Brand Style Guide Oct 2025, p. 2 — "Born in Vermont in 1989")
 - **Headquarters:** Berlin, Vermont
 - **Structure:** Local, not-for-profit health plan; BCBSA licensee; affiliated with BCBS Michigan
 - **Employees:** ~400
-- **CEO (2026):** Beth-Ann Roberts
+- **CEO (2026):** Beth Roberts (formal: Beth-Ann Roberts, MBA — used in HR/announcement copy only; brand voice and public-facing copy use "Beth Roberts," matching her bio at bluecrossvt.org/beth-roberts)
+- **Brand & Engagement Director:** Teresa Anderson (Brand, Reputation, Engagement & Experience division — owns the 2026 Operating Plan)
 - **Mission:** "We are committed to the health of Vermonters, outstanding member experiences and responsible cost management for all the people whose lives we touch."
 - **Brand Promise:** "Vermonters making healthcare work better for Vermonters." (Brand Style Guide Oct 2025, p. 1)
 - **Vision:** "Together, we can build a transformed health care system in which every Vermonter has healthcare coverage and receives timely, effective, affordable care." (Brand Style Guide Oct 2025, p. 1)
@@ -270,6 +226,19 @@ hit an artificial one-page target.
 - **Website:** bluecrossvt.org | **Social:** @bluecrossvt
 
 ## Brand Voice Summary
+
+**Authoritative 6-attribute framework** (Brand Style Guide Oct 2025, p. 2):
+
+| Attribute | Means |
+|---|---|
+| **Clear and Direct** | Plain-spoken, jargon-free, sixth-grade reading level |
+| **Truthful** | Accurate, source-attributed, never overpromise |
+| **Friendly and Polite** | Warm, neighborly, respectful — never condescending |
+| **Empathetic** | Acknowledges Vermonters' lived experience with care |
+| **Inspiring** | Affirms agency and choice; never paternalistic |
+| **Uniquely Vermont** | Community-rooted, place-aware, locally specific |
+
+**Quick mental model** (4-dimension shorthand — full framework above):
 
 | Dimension | Is | Is NOT |
 |-----------|-----|--------|
@@ -281,6 +250,19 @@ hit an artificial one-page target.
 **Core principles:** Vermont-first always, nonprofit heart, plain language, empowering not paternalistic, warm but grounded, collaborative not competitive.
 
 **Key vocabulary:** "Vermonters" (not customers), "health plan" (not insurance policy), "health care" (two words; the activity) vs. "healthcare" (one word; the system), community, local, neighbors, well-being.
+
+## Writing Rules Quick Reference
+
+These rules are in `data/brand/authoritative-writing-and-tone-guide.md` (the source of truth) but bear repeating where the agent will see them every load:
+
+- **Title case for headlines, section headings, letters, PowerPoints, articles, press releases.** Sentence case is the markdown norm but **not** BCBS style. (Writing & Tone Guide p. 13.) Convert sentence case to title case before delivery.
+- **Refer to a company or product as "it," not "they."** "Cigna says it has the lowest rates" — not "Cigna says they have." Same rule for partners (NMC, GMSC, VOI, VDI). (Writing & Tone Guide p. 7.) `brand-lint.py` flags partner-name + "they" within 80 chars.
+- **Use "they" as a singular pronoun** when gender is unknown or unspecified. (Writing & Tone Guide p. 9.)
+- **Don't add "Vermont" or "VT" to a county or town reference.** "Members in Chittenden County" — not "Chittenden County, Vermont." (Writing & Tone Guide p. 19.)
+- **No underline formatting. No combinations of italic + bold + caps + underline.** Italic alone for emphasis. (Writing & Tone Guide p. 12.)
+- **Use the serial (Oxford) comma in 3+ lists.** "Members, providers, and policymakers" — not "members, providers and policymakers." (Writing & Tone Guide p. 16.) `brand-lint.py` flags WARN-level on the missing-comma pattern.
+- **Em dash without spaces:** "Vermonters—our neighbors" — not "Vermonters — our neighbors." (Writing & Tone Guide p. 16.) `brand-lint.py` flags ` — ` with spaces.
+- **No directional language** ("left sidebar," "at the bottom of the page") — layout shifts on mobile. Describe options by name. (Writing & Tone Guide p. 20.)
 
 ## 2026 Strategic Defaults
 
@@ -294,22 +276,22 @@ When drafting any external content for 2026, anchor it to the team's operating p
 - **2026 KPIs:** NPS goal 9 (Brand Strength Measure), web intercept >−35, 75% Likely-to-Renew, 50% consumer / 65% member affordability perception.
 - See `data/strategy/2026-operating-plan.md` for the full audience taxonomy, all four operating goals, and the OEP/AEP/QHP/EGWP acronym glossary.
 
-### Audience cheat-sheet (2026)
+### Audience cheat-sheet (2026, top segments)
+
+The five most-frequently-drafted-against segments are below. For the full
+12-segment audience taxonomy (including Blue Edge Business, Large Group
+Non-Jumbo, Brokers, Members, Providers, Policymakers) plus the four
+operating goals and the OEP/AEP/QHP/EGWP glossary, load
+**`data/strategy/2026-operating-plan.md`** — that file is the canonical
+source for any 2026-attributed audience or KPI claim.
 
 | Segment | Mode | Tone / CTA default |
 |---|---|---|
-| QHP Small Group | Growth + Retention | Practical, value-focused; CTA = explore plans / talk to broker |
-| QHP Brokers (Small Group) | Growth + Retention | Peer-professional, low-cost product spotlight |
 | QHP Individual | Growth + Retention | Plain-spoken, planning-oriented; CTA = compare plans / get a quote |
-| Blue Edge Business | Retention | Account-management voice; reassurance + new low-cost options |
-| Large Group Non-Jumbo | Growth + Retention | "Move from Cigna" framing allowed; ASO consultative tone |
+| QHP Small Group | Growth + Retention | Practical, value-focused; CTA = explore plans / talk to broker |
 | Med-Sup Age-In | Growth | Warm, navigational; CTA = Medicare 101 seminars (May–Sept) |
 | Med-Sup Switchers | Growth | Comparative (target UHC); CTA = Medicare 101 seminars + switch carriers |
-| Brokers | Run | Newsletter + broker blasts; collect feedback |
 | Employees | Run | Internal voice ("Blue Cross," "our company"); CEO/Affordability education |
-| Members | Run | Newsletter, SMS, website; OEP support + Customer Insight Group recruit |
-| Providers | Run | Provider newsletter; referral-practice messaging |
-| Policymakers | Run (Affordability) | Education materials on key affordability initiatives |
 
 ## Oliver's Employment
 
@@ -442,45 +424,10 @@ python3 data/letterhead/scripts/build-exemplar-memo.py          # memo exemplar
 
 ## Source Documents on Disk
 
-The `~/Documents/BCBS/` folder contains original documents organized by category. Read these for additional context as needed — do not move or modify them.
-
-### ~/Documents/BCBS/
-```
-├── 2026-03-16 Blue Cross VT Social Media Strategy Plan.pdf
-├── Benefits/
-│   ├── 2026 Benefit Packet.pdf
-│   ├── 2026 BlueCross BlueShield of Vermont New Hire Benefits Summary.pdf
-│   ├── Blue Cross - Culture Values Benefits - 2026.pdf
-│   ├── Health Insurance Comparison — BCBS vs VEHI Gold CDHP.md
-│   ├── Health Insurance Scenario Planner.xlsx
-│   └── Benefits Presentation/ (20 screenshot PNGs from benefits walkthrough)
-├── Calls/
-│   ├── 2026-03-13 Call with Ashley.md
-│   ├── 2026-03-13 Call with Cass Lang.md
-│   ├── 2026-03-13 Call with Kristina Massari.md
-│   ├── 2026-03-13 Onboarding Call with Gina Brittain.md
-│   └── 2026-03-13 Senior Games Planning Call.md
-├── Hiring/
-│   ├── 2025-12-02 Call with BCBS VT.md
-│   ├── 2026-02-02 Blue Cross Offer Call.md
-│   ├── 2026-02-05 Job Offer Acceptance - Oliver & Beth/ (audio + transcript)
-│   ├── 2026-02-09 BlueCross BlueShield Vermont Offer Letter.pdf
-│   └── Oliver Ames Cover Letter - Marketing - BCBSVT.docx
-├── Onboarding/
-│   ├── 2026 BlueCross BlueShield of Vermont Remote Work Policy.pdf
-│   ├── Blue Cross - What to Expect (onsite).pdf
-│   ├── Blue Cross VT Remote Access Authorization.pdf
-│   └── (i-9, W-4, relocation agreement, Outlook setup, etc.)
-└── Reference/
-    ├── 2025-02 BCBSA Affordability Solutions Proposal.pdf
-    ├── 2025-10 Blue Cross Vermont Brand Style Guide.pdf            ← authoritative visual identity (mirrored to data/brand/authoritative-brand-style-guide-2025-10.md)
-    ├── 2025-11 – Social Media Strategist Position Description.docx
-    ├── 2026-03 BlueCross VT Brand and Engagement Team Welcome Deck.pdf
-    ├── 2026-04-15 Brand and Engagement Operating Plan – BlueCross BlueShield of Vermont.pdf  ← 2026 operating plan (mirrored to data/strategy/2026-operating-plan.md)
-    ├── 2026-04-22 BlueCross BlueShield Payer Industry Challenges and Strategic Outlook.pdf
-    ├── Vermont Healthcare Affordability Guide 2025.md              ← Affordability Matters campaign content (mirrored to data/strategy/affordability-matters.md)
-    └── Writing and Tone Style Guide.pdf                            ← authoritative writing/voice (mirrored to data/brand/authoritative-writing-and-tone-guide.md)
-```
+For the directory listing of `~/Documents/BCBS/` (Benefits, Calls, Hiring,
+Onboarding, Reference) and which mirrors in `data/` are sourced from
+which PDF, see **`data/source-documents-on-disk.md`**. Read source PDFs
+for additional context as needed; never move or modify them.
 
 ## Content Pillars & Mix
 

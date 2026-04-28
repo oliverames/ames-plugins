@@ -1,9 +1,13 @@
 # BCBS VT Content Creation Guide
 
 ## Organization Context
-Blue Cross and Blue Shield of Vermont — Vermont's only local, not-for-profit health plan. 230,000+ members. Social Media Strategist: Oliver Ames.
+Blue Cross and Blue Shield of Vermont — Vermont's only local, not-for-profit health plan. Social Media Strategist: Oliver Ames.
 
-**Brand guidelines:** Load from `~/.claude/brand-voice-guidelines.md` for full voice, terminology, and channel rules.
+> **Membership counts vary by definition — verify before publishing a number.** This legacy file historically said "230,000+ members" (covered-lives count, including dependents and group plan members). The 2026 operating plan reports **191,800** total membership context (subscriber-line count). Use `data/strategy/2026-operating-plan.md` as the canonical source for any 2026-attributed figure; if a draft needs the higher covered-lives number, get it from a current BCBS VT enrollment report rather than this file.
+
+**Authoritative brand guidelines** (these win over anything in this file):
+- `data/brand/authoritative-brand-style-guide-2025-10.md` — visual identity
+- `data/brand/authoritative-writing-and-tone-guide.md` — voice, tone, grammar
 
 ## Content Patterns That Work
 

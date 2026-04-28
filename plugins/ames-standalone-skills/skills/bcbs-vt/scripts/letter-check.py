@@ -122,6 +122,33 @@ def has_header_with_logo(z: zipfile.ZipFile) -> bool:
     return has_header and has_image
 
 
+# Brand Style Guide (Oct 2025, p. 1, 3) requires the Independent Licensee
+# tagline somewhere on the document — body, header, or footer. We
+# concatenate text from all three locations before checking.
+INDEPENDENT_LICENSEE_PATTERN = re.compile(
+    r"Independent\s+Licensee\s+of\s+the\s+Blue\s+Cross\s+and\s+Blue\s+Shield\s+Association",
+    re.IGNORECASE,
+)
+
+
+def has_independent_licensee_tagline(z: zipfile.ZipFile) -> bool:
+    """Search body + headers + footers for the Independent Licensee tagline."""
+    parts = []
+    for name in z.namelist():
+        if (
+            name == "word/document.xml"
+            or (name.startswith("word/header") and name.endswith(".xml"))
+            or (name.startswith("word/footer") and name.endswith(".xml"))
+        ):
+            try:
+                xml = z.read(name).decode("utf-8", errors="replace")
+            except KeyError:
+                continue
+            parts.append(TAG_RX.sub(" ", xml))
+    combined = re.sub(r"\s+", " ", " ".join(parts))
+    return bool(INDEPENDENT_LICENSEE_PATTERN.search(combined))
+
+
 def body_is_left_aligned(document_xml: str) -> bool:
     """No paragraph in the body should have w:jc val=center/right/both."""
     # Count forbidden alignments.
@@ -182,10 +209,18 @@ def has_over_word(text: str, page_count: int) -> bool | None:
 
 
 def has_signature_block(text: str) -> bool:
-    """Heuristic: look for a closing followed by a signer name in the last ~400 chars.
+    """Heuristic: look for either a closing word OR a clear title near the end.
 
-    A signature block typically ends with "Sincerely,", "Thank you,",
-    "Regards," etc., followed by 1-3 short lines (name, title, organization).
+    Two accept paths:
+      1. A closing word ("Sincerely,", "Thank you,", "Regards," etc.) within
+         the last ~400 chars. Classic letter signature.
+      2. A common professional title ("President," "CEO," "Director,"
+         "Strategist," etc.) within the last ~250 chars, even without a
+         closing word. Many BCBS letters close with name + title only —
+         the warmth has already been done in the body, so a closing word
+         would feel redundant. This path keeps the linter from WARN'ing
+         on those correct letters.
+
     We can't validate the actual handwritten signature image from text alone;
     this checks for the textual sign-off only.
     """
@@ -199,7 +234,27 @@ def has_signature_block(text: str) -> bool:
         r"\bRespectfully,?\b",
         r"\bWarmly,?\b",
     )
-    return any(re.search(rx, tail, flags=re.IGNORECASE) for rx in closings)
+    if any(re.search(rx, tail, flags=re.IGNORECASE) for rx in closings):
+        return True
+
+    # Fallback: name + title pattern. We look at a slightly tighter tail to
+    # reduce false-positives from body prose that happens to mention a title.
+    title_tail = text[-250:] if len(text) > 250 else text
+    title_pattern = re.compile(
+        r"\b("
+        r"President(?:\s+(?:and|&)\s+CEO)?"
+        r"|CEO|COO|CFO|CTO|CMO"
+        r"|Chief\s+\w+(?:\s+\w+)?\s+Officer"
+        r"|Vice\s+President|VP"
+        r"|Director(?:\s+of\s+\w+(?:\s+\w+){0,2})?"
+        r"|Senior\s+Director|Executive\s+Director"
+        r"|Manager(?:\s+of\s+\w+(?:\s+\w+){0,2})?"
+        r"|Strategist|Specialist|Coordinator|Analyst"
+        r"|Counsel|General\s+Counsel"
+        r")\b",
+        flags=re.IGNORECASE,
+    )
+    return bool(title_pattern.search(title_tail))
 
 
 # ---------------------------------------------------------------------------
@@ -230,6 +285,7 @@ def main():
     service_marks_ok = has_service_marks(body_text)
     over_word_ok = has_over_word(body_text, page_count)
     signature_ok = has_signature_block(body_text)
+    independent_licensee_ok = has_independent_licensee_tagline(z)
 
     checks = []
 
@@ -302,6 +358,12 @@ def main():
         checks.append(("PASS", 'Closing detected (e.g., "Sincerely,") — signature block present.'))
     else:
         checks.append(("WARN", 'No standard closing (Sincerely / Thank you / Regards / Best / Warmly / Respectfully) found near the end. Verify a signature block is present.'))
+
+    # Independent Licensee tagline presence (Brand Style Guide p. 1, 3)
+    if independent_licensee_ok:
+        checks.append(("PASS", 'Independent Licensee tagline present (body, header, or footer).'))
+    else:
+        checks.append(("FAIL", 'Independent Licensee tagline missing — Brand Style Guide (Oct 2025, p. 1, 3) requires "An Independent Licensee of the Blue Cross and Blue Shield Association" somewhere on the document (body, header, or footer).'))
 
     # Render
     pass_count = sum(1 for s, _ in checks if s == "PASS")

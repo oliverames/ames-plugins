@@ -45,6 +45,15 @@ NAVY = "00355E"
 LIGHT_BLUE_BAND = "99D6EA"
 GRAY_SUBTITLE = "595959"
 CALLOUT_FILL = "EBF4FA"
+APPROVED_FONTS = {"Calibri", "DIN 2014", "Arial"}
+
+# Brand Style Guide (Oct 2025, p. 1, 3) requires the Independent Licensee
+# tagline somewhere on the document — body, header, or footer.
+TAG_RX = re.compile(r"<[^>]+>")
+INDEPENDENT_LICENSEE_PATTERN = re.compile(
+    r"Independent\s+Licensee\s+of\s+the\s+Blue\s+Cross\s+and\s+Blue\s+Shield\s+Association",
+    re.IGNORECASE,
+)
 
 
 def die(msg: str, code: int = 2) -> NoReturn:
@@ -180,6 +189,39 @@ def check_bottom_margin(document_xml: str) -> tuple[str, str]:
     return "FAIL", f'Bottom margin is {twips/1440:.2f}" ({twips} twips), expected 0.5".'
 
 
+def check_normal_font(styles_xml: str) -> tuple[str, str]:
+    """Verify the Normal style declares Calibri (or another approved font)."""
+    block = extract_style_block(styles_xml, "Normal")
+    if block is None:
+        return "WARN", "Normal style is not defined — cannot verify font."
+    font = find_attr(block, r'w:ascii="([^"]+)"')
+    if font is None:
+        return "WARN", "Normal style has no w:ascii font attribute — inspect manually."
+    if font in APPROVED_FONTS:
+        return "PASS", f"Normal font is {font} (approved: Calibri / DIN 2014 / Arial)."
+    return "FAIL", f"Normal font is '{font}' — must be Calibri, DIN 2014, or Arial."
+
+
+def check_independent_licensee(z: zipfile.ZipFile) -> tuple[str, str]:
+    """Search body + headers + footers for the Independent Licensee tagline."""
+    parts = []
+    for name in z.namelist():
+        if (
+            name == "word/document.xml"
+            or (name.startswith("word/header") and name.endswith(".xml"))
+            or (name.startswith("word/footer") and name.endswith(".xml"))
+        ):
+            try:
+                xml = z.read(name).decode("utf-8", errors="replace")
+            except KeyError:
+                continue
+            parts.append(TAG_RX.sub(" ", xml))
+    combined = re.sub(r"\s+", " ", " ".join(parts))
+    if INDEPENDENT_LICENSEE_PATTERN.search(combined):
+        return "PASS", "Independent Licensee tagline present (body, header, or footer)."
+    return "FAIL", 'Independent Licensee tagline missing — Brand Style Guide (Oct 2025, p. 1, 3) requires "An Independent Licensee of the Blue Cross and Blue Shield Association" somewhere on the document.'
+
+
 def check_blocktext_callout(styles_xml: str) -> tuple[str, str]:
     block = extract_style_block(styles_xml, "BlockText")
     if block is None:
@@ -220,8 +262,10 @@ def main() -> None:
         check_subtitle_style(styles_xml),
         check_heading1_band(styles_xml),
         check_normal_body_size(styles_xml),
+        check_normal_font(styles_xml),
         check_bottom_margin(document_xml),
         check_blocktext_callout(styles_xml),
+        check_independent_licensee(z),
     ]
 
     icons = {"PASS": "✓", "FAIL": "✗", "WARN": "!"}
