@@ -128,6 +128,84 @@ MECHANICS = [
      'The public domain is bluecrossvt.org, not bcbsvt.com. (bcbsvt.com is used only for email.)'),
 ]
 
+# Corporate fluff / Silicon Valley clichés the Writing & Tone Guide explicitly
+# tells us not to use (Word List → Words to Avoid, p. 29). Gated by
+# _is_about_us so industry critique that quotes these terms isn't flagged.
+CORPORATE_FLUFF = [
+    (re.compile(r"\bfunnel\b", re.IGNORECASE),
+     "CORPORATE-FLUFF",
+     'Avoid "funnel" in our voice. Plain English alternatives: "the steps customers take," "the path to coverage."'),
+    (re.compile(r"\bincentivi[sz](e|es|ed|ing)\b", re.IGNORECASE),
+     "CORPORATE-FLUFF",
+     'Avoid "incentivize." Use "encourage," "reward," or just say what we offer.'),
+    (re.compile(r"\bleverag(e|es|ed|ing)\b", re.IGNORECASE),
+     "CORPORATE-FLUFF",
+     'Avoid "leverage." Use "use," "apply," or "build on."'),
+    (re.compile(r"\bdisrupt(ing|ed|ion|or)?\b", re.IGNORECASE),
+     "CORPORATE-FLUFF",
+     'Avoid "disrupt" / "disruption" / "disruptor" — Silicon Valley cliché. Be specific about what is changing.'),
+    (re.compile(r"\bthought leader(ship)?\b", re.IGNORECASE),
+     "CORPORATE-FLUFF",
+     'Avoid "thought leader." Be specific (e.g., "Beth Roberts, our CEO, on affordability").'),
+    (re.compile(r"\blearnings\b", re.IGNORECASE),
+     "CORPORATE-FLUFF",
+     'Avoid "learnings." Use "what we learned," "lessons," or "findings."'),
+    (re.compile(r"\b(crushing|crushed) it\b", re.IGNORECASE),
+     "CORPORATE-FLUFF",
+     'Avoid "crushing it" / "crushed it." Pick a specific, concrete description.'),
+    (re.compile(r"\b(killing|killed) it\b", re.IGNORECASE),
+     "CORPORATE-FLUFF",
+     'Avoid "killing it" / "killed it." Pick a specific, concrete description.'),
+    (re.compile(r"\bbest[\s-]in[\s-]breed\b", re.IGNORECASE),
+     "CORPORATE-FLUFF",
+     'Avoid "best-in-breed." Use "best," "leading," or describe the actual capability.'),
+    (re.compile(r"\brise and grind\b", re.IGNORECASE),
+     "CORPORATE-FLUFF",
+     'Avoid "rise and grind" — Silicon Valley cliché.'),
+    (re.compile(r"\b(a|the|big|small|main|huge)\s+ask\b", re.IGNORECASE),
+     "CORPORATE-FLUFF",
+     '"Ask" as a noun is corporate-speak. Use "request," "favor," or "what we need."'),
+]
+
+# Internet slang variations explicitly forbidden (Word List → Words to Avoid).
+INTERNET_SLANG = [
+    (re.compile(r"\binternets\b", re.IGNORECASE),
+     "INTERNET-SLANG",
+     'Use "internet" (singular). The Writing & Tone Guide forbids "internets/interwebs."'),
+    (re.compile(r"\binterwebs\b", re.IGNORECASE),
+     "INTERNET-SLANG",
+     'Use "internet." The Writing & Tone Guide forbids "interwebs."'),
+]
+
+# "Ninja/rockstar/wizard" — only flag if not literal. We can't tell from a
+# regex whether someone is literally a ninja, so this is a WARN-level rule.
+LITERAL_OR_SKIP = [
+    (re.compile(r"\b(ninja|rockstar|wizard)\b", re.IGNORECASE),
+     "LITERAL-OR-SKIP",
+     'Don\'t call someone a "ninja," "rockstar," or "wizard" unless they literally are one (Writing & Tone Guide, p. 18).'),
+]
+
+# The previous toll-free TTY line (800-535-2227) is no longer functional.
+# Per Writing & Tone Guide p. 22, refer customers to 711 instead. Hard error.
+RETIRED_TTY = [
+    (re.compile(r"\b800[-.\s]?535[-.\s]?2227\b"),
+     "RETIRED-TTY",
+     'The 800-535-2227 TTY number is retired. Refer customers to the federal public service: TTY/TDD: 711.'),
+]
+
+# Accessibility: avoid directional language (Writing & Tone Guide, p. 20).
+DIRECTIONAL = [
+    (re.compile(r"\b(left|right) sidebar\b", re.IGNORECASE),
+     "DIRECTIONAL",
+     'Avoid directional language (layout shifts on mobile). Describe the option by name, not its position.'),
+    (re.compile(r"\bin the (right|left) (column|panel|pane|section)\b", re.IGNORECASE),
+     "DIRECTIONAL",
+     'Avoid directional language. Describe the option by name, not its position on the page.'),
+    (re.compile(r"\b(at the bottom|at the top|on the right|on the left) of (the|this) (page|screen)\b", re.IGNORECASE),
+     "DIRECTIONAL",
+     'Avoid directional language. Describe the option by name, not its position.'),
+]
+
 
 # ---------------------------------------------------------------------------
 # Phone-number / TTY rule
@@ -194,6 +272,14 @@ def lint_text(text: str) -> list[Violation]:
                         rule=rule, line=i, col=m.start() + 1,
                         snippet=m.group(0), fix=fix,
                     ))
+            # Corporate fluff — same gating. Industry critique that quotes
+            # "thought leader" or "disruption" is fine; using it ourselves isn't.
+            for rx, rule, fix in CORPORATE_FLUFF:
+                for m in rx.finditer(line):
+                    violations.append(Violation(
+                        rule=rule, line=i, col=m.start() + 1,
+                        snippet=m.group(0), fix=fix,
+                    ))
 
         # Inclusive language.
         for rx, rule, fix in INCLUSIVE_LANGUAGE:
@@ -205,6 +291,40 @@ def lint_text(text: str) -> list[Violation]:
 
         # Mechanics.
         for rx, rule, fix in MECHANICS:
+            for m in rx.finditer(line):
+                violations.append(Violation(
+                    rule=rule, line=i, col=m.start() + 1,
+                    snippet=m.group(0), fix=fix,
+                ))
+
+        # Internet slang (always — never appropriate in BCBS voice).
+        for rx, rule, fix in INTERNET_SLANG:
+            for m in rx.finditer(line):
+                violations.append(Violation(
+                    rule=rule, line=i, col=m.start() + 1,
+                    snippet=m.group(0), fix=fix,
+                ))
+
+        # "Ninja/rockstar/wizard" — flagged unconditionally. The fix message
+        # explicitly says "unless they literally are one" so the human can
+        # accept the false positive when the term is literal.
+        for rx, rule, fix in LITERAL_OR_SKIP:
+            for m in rx.finditer(line):
+                violations.append(Violation(
+                    rule=rule, line=i, col=m.start() + 1,
+                    snippet=m.group(0), fix=fix,
+                ))
+
+        # Retired TTY number (hard error — never publish the old line).
+        for rx, rule, fix in RETIRED_TTY:
+            for m in rx.finditer(line):
+                violations.append(Violation(
+                    rule=rule, line=i, col=m.start() + 1,
+                    snippet=m.group(0), fix=fix,
+                ))
+
+        # Directional language (accessibility — layout shifts on mobile).
+        for rx, rule, fix in DIRECTIONAL:
             for m in rx.finditer(line):
                 violations.append(Violation(
                     rule=rule, line=i, col=m.start() + 1,

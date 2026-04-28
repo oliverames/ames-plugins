@@ -129,6 +129,79 @@ def body_is_left_aligned(document_xml: str) -> bool:
     return len(forbidden) == 0
 
 
+# Strip OOXML tags to get the plain-text body. Used for content checks
+# (® presence, "over" word, signature block) that don't care about formatting.
+TAG_RX = re.compile(r"<[^>]+>")
+
+
+def extract_text(document_xml: str) -> str:
+    """Return the document body text with OOXML tags stripped and whitespace normalized."""
+    text = TAG_RX.sub("", document_xml)
+    # Collapse runs of whitespace; OOXML often inserts newlines mid-run.
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def has_service_marks(text: str) -> bool:
+    """Check for at least one ® or ℠ on a Blue Cross brand name in the body.
+
+    The Brand Style Guide (Oct 2025, p. 2) requires the registration indicia
+    on the first or most-prominent appearance of a mark. Header logos count
+    visually but the body text should still carry the symbol on a name use.
+    """
+    # Find any "Blue Cross" mention, then check if ® or ℠ is within ~30 chars.
+    for m in re.finditer(r"Blue\s*Cross", text, flags=re.IGNORECASE):
+        window = text[m.start(): m.end() + 30]
+        if "®" in window or "℠" in window:
+            return True
+    return False
+
+
+def estimate_page_count(document_xml: str) -> int:
+    """Return a conservative page count based on explicit page breaks.
+
+    Counts <w:br w:type="page"/> + 1. Word's automatic pagination isn't visible
+    in OOXML, so this only catches docs the author explicitly broke. A "1"
+    answer means "no manual breaks present" — the doc may still flow to two+
+    pages naturally. For mechanical checks this is acceptable: we only enforce
+    "over" on docs the author KNOWS are multi-page.
+    """
+    breaks = re.findall(r'<w:br[^/]*w:type="page"', document_xml)
+    return len(breaks) + 1
+
+
+def has_over_word(text: str, page_count: int) -> bool | None:
+    """Return True/False if the doc is multi-page and includes "over"; None otherwise.
+
+    Per the Letter Checklist (Writing & Tone Guide, p. 24): include the word
+    "over" on multi-page letters so the reader knows to turn the page.
+    """
+    if page_count < 2:
+        return None  # not applicable
+    return bool(re.search(r"\bover\b", text, flags=re.IGNORECASE))
+
+
+def has_signature_block(text: str) -> bool:
+    """Heuristic: look for a closing followed by a signer name in the last ~400 chars.
+
+    A signature block typically ends with "Sincerely,", "Thank you,",
+    "Regards," etc., followed by 1-3 short lines (name, title, organization).
+    We can't validate the actual handwritten signature image from text alone;
+    this checks for the textual sign-off only.
+    """
+    tail = text[-400:] if len(text) > 400 else text
+    closings = (
+        r"\bSincerely,?\b",
+        r"\bThank you,?\b",
+        r"\bRegards,?\b",
+        r"\bBest,?\b",
+        r"\bWith\s+(thanks|appreciation|gratitude),?\b",
+        r"\bRespectfully,?\b",
+        r"\bWarmly,?\b",
+    )
+    return any(re.search(rx, tail, flags=re.IGNORECASE) for rx in closings)
+
+
 # ---------------------------------------------------------------------------
 # Report
 # ---------------------------------------------------------------------------
@@ -151,6 +224,12 @@ def main():
     single_spaced = is_single_spaced(styles_xml)
     left_aligned = body_is_left_aligned(document_xml)
     logo_present = has_header_with_logo(z)
+
+    body_text = extract_text(document_xml)
+    page_count = estimate_page_count(document_xml)
+    service_marks_ok = has_service_marks(body_text)
+    over_word_ok = has_over_word(body_text, page_count)
+    signature_ok = has_signature_block(body_text)
 
     checks = []
 
@@ -203,6 +282,26 @@ def main():
         checks.append(("PASS", "Header with embedded image present (logo likely on page one)."))
     else:
         checks.append(("WARN", "No header or embedded image found — verify logo appears on page one."))
+
+    # Service marks on Blue Cross brand name in body text
+    if service_marks_ok:
+        checks.append(("PASS", "Service mark (® or ℠) detected near a Blue Cross brand name."))
+    else:
+        checks.append(("WARN", "No ® or ℠ found near a Blue Cross brand name in the body text. Brand Style Guide (p. 2) requires the registration indicia on the first or most-prominent appearance — verify that header/logo coverage is sufficient."))
+
+    # "over" word on multi-page letters
+    if over_word_ok is None:
+        checks.append(("PASS", 'Single-page letter — "over" check not applicable.'))
+    elif over_word_ok:
+        checks.append(("PASS", 'Multi-page letter includes the word "over" to direct the reader.'))
+    else:
+        checks.append(("FAIL", 'Multi-page letter is missing the word "over" — required by the Letter Checklist (Writing & Tone Guide, p. 24).'))
+
+    # Signature block presence
+    if signature_ok:
+        checks.append(("PASS", 'Closing detected (e.g., "Sincerely,") — signature block present.'))
+    else:
+        checks.append(("WARN", 'No standard closing (Sincerely / Thank you / Regards / Best / Warmly / Respectfully) found near the end. Verify a signature block is present.'))
 
     # Render
     pass_count = sum(1 for s, _ in checks if s == "PASS")

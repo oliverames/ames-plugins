@@ -16,7 +16,7 @@ description: >
   "remote work policy", "triage a ticket", "draft a customer response",
   "write a KB article", "campaign plan for Blue Cross",
   "BCBS VT", "Blue Cross Vermont".
-version: 1.6.0
+version: 1.7.0
 ---
 
 # Blue Cross and Blue Shield of Vermont
@@ -36,9 +36,12 @@ Two files under `data/brand/` are the canonical sources of truth, sourced verbat
 
 - Approved names: **"Blue Cross and Blue Shield of Vermont"** and **"Blue Cross VT"** only. Never "BCBSVT," "BCBS Vermont," "Blue Cross Vermont," or "Blue Cross of Vermont."
 - Primary color is **Blue Cross VT Blue `#0077C8` (PMS 3005 C)** — must be the dominant color, with other colors as accents.
-- Writing at a **sixth-grade reading level**; single-space, left-align, Calibri/DIN 2014/Arial.
+- Writing at a **sixth-grade reading level**; single-space, left-align.
+- **Typography tier (Brand Style Guide Oct 2025, p. 6):** **DIN** is the primary marketing/external font. **Calibri** is the secondary internal font for tools that don't render DIN (Word, PowerPoint, Excel). **Arial** is a fallback. The Letter Checklist (Writing & Tone Guide, p. 24) accepts any of the three at 11 pt body / 12 pt Medicare; brand-general digital and accessibility-focused use targets 12 pt minimum (14–18 pt for poor-vision audiences).
 - **Never refer to ourselves as an "insurance company"** — we're a **"health service organization."** We sell **subscriptions** (not policies); we charge **subscription rates** (not premiums); externally, "rates" works.
 - Letter checklist format: 11 pt (12 pt for Medicare), single-spaced, 1" top/bottom, **1.25" left/right** margins, logo on page one, include "over" on multi-page letters.
+- **Co-branded asset?** (any draft that pairs Blue Cross VT with a partner like NMC, GMSC, VOI, VDI, or another vendor.) Stop and load `data/brand/authoritative-brand-style-guide-2025-10.md` § Co-Branding before proceeding. Build **6–8 weeks** lead time for BCBSA approval; Blue Cross VT must be ≥ partner prominence; never imply endorsement, sponsorship, or partnership; include the independent-status disclosure for the partner.
+- **Statistical claims need source attribution.** Any number (percentages, rankings, "lowest/highest in the country") must carry a primary-source citation with a date — same standard as Oliver's `Professional Standards → Sources` rule. The Affordability Matters 19.6%/7.9% stat traces to WalletHub, July 2025, citing US Census Bureau and Kaiser Family Foundation.
 
 ## BCBS Operating Defaults
 
@@ -259,7 +262,11 @@ hit an artificial one-page target.
 - **Employees:** ~400
 - **CEO (2026):** Beth-Ann Roberts
 - **Mission:** "We are committed to the health of Vermonters, outstanding member experiences and responsible cost management for all the people whose lives we touch."
-- **Tagline:** "Vermonters Serving Vermonters"
+- **Brand Promise:** "Vermonters making healthcare work better for Vermonters." (Brand Style Guide Oct 2025, p. 1)
+- **Vision:** "Together, we can build a transformed health care system in which every Vermonter has healthcare coverage and receives timely, effective, affordable care." (Brand Style Guide Oct 2025, p. 1)
+- **Logo Tagline (required on most uses):** "An Independent Licensee of the Blue Cross and Blue Shield Association." (Brand Style Guide Oct 2025, p. 3)
+- **Voice principle (writing only, NOT a tagline):** "We're Vermonters serving Vermonters." (Writing & Tone Guide, p. 5)
+- **Brand Personality:** The Everyman Caregiver. All for one and one for all.
 - **Website:** bluecrossvt.org | **Social:** @bluecrossvt
 
 ## Brand Voice Summary
@@ -273,7 +280,36 @@ hit an artificial one-page target.
 
 **Core principles:** Vermont-first always, nonprofit heart, plain language, empowering not paternalistic, warm but grounded, collaborative not competitive.
 
-**Key vocabulary:** "Vermonters" (not customers), "health plan" (not insurance policy), "health care" (two words, AP style), community, local, neighbors, well-being.
+**Key vocabulary:** "Vermonters" (not customers), "health plan" (not insurance policy), "health care" (two words; the activity) vs. "healthcare" (one word; the system), community, local, neighbors, well-being.
+
+## 2026 Strategic Defaults
+
+When drafting any external content for 2026, anchor it to the team's operating plan. See `data/strategy/` for the full reference; quick rules:
+
+- **Affordability Matters is 2026's organizing thrust.** When relevant, the headline framing is: Vermonters spend 19.6% of income on healthcare vs. 7.9% national average (source: WalletHub, July 2025, citing US Census Bureau and Kaiser Family Foundation). See `data/strategy/affordability-matters.md`.
+- **CEO Brand Building.** Beth Roberts is positioned as the affordability thought leader for 2026. CEO-attributed content should reflect her voice and the affordability narrative.
+- **Medicare 101 seminars (May–September).** Anything Medicare-related during this window should reference or support the seminar series. Audiences: Med-Sup Age-In + Switchers (specifically targeting UHC members).
+- **Cigna → Blue Cross VT** is an explicit 2026 conversion play for Large Group Non-Jumbo. Competitor framing is allowed for this segment.
+- **Vermont Blue Advantage Medicare Advantage plans are discontinued.** Do NOT reference MA availability. The "Vermont Blue Advantage" entity itself still exists as an affiliate.
+- **2026 KPIs:** NPS goal 9 (Brand Strength Measure), web intercept >−35, 75% Likely-to-Renew, 50% consumer / 65% member affordability perception.
+- See `data/strategy/2026-operating-plan.md` for the full audience taxonomy, all four operating goals, and the OEP/AEP/QHP/EGWP acronym glossary.
+
+### Audience cheat-sheet (2026)
+
+| Segment | Mode | Tone / CTA default |
+|---|---|---|
+| QHP Small Group | Growth + Retention | Practical, value-focused; CTA = explore plans / talk to broker |
+| QHP Brokers (Small Group) | Growth + Retention | Peer-professional, low-cost product spotlight |
+| QHP Individual | Growth + Retention | Plain-spoken, planning-oriented; CTA = compare plans / get a quote |
+| Blue Edge Business | Retention | Account-management voice; reassurance + new low-cost options |
+| Large Group Non-Jumbo | Growth + Retention | "Move from Cigna" framing allowed; ASO consultative tone |
+| Med-Sup Age-In | Growth | Warm, navigational; CTA = Medicare 101 seminars (May–Sept) |
+| Med-Sup Switchers | Growth | Comparative (target UHC); CTA = Medicare 101 seminars + switch carriers |
+| Brokers | Run | Newsletter + broker blasts; collect feedback |
+| Employees | Run | Internal voice ("Blue Cross," "our company"); CEO/Affordability education |
+| Members | Run | Newsletter, SMS, website; OEP support + Customer Insight Group recruit |
+| Providers | Run | Provider newsletter; referral-practice messaging |
+| Policymakers | Run (Affordability) | Education materials on key affordability initiatives |
 
 ## Oliver's Employment
 
@@ -332,6 +368,12 @@ All reference data lives in `data/` next to this file. Load as needed — don't 
 | `data/customer-support/bcbsvt-faqs-help.md` | FAQs and help content |
 | `data/customer-support/bcbsvt-member-support.md` | Member support reference |
 | `data/customer-support/bcbsvt-triage-context.md` | Ticket triage categories and routing |
+
+### Strategy (2026)
+| File | Contents |
+|------|----------|
+| **`data/strategy/2026-operating-plan.md`** | **2026 Brand & Engagement Operating Plan: four operating goals, audience taxonomy (QHP / Med-Sup / Brokers / Employees / Members / Providers / Policymakers), Affordability Matters campaign tactics, Medicare 101 seminars, KPIs, OEP/AEP/EGWP glossary. Source: 2026-04-15 Operating Plan PDF.** |
+| **`data/strategy/affordability-matters.md`** | **Affordability Matters campaign reference: 19.6%/7.9% headline stat with WalletHub-July-2025 attribution, partner orgs (NMC/GMSC/VOI/VDI), talking points, vtaffordablecare.com, Cost Tool URL, co-branding compliance reminder.** |
 
 ### Marketing & Campaigns
 | File | Contents |
@@ -430,8 +472,14 @@ The `~/Documents/BCBS/` folder contains original documents organized by category
 │   ├── Blue Cross VT Remote Access Authorization.pdf
 │   └── (i-9, W-4, relocation agreement, Outlook setup, etc.)
 └── Reference/
-    ├── 2025-11 Social Media Strategist Position Description.docx
-    └── 2026-03 BlueCross VT Brand and Engagement Team Welcome Deck.pdf
+    ├── 2025-02 BCBSA Affordability Solutions Proposal.pdf
+    ├── 2025-10 Blue Cross Vermont Brand Style Guide.pdf            ← authoritative visual identity (mirrored to data/brand/authoritative-brand-style-guide-2025-10.md)
+    ├── 2025-11 – Social Media Strategist Position Description.docx
+    ├── 2026-03 BlueCross VT Brand and Engagement Team Welcome Deck.pdf
+    ├── 2026-04-15 Brand and Engagement Operating Plan – BlueCross BlueShield of Vermont.pdf  ← 2026 operating plan (mirrored to data/strategy/2026-operating-plan.md)
+    ├── 2026-04-22 BlueCross BlueShield Payer Industry Challenges and Strategic Outlook.pdf
+    ├── Vermont Healthcare Affordability Guide 2025.md              ← Affordability Matters campaign content (mirrored to data/strategy/affordability-matters.md)
+    └── Writing and Tone Style Guide.pdf                            ← authoritative writing/voice (mirrored to data/brand/authoritative-writing-and-tone-guide.md)
 ```
 
 ## Content Pillars & Mix
@@ -455,4 +503,8 @@ Always include: #BlueCrossVT #Vermont
 
 ## Medicare Warning (2026)
 
-Vermont Blue Advantage discontinued all Medicare Advantage plans. Do NOT reference MA availability. Current offerings: Vermont Medigap Blue, Vermont Blue 65 Supplement, Blue MedicareRx (Part D).
+**Vermont Blue Advantage discontinued all Medicare Advantage plans.** Do NOT reference MA availability or write copy that suggests we still sell MA. Current offerings: Vermont Medigap Blue, Vermont Blue 65 Supplement, Blue MedicareRx (Part D).
+
+**The "Vermont Blue Advantage" entity itself still exists.** Per the Writing & Tone Guide (p. 7), Blue Cross VT manages two affiliates: Vermont Blue Advantage and The Vermont Health Plan. The Vermont Health Plan (TVHP) is the BCBS VT subsidiary that sells Vermont Medigap Blue (Brand Style Guide p. 10). Don't conflate "no MA plans" with "the entity is gone."
+
+**Medicare 101 seminars run May–September 2026.** Any Medicare-related draft in that window should reference or support the seminar series. See `data/strategy/2026-operating-plan.md` for the Med-Sup Age-In and Switchers audience definitions, and the explicit "target United Health Care members to switch carriers" play.
