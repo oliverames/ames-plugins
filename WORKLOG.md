@@ -931,3 +931,22 @@ Worklog
 **Open questions**: Libation CLI `liberate` silently fails on some Audible Plus titles with "Validation failed" — no log file found. May need to investigate Libation's log location or file a bug. Heidi (B00BSVS1LU) specifically fails repeatedly.
 
 ---
+
+## 2026-04-28 — bcbs-vt v1.9.0: oliver-voice-layer.md (plugin v3.7.1)
+
+**What changed**: Added `plugins/ames-standalone-skills/skills/bcbs-vt/data/brand/oliver-voice-layer.md` (~150 lines) capturing Oliver's personal voice layer: scope of work, speaker positioning, anchor phrases, five tonal modes (Empowering Educator, Trusted Neighbor, Evidence-Led Advocate, Human Storyteller, Celebratory Community Partner) plus crisis and press-release modes, channel-specific rules (LinkedIn 2-4 sentences zero hashtags, Instagram first-comment hashtags, blog opening conventions, member email tone), Vermont specificity reaches, hard prohibitions (no competitor attacks, no MA refs, no invented stats), CEO voice profile (Beth Roberts public-facing / Beth-Ann Roberts MBA formal; affordability anchor; collaboration language), full AI-tell don't-list (significance inflation, superficial -ing phrases, promotional adjectives, copula avoidance, signposting, sycophantic openers, etc.), formatting preferences (no em dashes, sentence case headings, no inline-header bullets, no uniform hyphenation), rhythm guidance, and workflow defaults. Bumped skill to 1.9.0 in SKILL.md frontmatter. Added the new file as a row in the "Authoritative Sources" table and the "Brand & Voice" data files index. Updated the Social Media Posting Cadence table: LinkedIn hashtags from 3-4 to 0, Instagram hashtags moved to first comment with 1-3 contextual emoji. Plugin bumped 3.7.0 → 3.7.1 via `bump-and-sync`.
+
+**Decisions made**: Created a personal voice layer rather than editing the authoritative BCBS files (`authoritative-brand-style-guide-2025-10.md` and `authoritative-writing-and-tone-guide.md`). The two authoritative files remain unchanged and continue to win for member-facing finished deliverables; the new layer is Claude's drafting default. Three explicit overrides documented in a conflict table at the bottom of the file: em dashes (never vs. permitted-without-spaces), heading case (sentence vs. title for press releases), LinkedIn hashtag count (zero vs. 3-4). Dropped the pre-existing `.backups/*.pre-1.8.0` files from this commit's scope; they belong to a prior bump and violate Oliver's no-backup-directory rule, but cleaning them up is out of scope.
+
+**Left off at**: All my changes staged (`git add` on SKILL.md and the new data file, plus the auto-staged plugin.json + marketplace.json from `bump-and-sync`). Final `git commit` blocked by 1Password SSH-agent failure ("1Password: failed to fill whole buffer"). Once the agent is reachable, run `git commit -m "sync: ames-standalone-skills 3.7.1" && git push` to land the bump and propagate to the public marketplace.
+
+**Open questions**: Sentence-case-vs-title-case override is scoped to Claude's drafts in the conflict table; if Oliver wants the override to extend to finished BCBS press releases as well, the table needs an edit. Pre-existing `.backups/` directory under bcbs-vt should be cleaned in a separate session.
+
+**Verification**:
+- `python3 -m json.tool .claude-plugin/marketplace.json >/dev/null` → ok
+- `python3 -m json.tool .agents/plugins/marketplace.json >/dev/null` → ok
+- `grep '—' .../oliver-voice-layer.md` → none (Oliver's no-em-dash rule honored in his own voice file)
+- `grep version: .../bcbs-vt/SKILL.md` → 1.9.0
+- `cat .../ames-standalone-skills/.claude-plugin/plugin.json | python3 -c 'import json,sys;print(json.load(sys.stdin)["version"])'` → 3.7.1
+
+---
