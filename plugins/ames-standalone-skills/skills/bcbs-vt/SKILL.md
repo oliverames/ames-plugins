@@ -8,7 +8,7 @@ description: >
   "check brand voice", "create a memo", "build a letterhead doc",
   "draft a press release", "triage a ticket", "my Blue Cross benefits",
   "remote work policy", "campaign plan", "content calendar".
-version: 1.8.0
+version: 1.9.0
 ---
 
 # Blue Cross and Blue Shield of Vermont
@@ -23,6 +23,7 @@ Two files under `data/brand/` are the canonical sources of truth, sourced verbat
 |------|-----------|--------|
 | `data/brand/authoritative-brand-style-guide-2025-10.md` | Anything about visual identity | Brand story, tone attributes, approved/unapproved names, logos, colors (exact hex/PMS/CMYK/RGB), typography, photography, accessibility, co-branding, derivative marks. Source: Brand Style Guide (October 2025). |
 | `data/brand/authoritative-writing-and-tone-guide.md` | Anything about writing, grammar, or voice | Writing goals, voice vs. tone, inclusive-language lists (people, age, gender, heritage, etc.), grammar mechanics, letter/email checklists, word list (insurance/policy/premium exceptions, healthcare vs. health care). Source: Writing and Tone Style Guide (rev. November 2021). |
+| `data/brand/oliver-voice-layer.md` | Claude's drafting defaults; supplements (and in three documented places overrides) the authoritative files | Tonal modes, channel rules, anchor phrases, AI-tell don't-list, formatting preferences, CEO voice profile, workflow defaults. Apply by default for any prose Claude produces or edits. Where it conflicts with the authoritative files, the conflict table at the bottom of the file says which one wins for which audience. Source: Oliver's stated voice preferences. |
 
 **Key authoritative rules that override legacy data files:**
 
@@ -324,6 +325,7 @@ All reference data lives in `data/` next to this file. Load as needed — don't 
 |------|----------|
 | **`data/brand/authoritative-brand-style-guide-2025-10.md`** | **AUTHORITATIVE. Visual identity, colors, logos, typography, co-branding, derivative marks (from the Oct 2025 Brand Style Guide PDF).** |
 | **`data/brand/authoritative-writing-and-tone-guide.md`** | **AUTHORITATIVE. Voice, tone, grammar mechanics, inclusive-language lists, letter/email checklists, word list (from the Writing and Tone Style Guide PDF).** |
+| **`data/brand/oliver-voice-layer.md`** | **Oliver's personal voice layer. Tonal modes, channel rules, anchor phrases, AI-tell don't-list, formatting preferences, CEO voice profile. Apply by default for any prose Claude produces or edits in BCBS work; defer to authoritative files for member-facing finished deliverables where flagged.** |
 | `data/brand/brand-voice.md` | Legacy — full writing guide with verbatim examples. Use for historical context; defer to authoritative file for rules. |
 | `data/brand/visual-identity.md` | Legacy — earlier colors/typography/logo usage. Defer to authoritative brand style guide for exact values. |
 | `data/brand/content-by-channel.md` | Channel-specific rules (web, email, social, print, press) |
@@ -441,12 +443,12 @@ for additional context as needed; never move or modify them.
 
 | Platform | Frequency | Hashtags | Emoji |
 |----------|-----------|----------|-------|
-| Instagram | 4-5x/week | 5-7 | Yes |
+| Instagram | 4-5x/week | 5-7 in first comment, never in post body | 1-3 contextual |
 | Facebook | 3-4x/week | 3-5 | Yes |
-| LinkedIn | 3x/week | 3-4 | Sparse |
+| LinkedIn | 3x/week | **0** (zero) | Sparse |
 | YouTube | 2x/month | — | — |
 
-Always include: #BlueCrossVT #Vermont
+LinkedIn posts run two to four sentences, include one external link, and use zero hashtags. Instagram CTA convention is "at the link in our bio"; hashtags go in the first comment, never inline. Always include `#BlueCrossVT #Vermont` on Facebook and Instagram (first-comment placement on Instagram).
 
 ## Medicare Warning (2026)
 
