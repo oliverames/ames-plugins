@@ -25,3 +25,4 @@ secrets.json
 # Backup files (timestamped or otherwise)
 *.bak
 *.bak-*
+.backups/
