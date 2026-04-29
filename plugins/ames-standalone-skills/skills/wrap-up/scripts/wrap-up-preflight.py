@@ -29,7 +29,6 @@ COMMANDS = [
     "op",
     "validate-skill",
     "backup-claude",
-    "backup-telegram",
     "commit-push-all",
 ]
 
@@ -285,7 +284,7 @@ def warnings(command_paths: dict[str, str | None], root: str | None, ames_claude
         notes.append("Current directory is not inside a git repo.")
     if not ames_claude:
         notes.append("Could not locate ames-claude source repo.")
-    for cmd in ["backup-telegram", "validate-skill"]:
+    for cmd in ["validate-skill"]:
         if not command_paths.get(cmd):
             notes.append(f"Optional command not found: {cmd}.")
     if not command_paths.get("git"):

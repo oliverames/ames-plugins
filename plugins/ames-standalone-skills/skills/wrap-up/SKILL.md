@@ -216,9 +216,7 @@ Run only available and relevant commands:
 
 1. `backup-claude`: run when Claude Code memory/config changed and the command
    exists.
-2. `backup-telegram`: run only if Telegram config changed and the command
-   exists.
-3. `commit-push-all`: use only after verifying the repos it would touch are
+2. `commit-push-all`: use only after verifying the repos it would touch are
    expected. If the script supports a dry run, run that first. If it does not,
    prefer explicit repo commits unless this was a deep multi-repo cleanup.
 
