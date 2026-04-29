@@ -1,12 +1,12 @@
 # ames-claude
 
-Oliver's personal plugin marketplace for Claude Code with experimental Codex dual-host support. Ships 6 plugins, 47 skills, 13 MCP servers (split across `ames-dev-mcps` and `ames-general-mcps`). First-party API connectors (`ames-ynab`, `ames-lytho`) live in the separate [ames-connectors](https://github.com/oliverames/ames-connectors) marketplace as of 2026-04-21.
+Oliver's personal plugin marketplace for Claude Code with experimental Codex dual-host support. Ships 6 plugins, 48 skills, 13 MCP servers (split across `ames-dev-mcps` and `ames-general-mcps`). First-party API connectors (`ames-ynab`, `ames-lytho`) live in the separate [ames-connectors](https://github.com/oliverames/ames-connectors) marketplace as of 2026-04-21.
 
 ## Structure
 
 ```
 plugins/<name>/                             Plugins (each has .claude-plugin/plugin.json)
-plugins/ames-standalone-skills/skills/      Original skills (29)
+plugins/ames-standalone-skills/skills/      Original skills (30)
 plugins/ames-community-skills/skills/       Curated third-party skills (1: humanizer)
 plugins/build-ios-apps-codex/skills/        iOS skills converted from OpenAI's Codex plugin (6)
 plugins/build-macos-apps-codex/skills/      macOS skills converted from OpenAI's Codex plugin (11)
@@ -46,7 +46,7 @@ Codex work must be additive. Do not change Claude Code's `.claude-plugin/marketp
 
 | Plugin | Hosts | Description |
 |--------|-------|-------------|
-| `ames-standalone-skills` | Claude + Codex | 29 original skills covering writing, dev, Apple workflows, finance, automation |
+| `ames-standalone-skills` | Claude + Codex | 30 original skills covering writing, dev, Apple workflows, finance, automation |
 | `ames-dev-mcps` | Claude + Codex | 6 development-focused MCP servers (Apple Docs, Apple Notifier, macOS Automator, XcodeBuildMCP, Sim Genie, Sosumi) |
 | `ames-general-mcps` | Claude + Codex | 7 day-to-day general-purpose MCP servers (Drafts, Excel, Google Workspace, iMCP, MarkItDown, Pandoc, Peekaboo) |
 | `ames-community-skills` | Claude + Codex | Third-party skills without upstream marketplaces (currently 1: humanizer by blader) |
