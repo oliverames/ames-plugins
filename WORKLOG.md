@@ -1,5 +1,69 @@
 # Worklog
 
+## 2026-05-01 — smart-transcribe Tier-1 robustness (v3.9.3)
+
+**What changed**: Three robustness fixes to the smart-transcribe pipeline (bcbs-reviewer data expansion also in this bump).
+
+1. **All cloud engines now retry** — `retry_engine()` was dead code; only Mistral had transient-error retry (inline in its subprocess script). Wired `retry_engine` into `_run_one_engine` via an `_attempt_once` closure that adapts the `str | None` engine return to the `{"status": ..., "error": ...}` dict protocol. AssemblyAI, Gemini, and Scribe now get 3-attempt 10s → 30s → 90s backoff on 429/5xx; auth failures (401/403) bail immediately as before.
+2. **`executor.map()` → `submit()` + `as_completed()`** — Engine results are now written as each engine completes rather than in submission order. A slow AssemblyAI run no longer blocks status updates and transcript writes for the faster engines behind it.
+3. **`chunk_audio` temp file isolation** — `st-chunk-000.m4a` was shared across all callers in `/tmp/`. Added a per-call `uuid4().hex[:8]` prefix (`st-chunk-<run_id>-000.m4a`) to prevent concurrent runs or quick retries from stomping each other's chunks.
+4. **3 new tests** — `retry_engine` retries 3× on 429 (with mocked sleep), bails immediately on 401, and uuid uniqueness check for chunk naming. Total test count: 11 → 14.
+5. **SKILL.md updated** — "Mistral retries on transient 5xx" → "All cloud engines retry on 5xx/429."
+
+**Decisions made**:
+- Retry wired at the `_run_one_engine` level (not inside each engine function) so the dict protocol stays isolated to the adapter closure. Engine function signatures unchanged.
+- Error string for retry detection comes from the engine log file scanned with `HTTP_RETRYABLE_SIGNALS` (already imported); log is overwritten on each attempt, so retry always checks the freshest error.
+
+**Validated by**: `python3 -m unittest tests.test_smart_transcribe` — 14/14 pass. `bump-and-sync ames-standalone-skills 3.9.3` — both manifests regenerated, pushed to `origin/main`.
+
+**Left off at**: Clean. All committed and pushed. Untracked `brand-asset-finder-workspace/` remains from the earlier brand-asset-finder eval session (intentionally unstaged — that's the eval workspace, not production).
+
+**Open questions** (carried from prior session):
+- Tier 2: Structured error returns from engine functions (removes log-grep brittleness).
+- Tier 2: Explicit `SMART_TRANSCRIBE_BUNDLE_READY:` signal in stdout for reliable agent-merge handoff.
+- ElevenLabs STT-specific quota endpoint still not public; character-proxy check remains.
+
+---
+
+## 2026-05-01 — bcbs-vt rename + bcbs-reviewer new skill (v3.9.2)
+
+**What changed**:
+
+1. **bcbs-vt → bcbs-brand** — Skill directory renamed via `git mv` to preserve full history across 44 files. `SKILL.md` frontmatter, README, `filesystem-map.md`, `smart-transcribe/SKILL.md` examples, and `brand-voice-local-config.md` path all updated. `ames-standalone-skills` bumped 3.8.0 → 3.8.1.
+
+2. **bcbs-reviewer** — New skill (`v1.0.0`) added to `ames-standalone-skills`. Simulates the Brand & Engagement internal review cycle: returns structured feedback in the voice of three internal reviewer personas (Brand Lead, Director, Medicare SME), keyed to their actual documented feedback patterns. Sources: 10 BCBS VT Word/Excel documents. Files: `SKILL.md`, `data/reviewer-personas.md`, `data/review-checklist.md`, `data/source-comments.md`.
+
+   Core review checks encoded:
+   - Department name accuracy ("Brand & Engagement Strategies", not "marketing")
+   - Medicare compliance language (licensed agents, no sales-pitch framing, educational tone, canonical-source tracing)
+   - Copy concision (with rewrite offers)
+   - Audience-appropriate cuts (exec-vs-general companion-doc workflow)
+   - Inclusive language ("Vermonters who identify as women")
+   - Social response tone (no casual phrases, no overpromising resolution, no internal ops exposure)
+   - PHI reminders, profanity moderation, Google review threat reporting
+   - Testimonial Legal approval requirement
+   - Plain-language jargon check
+
+   All reviewer names anonymized (public repo). Source corpus covers 10 documents including a Word doc, 2 photo guides, a Medicare social plan, an infrastructure memo, a social posts compilation, 2 Facebook ad docs, a Google Reviews response plan (xlsx), and a Jira proposal.
+
+3. **Plugin version**: `ames-standalone-skills` 3.8.0 → 3.9.2 across 4 commits. Both marketplace manifests regenerated and validated.
+
+**Decisions made**:
+- Reviewer names anonymized to role labels (Brand Lead, Director, Medicare SME) before push — names + quoted internal feedback in a public repo was the advisor's blocker.
+- `bcbs-reviewer` deliberately does NOT restate `bcbs-brand` rules. It encodes the human review layer only. When both are active, run `bcbs-brand` first, then `bcbs-reviewer`.
+- Social response patterns (from the Google Reviews xlsx and Response Management doc) added as a full new checklist section — they're a distinct domain from content drafting.
+- Jira proposal comments (team planning discussion) yielded only one generalizable pattern (plain-language jargon check); the rest was operational and excluded.
+
+**Validated by**:
+- `python3 -m json.tool` on both marketplace manifests: OK.
+- `git mv` rename confirmed all 44 files tracked (100% similarity detected by git).
+- Final name scan across all 4 bcbs-reviewer files: clean.
+- Pushed to `origin/main`.
+
+**Left off at**: Clean. Branch up to date with origin. `brand-asset-finder-workspace/` remains untracked (pre-existing, belongs to another session).
+
+---
+
 ## 2026-05-01 — smart-transcribe v3.8.0: six post-mortem fixes + context guard
 
 **What changed**: Applied all six fixes from the 2026-04-30 two-recording batch post-mortem (22 min phone call + 85 min Ashley/Oliver 1-on-1 that ran on 2/4 engines). Also added context interview guard and renamed bcbs-vt → bcbs-brand.
