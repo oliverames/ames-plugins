@@ -92,6 +92,20 @@ MERGE_OUTPUT_SCHEMA = {
 # =============================================================================
 
 
+_RECORDING_SPECIFIC_PATTERNS = re.compile(
+    r"\b(main topic|call between|today'?s? (meeting|call|session)|discussed?|"
+    r"covers?|this (call|meeting|session|recording)|about:|"
+    r"\d{4}-\d{2}-\d{2}|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b.*\d{4})\b",
+    re.IGNORECASE,
+)
+
+
+def _looks_recording_specific(note: str) -> bool:
+    """Return True if the note text looks like it describes a specific recording rather than
+    general background. Heuristic — false positives are fine since the user can still confirm."""
+    return bool(_RECORDING_SPECIFIC_PATTERNS.search(note))
+
+
 def _run_context_interview(name: str) -> dict:
     """Interactive first-run interview to seed a new named context.
 
@@ -123,10 +137,24 @@ def _run_context_interview(name: str) -> dict:
             if wrong and right:
                 context["corrections"][wrong] = right
 
-    # Q3: Context notes for the LLM
-    raw = input("\n   3. Context notes for the LLM (e.g. 'Vermont health insurer, speakers include doctors'):\n   > ").strip()
+    # Q3: Context notes — background reference only, never recording-specific
+    raw = input(
+        "\n   3. Permanent background context (e.g. 'Vermont health insurer; speakers are doctors and admin staff').\n"
+        "      ⚠️  Background only — never recording-specific topics. For per-run hints, use --speakers instead.\n"
+        "   > "
+    ).strip()
     if raw:
-        context["notes"].append(raw)
+        if _looks_recording_specific(raw):
+            print(
+                f"\n   ⚠️  This note looks recording-specific:\n      \"{raw}\"\n"
+                f"   Recording-specific notes will appear in every future '{name}' run."
+            )
+            confirm = input("   Save it permanently to this context anyway? [y/N] ").strip().lower()
+            if confirm != "y":
+                print("   Skipped — add it as a --speakers hint at run time instead.")
+                raw = ""
+        if raw:
+            context["notes"].append(raw)
 
     return context
 
