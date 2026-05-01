@@ -33,7 +33,7 @@ from common import (
     write_status,
 )
 
-DEFAULT_ENGINES = ["cohere-transcribe", "voxtral-small", "scribe-v2", "assemblyai-u3-pro"]
+DEFAULT_ENGINES = ["assemblyai-u3-pro", "scribe-v2", "voxtral-small", "gemini-3-pro"]
 DEFAULT_FALLBACK_ENGINE = "gpt4o-mini-transcribe"
 LOCAL_ENGINE_IDS = {"voxtral-mini-local", "cohere-transcribe"}
 ENGINE_TIMEOUTS = {
@@ -479,6 +479,11 @@ def emit_agent_merge_bundle(
     parts.append(", ".join(entities) if entities else "_None_")
 
     parts.extend(["", "## Context Notes", ""])
+    parts.append(
+        "> ⚠️ These notes are **background reference from the context file**, not recording-specific."
+        " Verify against the actual transcript; do NOT carry them forward verbatim into the merged output."
+    )
+    parts.append("")
     if notes:
         parts.extend(f"- {note}" for note in notes)
     else:
@@ -508,6 +513,7 @@ def build_doctor_report(
             "ASSEMBLYAI_API_KEY",
             "ELEVENLABS_API_KEY",
             "MISTRAL_API_KEY",
+            "GOOGLE_API_KEY",
             "HF_TOKEN",
             "ANTHROPIC_API_KEY",
         ]
@@ -986,7 +992,13 @@ def transcribe_mistral(audio_path: str, context_bias: list | None = None,
     print(f"🌊 Running Mistral Voxtral with {len(valid_bias)} single-token context terms...")
 
     script = '''
-import json, os, sys
+import json, os, sys, time
+_RETRYABLE = ("500", "502", "503", "504", "service unavailable",
+              "internal server error", "bad gateway", "gateway timeout",
+              "408", "request timeout", "429", "rate limit", "too many requests")
+_NON_RETRYABLE = ("401", "403", "unauthorized", "forbidden", "invalid api key",
+                  "quota_exceeded", "quota exhausted")
+BACKOFF = [10, 30, 90]
 try:
     from mistralai import Mistral
     from mistralai.models import File
@@ -1001,21 +1013,38 @@ try:
     bias_terms = json.loads(os.environ.get("ST_BIAS_TERMS", "[]"))
     model = os.environ.get("ST_MISTRAL_MODEL", "voxtral-mini-latest")
     client = Mistral(api_key=os.environ["MISTRAL_API_KEY"])
-
     ext = os.path.splitext(audio_file)[1].lstrip(".").lower()
-    with open(audio_file, "rb") as handle:
-        file_obj = File(
-            fileName=os.path.basename(audio_file),
-            content=handle,
-            content_type=content_type_map.get(ext, "audio/m4a"),
-        )
-        response = client.audio.transcriptions.complete(
-            model=model,
-            file=file_obj,
-            diarize=True,
-            timestamp_granularities=["segment"],
-            context_bias=bias_terms or None,
-        )
+
+    response = None
+    last_err = None
+    for attempt in range(3):
+        try:
+            with open(audio_file, "rb") as handle:
+                file_obj = File(
+                    fileName=os.path.basename(audio_file),
+                    content=handle,
+                    content_type=content_type_map.get(ext, "audio/m4a"),
+                )
+                response = client.audio.transcriptions.complete(
+                    model=model,
+                    file=file_obj,
+                    diarize=True,
+                    timestamp_granularities=["segment"],
+                    context_bias=bias_terms or None,
+                )
+            break
+        except Exception as e:
+            last_err = str(e)
+            err_lower = last_err.lower()
+            if any(s in err_lower for s in _NON_RETRYABLE):
+                raise
+            if any(s in err_lower for s in _RETRYABLE) and attempt < 2:
+                delay = BACKOFF[attempt]
+                print(f"Mistral transient error (attempt {attempt+1}/3), retrying in {delay}s: {last_err[:120]}", file=sys.stderr)
+                time.sleep(delay)
+                continue
+            raise
+
     text = getattr(response, "text", None)
     if text is None and isinstance(response, dict):
         text = response.get("text")
@@ -1041,12 +1070,89 @@ except Exception as e:
 # =============================================================================
 
 # Engine: ElevenLabs Scribe v2
+
+def _check_elevenlabs_quota(key: str, audio_path: str, python_bin: str | None = None) -> tuple[bool, str]:
+    """Pre-flight: verify API key and surface quota state before transcription starts.
+
+    Queries client.user.get() for subscription info. Note: the character quota
+    returned is TTS-based; ElevenLabs STT credits are a separate pool not yet
+    exposed by a stable public endpoint. This check catches: invalid/expired keys,
+    accounts with zero remaining characters (strong proxy for depleted STT credits),
+    and accounts where the API itself returns a quota error on basic access.
+
+    Returns (sufficient, message). Fails open if quota info is unavailable.
+    """
+    script = '''
+import sys, json, os
+try:
+    try:
+        from elevenlabs.client import ElevenLabs
+    except Exception:
+        from elevenlabs import ElevenLabs
+    client = ElevenLabs(api_key=os.environ["ELEVENLABS_API_KEY"])
+    user = client.user.get()
+    sub = getattr(user, "subscription", None)
+    if sub is None and isinstance(user, dict):
+        sub = user.get("subscription", {})
+    info = {}
+    for f in ["character_count", "character_limit", "status", "tier"]:
+        val = getattr(sub, f, None)
+        if val is None and isinstance(sub, dict):
+            val = sub.get(f)
+        if val is not None:
+            info[f] = val
+    print(json.dumps({"ok": True, "info": info}))
+except Exception as e:
+    err = str(e)
+    print(json.dumps({"ok": False, "error": err,
+                      "quota_exhausted": any(kw in err.lower() for kw in
+                                             ["quota", "quota_exceeded", "insufficient"])}))
+    sys.exit(1)
+'''
+    try:
+        result = subprocess.run(
+            [python_bin or str(VENV_PYTHON), "-c", script],
+            capture_output=True, text=True, timeout=10,
+            env={**os.environ, "ELEVENLABS_API_KEY": key},
+        )
+        if result.returncode != 0:
+            try:
+                data = json.loads(result.stdout.strip())
+                if data.get("quota_exhausted"):
+                    return False, f"ElevenLabs quota exhausted — {data.get('error', '')[:200]}"
+            except Exception:
+                pass
+            return True, "quota check failed — proceeding"
+        data = json.loads(result.stdout.strip())
+        if not data.get("ok"):
+            err = data.get("error", "")
+            if data.get("quota_exhausted") or "quota" in err.lower():
+                return False, f"ElevenLabs: quota exhausted — {err[:200]}"
+            return True, f"quota check skipped: {err[:80]}"
+        info = data.get("info", {})
+        limit = info.get("character_limit")
+        used = info.get("character_count")
+        if limit is not None and used is not None:
+            remaining = limit - used
+            if remaining <= 0:
+                return False, f"ElevenLabs: character quota exhausted ({used:,}/{limit:,} used)"
+        return True, "quota OK"
+    except Exception as e:
+        return True, f"quota check skipped: {e}"
+
+
 def transcribe_elevenlabs(audio_path: str, context_bias: list | None = None,
                           python_bin: str | None = None, log_path: Path | None = None) -> str | None:
     key = resolve_key("ELEVENLABS_API_KEY") or ""
     if not key:
         print("⚠️  ELEVENLABS_API_KEY not set. Skipping ElevenLabs.", file=sys.stderr)
         return None
+    quota_ok, quota_msg = _check_elevenlabs_quota(key, audio_path, python_bin)
+    if not quota_ok:
+        print(f"⚠️  Skipping ElevenLabs Scribe v2: {quota_msg}", file=sys.stderr)
+        return None
+    if quota_msg not in ("quota OK",):
+        print(f"  ElevenLabs: {quota_msg}", file=sys.stderr)
     # ElevenLabs: max 4 spaces per keyterm (5+ word phrases rejected by API)
     valid_keyterms = [t for t in (context_bias or []) if isinstance(t, str) and t.count(' ') <= 4][:100]
     keyterms_json = json.dumps(valid_keyterms)
@@ -1804,6 +1910,77 @@ def append_suggestions(suggestions: list, source_file: str | None = None):
 
 
 # =============================================================================
+# ENGINE RUN SUMMARY
+# =============================================================================
+
+def _print_engine_summary(
+    engine_results: dict[str, dict],
+    selected_engine_ids: list[str],
+    bundle_path: Path | None = None,
+) -> None:
+    """Print a structured summary of engine outcomes after a transcription run.
+
+    Shows: per-engine success/fail with failure reasons, word counts with outlier
+    flags, and a HIGH/MODERATE/LOW confidence label based on successful engine ratio.
+    """
+    total = len(selected_engine_ids)
+    successes = [label for label, r in engine_results.items() if r.get("status") == "complete"]
+    failures = {label: r for label, r in engine_results.items() if r.get("status") != "complete"}
+    n_ok = len(successes)
+
+    if total == 0:
+        return
+
+    # Confidence label
+    ratio = n_ok / total
+    if ratio >= 1.0:
+        confidence = "HIGH"
+        conf_icon = "🟢"
+    elif ratio >= 0.75:
+        confidence = "MODERATE"
+        conf_icon = "🟡"
+    else:
+        confidence = "LOW"
+        conf_icon = "🔴"
+
+    print(f"\n{'─' * 60}", file=sys.stderr)
+    print(f"📊 Engine summary  {n_ok}/{total} succeeded  |  confidence: {conf_icon} {confidence}", file=sys.stderr)
+    print(f"{'─' * 60}", file=sys.stderr)
+
+    # Per-engine word counts (for outlier detection)
+    word_counts: dict[str, int] = {}
+    for label, r in engine_results.items():
+        text = r.get("text") or ""
+        word_counts[label] = len(text.split()) if text else 0
+
+    max_wc = max(word_counts.values()) if word_counts else 0
+
+    for label, r in engine_results.items():
+        status = r.get("status", "failed")
+        wc = word_counts.get(label, 0)
+        if status == "complete":
+            outlier = max_wc > 0 and wc < max_wc * 0.10
+            outlier_flag = "  ⚠️ word count outlier (<10% of max)" if outlier else ""
+            print(f"  ✅ {label}: {wc:,} words{outlier_flag}", file=sys.stderr)
+        else:
+            reason = r.get("failure_reason") or "no transcript produced"
+            print(f"  ❌ {label}: {reason}", file=sys.stderr)
+
+    if bundle_path:
+        print(f"\n📦 Agent merge bundle ready", file=sys.stderr)
+        print(f"📄 {bundle_path}", file=sys.stderr)
+
+    if confidence == "LOW":
+        print(
+            f"\n⚠️  LOW confidence: only {n_ok}/{total} engines succeeded."
+            " Merged transcript may have unresolved word-accuracy gaps."
+            " Consider re-running with --resume once upstream errors are resolved.",
+            file=sys.stderr,
+        )
+    print(f"{'─' * 60}\n", file=sys.stderr)
+
+
+# =============================================================================
 # MAIN ENTRY POINT
 # =============================================================================
 
@@ -2196,11 +2373,24 @@ Examples:
             text = func(str(upload_path), context_bias, python_bin=python_bin, log_path=engine_log)  # type: ignore[operator]
 
         status = "complete" if text else "failed"
+        # Extract a meaningful failure reason from the engine log (first error line)
+        failure_reason: str | None = None
+        if not text and engine_log.exists():
+            try:
+                log_txt = engine_log.read_text(encoding="utf-8", errors="replace")
+                for line in log_txt.splitlines():
+                    if "error" in line.lower() or "quota" in line.lower() or "status" in line.lower():
+                        failure_reason = line.strip()[:200]
+                        break
+            except Exception:
+                pass
+        if not text and not failure_reason:
+            failure_reason = f"{label} returned no transcript"
         result = {
             "engine_id": engine_id,
             "label": label,
             "status": status,
-            "failure_reason": None if text else f"{label} returned no transcript",
+            "failure_reason": failure_reason,
             "python": python_bin,
             "text": text or "",
             "segments": normalize_segments(extract_basic_segments(text or "", engine_id), engine_id),
@@ -2264,10 +2454,10 @@ Examples:
             print(f"   Failed: {', '.join(failed)}")
             sys.exit(1)
 
-    print(f"\n✅ {len(successful)}/{len(transcripts)} engines succeeded", file=sys.stderr)
+    if args.merge_mode != "agent":
+        _print_engine_summary(engine_results, selected_engine_ids)
     if len(successful) < len(DEFAULT_ENGINES) and set(selected_engine_ids) == set(DEFAULT_ENGINES):
         print(f"⚠️  default engine set degraded: used {len(successful)}/{len(DEFAULT_ENGINES)} engines", file=sys.stderr)
-    print(file=sys.stderr)
 
     # ==========================================================================
     # TRANSCRIBE-ONLY MODE: Output raw transcripts and exit
@@ -2309,8 +2499,7 @@ Examples:
         })
         with run_log_path.open("a", encoding="utf-8") as fh:
             fh.write(f"{datetime.now().isoformat()} needs_agent_merge bundle={bundle_path}\n")
-        print("\n📦 Agent merge bundle ready")
-        print(f"📄 {bundle_path}")
+        _print_engine_summary(engine_results, selected_engine_ids, bundle_path=bundle_path)
         return str(bundle_path)
 
     # ==========================================================================

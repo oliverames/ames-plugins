@@ -22,7 +22,7 @@ class SmartTranscribeTests(unittest.TestCase):
     def test_default_engine_set(self):
         self.assertEqual(
             smart_transcribe.DEFAULT_ENGINES,
-            ["cohere-transcribe", "voxtral-small", "scribe-v2", "assemblyai-u3-pro"],
+            ["assemblyai-u3-pro", "scribe-v2", "voxtral-small", "gemini-3-pro"],
         )
 
     def test_python_version_supported(self):
