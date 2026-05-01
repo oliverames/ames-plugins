@@ -711,6 +711,16 @@ def run_engine_text(script: str, env: dict, label: str, timeout: int = 3600,
         return None
 
 
+HTTP_RATE_LIMIT_SIGNALS = ("rate", "429", "limit", "overloaded", "capacity", "too many requests")
+HTTP_SERVER_ERROR_SIGNALS = ("500", "502", "503", "504", "service unavailable",
+                             "internal server error", "bad gateway", "gateway timeout",
+                             "408", "request timeout")
+HTTP_NON_RETRYABLE_SIGNALS = ("401", "403", "quota_exceeded", "quota exhausted",
+                              "unauthorized", "forbidden", "invalid api key")
+HTTP_RETRYABLE_SIGNALS = HTTP_RATE_LIMIT_SIGNALS + HTTP_SERVER_ERROR_SIGNALS
+HTTP_BACKOFF_DELAYS_S = [10, 30, 90]
+
+
 def retry_engine(func, max_retries: int = 3) -> dict:
     """Retry an engine function with exponential backoff on transient errors.
 
@@ -720,27 +730,19 @@ def retry_engine(func, max_retries: int = 3) -> dict:
     - HTTP 408 (request timeout)
     Non-retryable errors (auth failures, quota exhaustion) return immediately.
     """
-    _RATE_LIMIT_SIGNALS = ("rate", "429", "limit", "overloaded", "capacity", "too many requests")
-    _SERVER_ERROR_SIGNALS = ("500", "502", "503", "504", "service unavailable",
-                             "internal server error", "bad gateway", "gateway timeout",
-                             "408", "request timeout")
-    _NON_RETRYABLE_SIGNALS = ("401", "403", "quota_exceeded", "quota exhausted",
-                              "unauthorized", "forbidden", "invalid api key")
-    BACKOFF_DELAYS = [10, 30, 90]
-
     result = None
     for attempt in range(max_retries):
         result = func()
         if result["status"] == "complete":
             return result
         err = (result.get("error") or "").lower()
-        if any(sig in err for sig in _NON_RETRYABLE_SIGNALS):
+        if any(sig in err for sig in HTTP_NON_RETRYABLE_SIGNALS):
             return result
-        is_retryable = any(sig in err for sig in _RATE_LIMIT_SIGNALS) or \
-                       any(sig in err for sig in _SERVER_ERROR_SIGNALS)
-        if is_retryable and attempt < max_retries - 1:
-            wait = BACKOFF_DELAYS[attempt]
-            category = "rate-limited" if any(s in err for s in _RATE_LIMIT_SIGNALS) else "server error"
+        is_rate_limit = any(sig in err for sig in HTTP_RATE_LIMIT_SIGNALS)
+        is_server_error = any(sig in err for sig in HTTP_SERVER_ERROR_SIGNALS)
+        if (is_rate_limit or is_server_error) and attempt < max_retries - 1:
+            wait = HTTP_BACKOFF_DELAYS_S[attempt]
+            category = "rate-limited" if is_rate_limit else "server error"
             print(f"  {category} (attempt {attempt + 1}/{max_retries}), retrying in {wait}s...",
                   file=sys.stderr)
             time.sleep(wait)

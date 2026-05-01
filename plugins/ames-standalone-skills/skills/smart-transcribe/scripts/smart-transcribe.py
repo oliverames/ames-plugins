@@ -24,6 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from common import (
     CONTEXTS_DIR, VENV_PYTHON, CONFIG_DIR, STATUS_FILE_NAME, RUN_LOG_NAME,
+    HTTP_RETRYABLE_SIGNALS, HTTP_NON_RETRYABLE_SIGNALS, HTTP_BACKOFF_DELAYS_S,
     resolve_key, load_dictionary, get_context_terms,
     get_dictionary_paths, flatten_entities, merge_dicts,
     compress_audio, convert_16khz_mono, chunk_audio,
@@ -1019,14 +1020,11 @@ def transcribe_mistral(audio_path: str, context_bias: list | None = None,
     ][:100]
     print(f"🌊 Running Mistral Voxtral with {len(valid_bias)} single-token context terms...")
 
-    script = '''
+    script = f'''
 import json, os, sys, time
-_RETRYABLE = ("500", "502", "503", "504", "service unavailable",
-              "internal server error", "bad gateway", "gateway timeout",
-              "408", "request timeout", "429", "rate limit", "too many requests")
-_NON_RETRYABLE = ("401", "403", "unauthorized", "forbidden", "invalid api key",
-                  "quota_exceeded", "quota exhausted")
-BACKOFF = [10, 30, 90]
+_RETRYABLE = {repr(HTTP_RETRYABLE_SIGNALS)}
+_NON_RETRYABLE = {repr(HTTP_NON_RETRYABLE_SIGNALS)}
+BACKOFF = {repr(HTTP_BACKOFF_DELAYS_S)}
 try:
     from mistralai import Mistral
     from mistralai.models import File
@@ -1143,27 +1141,21 @@ except Exception as e:
             capture_output=True, text=True, timeout=10,
             env={**os.environ, "ELEVENLABS_API_KEY": key},
         )
-        if result.returncode != 0:
-            try:
-                data = json.loads(result.stdout.strip())
-                if data.get("quota_exhausted"):
-                    return False, f"ElevenLabs quota exhausted — {data.get('error', '')[:200]}"
-            except Exception:
-                pass
+        try:
+            data = json.loads(result.stdout.strip())
+        except Exception:
             return True, "quota check failed — proceeding"
-        data = json.loads(result.stdout.strip())
-        if not data.get("ok"):
+        if result.returncode != 0 or not data.get("ok"):
             err = data.get("error", "")
             if data.get("quota_exhausted") or "quota" in err.lower():
                 return False, f"ElevenLabs: quota exhausted — {err[:200]}"
-            return True, f"quota check skipped: {err[:80]}"
+            return (True, "quota check failed — proceeding") if result.returncode != 0 \
+                else (True, f"quota check skipped: {err[:80]}")
         info = data.get("info", {})
         limit = info.get("character_limit")
         used = info.get("character_count")
-        if limit is not None and used is not None:
-            remaining = limit - used
-            if remaining <= 0:
-                return False, f"ElevenLabs: character quota exhausted ({used:,}/{limit:,} used)"
+        if limit is not None and used is not None and limit - used <= 0:
+            return False, f"ElevenLabs: character quota exhausted ({used:,}/{limit:,} used)"
         return True, "quota OK"
     except Exception as e:
         return True, f"quota check skipped: {e}"
@@ -1952,9 +1944,7 @@ def _print_engine_summary(
     flags, and a HIGH/MODERATE/LOW confidence label based on successful engine ratio.
     """
     total = len(selected_engine_ids)
-    successes = [label for label, r in engine_results.items() if r.get("status") == "complete"]
-    failures = {label: r for label, r in engine_results.items() if r.get("status") != "complete"}
-    n_ok = len(successes)
+    n_ok = sum(1 for r in engine_results.values() if r.get("status") == "complete")
 
     if total == 0:
         return
@@ -2405,11 +2395,11 @@ Examples:
         failure_reason: str | None = None
         if not text and engine_log.exists():
             try:
-                log_txt = engine_log.read_text(encoding="utf-8", errors="replace")
-                for line in log_txt.splitlines():
-                    if "error" in line.lower() or "quota" in line.lower() or "status" in line.lower():
-                        failure_reason = line.strip()[:200]
-                        break
+                with open(engine_log, encoding="utf-8", errors="replace") as _lf:
+                    for line in _lf:
+                        if "error" in line.lower() or "quota" in line.lower():
+                            failure_reason = line.strip()[:200]
+                            break
             except Exception:
                 pass
         if not text and not failure_reason:
