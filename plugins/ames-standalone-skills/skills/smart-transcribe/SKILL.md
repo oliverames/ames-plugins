@@ -156,7 +156,7 @@ Detailed strengths and weaknesses for each engine. Use these to choose the right
 
 - **Strengths**: #1 on HF Open ASR Leaderboard (5.42% WER, beating all cloud dedicated ASR alternatives in academic benchmarks); 524x real-time factor — roughly 3x faster than Whisper Large; Conformer-based encoder-decoder with >90% parameters in the acoustic encoder for high efficiency; Apache 2.0 license (freely deployable); 14 enterprise languages; free after local setup.
 - **Weaknesses**: No timestamps; no speaker diarization; no automatic language detection (language must be pre-specified); does not handle code-switching or mixed-language audio; no keyterm biasing; "eager transcription" — hallucinates on floor noise and non-speech sounds without a VAD preprocessing step; requires HF token for gated model access.
-- **Best for**: Private/local tiebreaker in the default engine set; single-language recordings where pure word accuracy matters and timestamps/diarization are not needed; high-volume local batch processing where API costs would add up.
+- **Best for**: Opt-in via `--engines cohere-transcribe,...` — single-language, single-speaker, low-silence recordings (voiceovers, dictation) where pure word accuracy matters and timestamps/diarization are not needed; high-volume local batch processing where API costs would add up. **Not suitable for meeting/phone-call audio** (hallucinations on silence without a VAD preprocessor); excluded from the default engine set for that reason.
 
 ## Architecture
 
