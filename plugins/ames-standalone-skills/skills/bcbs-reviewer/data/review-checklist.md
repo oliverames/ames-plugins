@@ -117,9 +117,11 @@ Apply when reviewing social media response templates, response playbooks, or dra
 
 **Testimonials:**
 - [ ] Google review testimonials cannot be used in marketing materials or digital channels without Legal approval — track them for future use but do not publish without clearance
+- [ ] When a positive review names a specific BCBS employee, keep the response generic rather than addressing the individual by name — CS team turnover means named staff may no longer be with the organization, and a personalized response can date awkwardly. Use "we all care about doing right by Vermonters" or "we'll make sure your kind words reach the right people" rather than naming anyone.
 
 **Organic vs. paid:**
 - [ ] Response protocols for organic posts vs. paid advertising posts may differ — flag if a response playbook does not distinguish between the two
+- [ ] Third-party posts mentioning BCBS (news clips, partner organizations, advocacy accounts) do not automatically warrant a response — if engagement would surface a sensitive topic (executive compensation, rate increases, coverage disputes) or extend a thread that is already going poorly, watch-only is the right call. Respond only when engagement adds clear value and won't amplify a bad thread.
 
 ---
 

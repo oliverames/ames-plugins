@@ -144,6 +144,24 @@ All comments below are from the Brand Lead, reviewing response copy templates on
 
 ---
 
+## 2026-04-30 Ashley & Oliver 1-on-1 — Transcript
+
+Patterns derived from the verbal review discussion of the Google Reviews response drafts during the April 30, 2026 one-on-one. These expand on the cell comments already captured above; they came out of the back-and-forth conversation rather than written annotations.
+
+**On responding to positive reviews that name specific employees:** "I honestly don't know if those people work here anymore from our perspective. So as you respond, it may just be like, 'thanks, this means a lot, we all care' — more generic, only because [Customer Service has] turnover."
+*Pattern: Positive review responses that name specific BCBS employees should be kept generic. CS team turnover means named staff may no longer be with the organization. Use team-wide acknowledgment language ("we all care," "we'll make sure your kind words reach the right people") rather than calling out individuals.*
+
+**On engaging with third-party posts where BCBS is mentioned:** "That was bad. They of course pulled out the one entity where they asked her basically about executive compensation and what she made. Did not go well, the optics of it... They posted on Instagram, all this stuff under Vermont Public's name. It wasn't pretty. We could watch it, but we're like, hey, this isn't our post."
+*Pattern: A Blue Cross mention in a third-party post does not automatically warrant engagement. When a thread would surface sensitive topics (executive compensation, rate complaints, political positioning) or is already gaining negative momentum, watch-only is the right call. The bar for engagement is whether BCBS can add value — not simply that the brand was mentioned.*
+
+**On political threads in paid social:** "Back in November, we ran through Crosby an ad tied to the VTaffordablecare.com campaign... it got political... people were working it out with each other... I was like, let's not engage in this conversation... It became multiple per day, long thread, a lot of banter, turned into political. I was like, I think we need to just watch now."
+*Pattern: When paid ad comment threads turn political, the right call is watch-only. Don't engage even to correct misstatements — the thread momentum is more damaging than any clarification is useful. Teresa pulled the Crosby/VTaffordablecare.com ad after this experience.*
+
+**On when to escalate response decisions:** "When a post straddles the line on engagement, bring to Ashley and Teresa. Most of the time I'll be able to quick draft a response and get it out the door to them. But if someone's saying you're failing the state and hard-working Vermonters while you pay your CEO a lot of money, that might be something to respond to, but there's no way I'm responding to that without getting Teresa's eyes on it."
+*Pattern: When a public response decision is borderline — especially on executive-comp attacks, "you're failing Vermonters" framing, or any politically charged thread — bring the draft to the Brand Lead and Director before publishing. Most routine responses can be drafted and sent to them for a quick look; high-stakes responses require their eyes before anything goes out.*
+
+---
+
 ## Jira-Proposal---One-Sheet.docx
 
 Comments in this document are team planning discussion (phase timing, tool access, meeting logistics) — not brand or editorial review patterns.
