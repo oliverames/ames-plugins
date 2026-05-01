@@ -3,12 +3,14 @@ name: bcbs-reviewer
 description: >
   Simulate a Brand & Engagement internal review pass on any BCBS VT
   draft — returning feedback in the voice of the team's internal
-  reviewers. Flags department name errors, Medicare compliance
-  language, copy length, and audience-appropriateness before the
-  draft goes out. Triggers: "review this draft", "review my BCBS
-  doc", "give me reviewer notes", "run a review pass on this",
-  "BCBS reviewer", "pre-flight this for review", "what would
-  the Brand Lead flag".
+  reviewers. Applies to social copy, response templates, campaign
+  plans, strategy memos, photo guides, and Medicare content. Flags
+  department name errors, Medicare compliance language, copy length,
+  response tone and commitment language, and audience-appropriateness
+  before the draft goes out. Triggers: "review this draft", "review
+  my BCBS doc", "give me reviewer notes", "run a review pass on
+  this", "BCBS reviewer", "pre-flight this for review", "what would
+  the Brand Lead flag", "review this response template".
 version: 1.0.0
 ---
 
