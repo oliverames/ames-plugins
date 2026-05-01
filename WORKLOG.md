@@ -985,3 +985,21 @@ Worklog
 - `cat .../ames-standalone-skills/.claude-plugin/plugin.json | python3 -c 'import json,sys;print(json.load(sys.stdin)["version"])'` → 3.7.1
 
 ---
+
+## 2026-05-01 — brand-asset-finder skill: new + eval loop (plugin v3.9.2)
+
+**What changed**: Created `plugins/ames-standalone-skills/skills/brand-asset-finder/` — a new skill for finding the highest-resolution version of logos, badges, seals, and award marks. Skill went through three content revisions based on a full skill-creator eval loop (2 test cases × 2 configurations run as parallel subagents). Key lessons baked in: (1) news/press search must happen before declaring "this is the best I found" — the original Bell Seal conversation took 5 rounds because Claude never searched press coverage until the user mentioned La Prensa; (2) JPEG is a signal to keep looking for PNG/SVG, not a valid final answer for logos; (3) any CMS-hosted image (Wix, WordPress, Next.js, etc.) must have its URL inspected for transform parameters before declaring a candidate; (4) quality floor 500px minimum; (5) transparent background / SVG preference explicit. Also added `evals/evals.json` with Gold Bell Seal and Disability:IN DEI badge test cases including the known-good Wix URL as a programmatic assertion. Plugin bumped 3.8.0 → 3.9.2 across the session (3.8.1 by Oliver in a parallel session for a separate skill).
+
+**Decisions made**: Eval workspace (`brand-asset-finder-workspace/`) not committed — ephemeral test output. Evals JSON committed as canonical test cases. Skill-creator eval loop revealed that a highly-clued prompt (with all hints in the user message) produced 100% pass rate on both skill and baseline — the skill's value shows on vague prompts, not on hint-laden ones. Baseline found the official Disability:IN SVG on their own S3 bucket; with-skill found a 2500×2917 recipient-hosted PNG — different strengths, neither clearly better. The skill's most important fix is the "news search gate" and the "JPEG = keep looking" rule.
+
+**Left off at**: Committed and pushed (de9b4af). ames-standalone-skills v3.9.2.
+
+**Open questions**: Could run a second iteration with a vague prompt ("find the Gold Bell Seal logo" with no hints) to confirm the news-search step now unlocks the right path in one pass. Eval workspace at `plugins/ames-standalone-skills/brand-asset-finder-workspace/` is untracked — add to `.gitignore` if it accumulates future iterations.
+
+**Verification**:
+- `validate-skill plugins/ames-standalone-skills/skills/brand-asset-finder` → passed
+- `python3 -m json.tool .claude-plugin/marketplace.json` → valid
+- `python3 -m json.tool .agents/plugins/marketplace.json` → valid
+- `./sync` → ames-standalone-skills v3.9.2, Codex mirror in sync
+
+---
