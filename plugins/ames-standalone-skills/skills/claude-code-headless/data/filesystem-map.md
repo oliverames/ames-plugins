@@ -311,6 +311,6 @@ The body of SKILL.md contains the full skill instructions in markdown — inject
 
 ### Skills list (as of 2026-04-12)
 
-32 skills in `ames-standalone-skills`: 1password-vault, ai-pattern-remover, apple-music-rip, apple-notes-formatting, apple-workout-generator, audible-library, bcbs-meeting-notes, bcbs-vt, bcbs-wrap-up, build-ios-apps-codex, build-macos-apps-codex, claude-code-headless, cmux-workflows, create-shortcut, draft-comms, file-organization, generate-image, gmcf-masters-swim, humanizer, ios-capabilities, jelly, macos-app-icons, obsidian-notes, oliver-tone, raw-plist, readme-style, smart-transcribe, swiftui-pro, testflight-deployment, wrap-up, xcodegen-project, ynab-finance.
+32 skills in `ames-standalone-skills`: 1password-vault, ai-pattern-remover, apple-music-rip, apple-notes-formatting, apple-workout-generator, audible-library, bcbs-brand, bcbs-meeting-notes, bcbs-wrap-up, build-ios-apps-codex, build-macos-apps-codex, claude-code-headless, cmux-workflows, create-shortcut, draft-comms, file-organization, generate-image, gmcf-masters-swim, humanizer, ios-capabilities, jelly, macos-app-icons, obsidian-notes, oliver-tone, raw-plist, readme-style, smart-transcribe, swiftui-pro, testflight-deployment, wrap-up, xcodegen-project, ynab-finance.
 
 Source: `plugins/ames-standalone-skills/skills/` in the `ames-claude` repo. Edit there, then run `sync-skills` to publish and install.

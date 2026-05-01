@@ -182,7 +182,7 @@ Both plugins originated in [openai/plugins](https://github.com/openai/plugins) a
 - [`ynab-finance`](plugins/ames-standalone-skills/skills/ynab-finance/) — Household finance via YNAB (reviews, reconciliation, reporting)
 
 **BCBS VT (work-specific)**
-- [`bcbs-vt`](plugins/ames-standalone-skills/skills/bcbs-vt/) — Context and guidance for BCBS VT work
+- [`bcbs-brand`](plugins/ames-standalone-skills/skills/bcbs-brand/) — Context and guidance for BCBS VT work
 - [`bcbs-meeting-notes`](plugins/ames-standalone-skills/skills/bcbs-meeting-notes/) — Structure BCBS VT transcripts into notes with action items
 - [`bcbs-wrap-up`](plugins/ames-standalone-skills/skills/bcbs-wrap-up/) — End-of-session wrap-up, verifies Jira-tracked action items
 

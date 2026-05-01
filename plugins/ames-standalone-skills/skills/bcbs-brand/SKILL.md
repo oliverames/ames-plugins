@@ -1,5 +1,5 @@
 ---
-name: bcbs-vt
+name: bcbs-brand
 description: >
   Apply Blue Cross and Blue Shield of Vermont (BCBS VT) brand and
   writing standards to drafting, brand-linting, letterhead and memo

@@ -24,7 +24,7 @@ Use `--merge-mode claude` only when you intentionally want the script to call ne
 | Flag | Description |
 |------|-------------|
 | `--fix-transcript FILE` | Correct an existing transcript (`.srt`, `.vtt`, `.txt`, `.md`) — skips audio engines entirely |
-| `--context NAME` | Load a named per-project context overlay (e.g. `--context bcbs-vt`). First use triggers a short interview. Omit NAME to list saved contexts. |
+| `--context NAME` | Load a named per-project context overlay (e.g. `--context bcbs-brand`). First use triggers a short interview. Omit NAME to list saved contexts. |
 | `--review` | Interactively review applied corrections before saving — dispute false positives to log them for dictionary cleanup |
 | `--engines E1,E2,...` | Choose transcription engines (default: `assemblyai-u3-pro,scribe-v2,voxtral-small,gemini-3-pro`). Run `--list-engines` for all IDs. |
 | `--list-engines` | Print all available engine IDs and aliases, then exit |
@@ -184,7 +184,7 @@ The report is also printed to the terminal after every run. With `--review`, the
 
 ### Per-Context Configuration
 
-Named contexts (e.g. `bcbs-vt`) live in `~/.config/smart-transcribe/contexts/<name>.json`. They use the same schema as the main dictionary and deep-merge on top of it:
+Named contexts (e.g. `bcbs-brand`) live in `~/.config/smart-transcribe/contexts/<name>.json`. They use the same schema as the main dictionary and deep-merge on top of it:
 - Context corrections take precedence over global ones on key collision
 - Entities and notes are additive (union, no duplicates)
 - First use of a new context name triggers a 3-question setup interview
