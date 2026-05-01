@@ -15,7 +15,7 @@ Expanded checklist for `bcbs-reviewer` passes. The SKILL.md contains the 4 core 
 
 ---
 
-## Photography and Visual Asset Review (Teresa)
+## Photography and Visual Asset Review (Director)
 
 Apply when reviewing a photo shoot brief, appearance guide, or event photography document.
 
@@ -38,7 +38,7 @@ Apply when reviewing a photo shoot brief, appearance guide, or event photography
 
 ---
 
-## Medicare Campaign Checklist (Ashley + Jordan)
+## Medicare Campaign Checklist (Brand Lead + Medicare SME)
 
 Apply to any Medicare-related social, event, or campaign content.
 
@@ -46,7 +46,11 @@ Apply to any Medicare-related social, event, or campaign content.
 - [ ] "Licensed agents" or "licensed Medicare agents" — never "agents," "staff," or "our team" alone
 - [ ] No "no sales pitch," "we won't sell you anything," or similar disclaimers — reframe to what agents provide
 - [ ] Educational framing: "what to consider when choosing a plan," not "choose a plan" or "find the right plan for you"
-- [ ] Seminar descriptions should say what agents will guide attendees through (use Jordan's formula: What is Medicare / when you can enroll / benefits available / overview of plan options beyond Medicare)
+- [ ] Seminar descriptions should say what agents will guide attendees through (use Medicare SME's formula: What is Medicare / when you can enroll / benefits available / overview of plan options beyond Medicare)
+- [ ] No post copy should reference Blue Cross plans, products, or enrollment in a sales context — all Medicare content stays educational (from the Medicare 101 Social Media Plan NOTES section)
+
+**Review chain:**
+Medicare content follows a defined chain before publishing: content creator → Brand Lead → Medicare SME → final approver. Flag any Medicare copy that has not cleared both the Brand Lead and Medicare SME.
 
 **Audience and platform:**
 - [ ] Primary platform for 55+ Medicare audience: Facebook (not Instagram-first)
@@ -62,7 +66,7 @@ Apply to any Medicare-related social, event, or campaign content.
 
 ---
 
-## Event Photography Checklist (Ashley)
+## Event Photography Checklist (Brand Lead)
 
 Apply when reviewing event photo capture guidance.
 
@@ -72,4 +76,4 @@ Apply when reviewing event photo capture guidance.
 - [ ] Flash off; available light preferred
 - [ ] Burst mode for group shots
 - [ ] Tap-to-focus on faces
-- [ ] Complex steps: consider adding a visual or more explicit instruction if the step requires technical knowledge ("This may need some training or a visual added if a key step" — Ashley)
+- [ ] Complex steps: consider adding a visual or more explicit instruction if the step requires technical knowledge ("This may need some training or a visual added if a key step" — Brand Lead)
