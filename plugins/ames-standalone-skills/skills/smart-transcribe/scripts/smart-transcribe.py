@@ -20,7 +20,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from common import (
     CONTEXTS_DIR, VENV_PYTHON, CONFIG_DIR, STATUS_FILE_NAME, RUN_LOG_NAME,
@@ -28,7 +28,7 @@ from common import (
     resolve_key, load_dictionary, get_context_terms,
     get_dictionary_paths, flatten_entities, merge_dicts,
     compress_audio, convert_16khz_mono, chunk_audio,
-    run_engine_text,
+    run_engine_text, retry_engine,
     print_runtime_banner, resolve_engine_python, require_supported_python,
     supported_python_string, python_version_supported, resolve_key_status, check_ffmpeg_tools,
     write_status,
@@ -2371,39 +2371,46 @@ Examples:
             return label, cached
 
         python_bin = resolve_engine_python(engine_id, engine_python_overrides, args.use_system_python)
-        if engine_id == "assemblyai-u3-pro":
-            text = transcribe_assemblyai(
-                str(upload_path),
-                speaker_labels=use_diarization,
-                context_bias=context_bias,
-                num_speakers=args.num_speakers,
-                python_bin=python_bin,
-                log_path=engine_log,
-            )
-        elif engine_id == "voxtral-small":
-            text = transcribe_mistral(
-                str(upload_path),
-                context_bias,
-                python_bin=python_bin,
-                log_path=engine_log,
-            )
-        else:
-            text = func(str(upload_path), context_bias, python_bin=python_bin, log_path=engine_log)  # type: ignore[operator]
 
-        status = "complete" if text else "failed"
-        # Extract a meaningful failure reason from the engine log (first error line)
-        failure_reason: str | None = None
-        if not text and engine_log.exists():
-            try:
-                with open(engine_log, encoding="utf-8", errors="replace") as _lf:
-                    for line in _lf:
-                        if "error" in line.lower() or "quota" in line.lower():
-                            failure_reason = line.strip()[:200]
-                            break
-            except Exception:
-                pass
-        if not text and not failure_reason:
-            failure_reason = f"{label} returned no transcript"
+        _scan_kw = ("error", "quota") + HTTP_RETRYABLE_SIGNALS
+
+        def _attempt_once() -> dict:
+            if engine_id == "assemblyai-u3-pro":
+                t = transcribe_assemblyai(
+                    str(upload_path),
+                    speaker_labels=use_diarization,
+                    context_bias=context_bias,
+                    num_speakers=args.num_speakers,
+                    python_bin=python_bin,
+                    log_path=engine_log,
+                )
+            elif engine_id == "voxtral-small":
+                t = transcribe_mistral(
+                    str(upload_path),
+                    context_bias,
+                    python_bin=python_bin,
+                    log_path=engine_log,
+                )
+            else:
+                t = func(str(upload_path), context_bias, python_bin=python_bin, log_path=engine_log)  # type: ignore[operator]
+            if t:
+                return {"status": "complete", "text": t, "error": None}
+            err = f"{label} returned no transcript"
+            if engine_log.exists():
+                try:
+                    with open(engine_log, encoding="utf-8", errors="replace") as _lf:
+                        for line in _lf:
+                            if any(kw in line.lower() for kw in _scan_kw):
+                                err = line.strip()[:200]
+                                break
+                except Exception:
+                    pass
+            return {"status": "failed", "text": "", "error": err}
+
+        retry_result = retry_engine(_attempt_once)
+        text = retry_result.get("text") or ""
+        status = retry_result["status"]
+        failure_reason: str | None = retry_result.get("error") if not text else None
         result = {
             "engine_id": engine_id,
             "label": label,
@@ -2426,7 +2433,9 @@ Examples:
 
     if cloud_ids:
         with ThreadPoolExecutor(max_workers=len(cloud_ids)) as executor:
-            for label, result in executor.map(_run_one_engine, cloud_ids):
+            futures = {executor.submit(_run_one_engine, eid): eid for eid in cloud_ids}
+            for future in as_completed(futures):
+                label, result = future.result()
                 engine_results[label] = result
                 transcripts[label] = result.get("text")
                 write_status(status_path, {

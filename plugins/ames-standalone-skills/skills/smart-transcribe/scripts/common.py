@@ -16,6 +16,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -565,11 +566,12 @@ def chunk_audio(audio_path: str, max_mb: float = 24.0, overlap_seconds: int = 5)
         return [audio_path]
 
     chunk_dur = max(60, int(duration * (max_mb / size_mb) * 0.85))
+    run_id = uuid.uuid4().hex[:8]
     chunks: list[str] = []
     start = 0
     idx = 0
     while start < duration:
-        chunk_path = Path(tempfile.gettempdir()) / f"st-chunk-{idx:03d}.m4a"
+        chunk_path = Path(tempfile.gettempdir()) / f"st-chunk-{run_id}-{idx:03d}.m4a"
         try:
             subprocess.run(
                 ["ffmpeg", "-i", audio_path, "-ss", str(start),
