@@ -151,7 +151,7 @@ def _run_context_interview(name: str) -> dict:
             )
             confirm = input("   Save it permanently to this context anyway? [y/N] ").strip().lower()
             if confirm != "y":
-                print("   Skipped — add it as a --speakers hint at run time instead.")
+                print("   Skipped. Per-run context can be passed via --speakers (names) or noted in the merge bundle.")
                 raw = ""
         if raw:
             context["notes"].append(raw)
