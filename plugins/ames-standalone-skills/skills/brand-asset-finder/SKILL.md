@@ -8,122 +8,126 @@ description: >-
   or any request to locate a visual brand or recognition asset online. Also triggers
   for "find that award graphic", "download the trust badge", "get the accreditation
   seal", or "where can I get the [organization] logo". Inspects CMS/CDN transform
-  URLs to recover original uploaded files; separates official sources from
-  recipient-posted copies; flags usage and licensing uncertainty.
+  URLs to recover original uploaded files; prefers SVG or transparent PNG over JPEG;
+  separates official sources from recipient-posted copies; flags licensing uncertainty.
 ---
 
 # Brand Asset Finder
 
-When asked to find a logo, badge, seal, award mark, media kit asset, or any brand
-image, do not stop at the first obvious web result. The goal is the highest-resolution
-original asset — not a thumbnail, resized CDN copy, or screenshot.
+When asked to find a logo, badge, seal, or brand image, the goal is the highest-
+resolution original in the best format — ideally an SVG or a PNG with a transparent
+background. Do not declare a result until you have worked through the steps below.
 
-## Search Strategy
+## Format Priority
 
-Work through these steps in order, stopping when you have a clear best candidate.
+For any logo or badge, always prefer:
 
-### 1. Official organization site first
+**SVG > PNG with transparency > PNG without transparency > JPEG**
 
-Go to the organization's own website and look for:
-- A **media kit**, **press kit**, or **brand resources** page
-- A **recipient toolkit** or **partner resources** section (common for award badges)
-- Press releases and news pages that link to downloadable assets
-- Any `/assets/`, `/media/`, `/downloads/`, or `/brand/` directories if browseable
+JPEG cannot carry transparency, degrades edges and text, and is almost never the
+format the organization actually distributes. If you find a JPEG, it is a signal
+to keep looking. Before accepting any JPEG as final, try the same filename with
+`.png` and `.svg` extensions. Only accept JPEG if those alternatives 404.
 
-The official source is almost always higher quality and legally unambiguous.
+## Required Steps — Do All of These Before Reporting
 
-### 2. Recipient and partner pages
+### 1. Probe the official organization site
 
-Search for pages from award recipients, licensed partners, or news outlets that
-embed the asset. These pages often reference the original file directly via an
-`<img src="">` or `<a href="">` tag. Inspect the source URL — it may point back
-to the organization's CDN with a full-resolution path.
+Check for a **media kit**, **press kit**, **brand resources**, or **recipient toolkit**
+page. Also look for any publicly guessable CDN or S3 path. If you see the
+organization's CDN bucket name anywhere (e.g. `orgname-bulk.s3.amazonaws.com` on a
+recipient page), probe it directly — official SVG, AI, and EPS files are often stored
+in year- or program-named folders and may be publicly accessible even when not linked.
 
-### 3. Inspect image URLs for CMS/CDN transforms
+### 2. Search news and press coverage about recipients — do this before giving up
 
-When you find a candidate image URL, look carefully for transformation parameters
-that indicate a resized or reformatted copy rather than the original:
+Search for press releases, news articles, and announcements about recipients of the
+award or users of the logo. Use queries like:
+- `"[award name]" recipient announcement [year]`
+- `"[org name]" "[award name]" site:prweb.com OR site:businesswire.com OR site:prnewswire.com`
+- `"[award name]" filetype:png OR filetype:svg`
 
-| Pattern | Example | Meaning |
-|---------|---------|---------|
-| `/fill/w_<n>,h_<n>/` | `/fill/w_200,h_200/` | Wix crop/resize |
-| `?width=<n>` or `?w=<n>` | `?width=300` | Query-string resize |
-| `?quality=<n>` | `?quality=80` | Quality reduction |
-| `/crop/...` | `/crop/200x200+0+0/` | Crop transform |
-| `@2x`, `_thumb`, `_small`, `_preview` | `logo_thumb.png` | Named size variant |
-| `.webp` or `.avif` converted from a source PNG/SVG | `logo.webp` | Format conversion |
-| CDN resize: `cdn.example.com/resize/...` | varies | CDN-side transform |
+**Do not tell the user "this is the best I could find" until you have done this search.**
+News articles and PR newsroom pages frequently embed the badge and expose the original
+uploaded file URL. This step regularly surfaces higher-quality assets than the official
+site or random recipient pages.
 
-### 4. Try stripping transform parameters
+### 3. Visit recipient pages found via the above searches
 
-Attempt to derive the original source file by:
-- Removing all query-string parameters (`?width=...&quality=...`)
-- Removing CDN path segments like `/fill/w_200,h_200/`
-- Replacing `.webp` or `.avif` with `.png` or `.svg`
-- Trying the base filename without size suffixes (`logo.png` instead of `logo_300.png`)
+Navigate to the specific recipient pages found in steps 1–2. For each page, do not
+stop at the visually rendered image — always inspect the actual `src` URL of the
+badge element and any surrounding `<a href>` or `data-src` attributes. A badge that
+renders at 67×73 in a footer may be backed by a 1006×1200 source file.
 
-Fetch the derived URL and check whether it loads a higher-resolution or different
-format version. If it 404s, try one level up in the path.
+### 4. Inspect every CMS-hosted image URL for transforms
 
-### 5. Compare candidates
+Any image URL hosted on a known CMS or CDN **must** be inspected for transform
+parameters, regardless of how the rendered image looks. The thumbnail might appear
+"good enough" — the original file is almost always larger.
 
-Before declaring a winner, compare candidate files across these dimensions:
+Transform signatures to look for:
 
-- **Pixel dimensions** — larger is almost always better for print/design use
-- **File type** — SVG > PNG with transparency > PNG without > JPEG > WebP thumbnail
-- **Transparency** — a PNG or SVG with a transparent background is more versatile
-- **Version/year** — check for current branding vs. an older or deprecated variant
-- **Standalone vs. embedded** — a logo isolated on a transparent background vs. one
-  embedded in a larger graphic (e.g., a web banner or composite image)
+| Pattern | Platform |
+|---------|---------|
+| `/v1/fill/w_N,h_N/` or `/v1/crop/...` | Wix |
+| `-WxH` suffix before extension, e.g. `logo-300x200.png` | WordPress |
+| `?format=Nw` or `?format=webp` | Squarespace |
+| `/_next/image?url=...&w=N&q=N` | Next.js |
+| `/upload/w_N,h_N/` in URL | Cloudinary |
+| `_<uuid>-prv.png` inside a hash-named subdirectory | Press release platforms (IPR Software, etc.) |
+| `?width=N`, `?w=N`, `?q=N` query params | Generic CDN |
+| `.webp` or `.avif` when the original is likely `.png` | Format conversion |
 
-### 6. Separate official from recipient copies
+When you find any of these patterns, derive the original (see step 5) and fetch it
+before reporting. A Wix crop path like `w_1006,h_1095` tells you the original
+dimensions without fetching — use that as a fast signal.
 
-Clearly distinguish:
-- **Official source**: hosted on the organization's own domain or their designated CDN
-- **Recipient/partner copy**: hosted by a third party who received or licensed the asset
-- **Unknown provenance**: found on an unrelated site with no clear attribution
+### 5. Strip the transforms
 
-If the best-quality version is a recipient copy rather than the official source, say so.
+- **Wix**: remove everything between `/v1/` and the trailing filename →
+  `static.wixstatic.com/media/<id>~mv2.png`
+- **WordPress**: remove the `-WxH` size suffix → `logo.png` not `logo-300x200.png`
+- **Squarespace**: remove `?format=...`
+- **Next.js**: extract the inner URL from `url=`, then strip `?w=N&q=N`
+- **Cloudinary**: remove `w_N,h_N` between `/upload/` and filename
+- **Press release platforms**: replace `<hash>_<filename>/<filename>_<uuid>-prv.png`
+  with flat `<filename>.png` at the release directory level
+- **Imgix / generic CDN**: remove all query params
 
-Flag any uncertainty about usage rights — for example, award badges often come with
-explicit use restrictions (only for a specific year, only for recipients, only in
-approved contexts).
+Fetch the derived URL and confirm it returns a valid image.
 
-### 7. Report the result clearly
+### 6. Apply the quality floor
 
-Give the user:
+The result is not ready to report until you have either:
+- An SVG or vector file (any size)
+- A standalone PNG with no transform in the URL, at **500px or larger in both dimensions**
+- A Wix/CDN base URL confirmed to return a valid image (after stripping transforms)
 
-1. **Best source URL** — the direct link to the highest-quality asset found
-2. **Rendered/visible URL** — the transformed version you first saw, if different
-3. **Why this is the best version** — dimensions, file type, transparency, source authority
-4. **Official vs. third-party** — which domain is serving it and whether it's authoritative
-5. **Licensing note** (if relevant) — any visible use restrictions or terms
+If the best you have is:
+- Under 500px → keep searching; you likely have a thumbnail
+- A JPEG → look for `.png` and `.svg` variants before accepting
+- A PNG without transparency for a badge/seal → look for an SVG or transparent-bg variant
 
-If you found multiple viable candidates at different quality levels, list them ranked
-from best to worst with a one-line reason for each ranking.
+A 335×400 JPEG from a recipient page is not a satisfactory final answer.
+A 67×73 AVIF footer thumbnail is not a satisfactory final answer.
+Both are signals to apply steps 2–5 harder.
 
-## CMS/CDN URL Patterns by Platform
+## How to Report
 
-When the image is hosted on a known platform, apply the platform-specific stripping rule:
+Five bullets, nothing more unless asked:
 
-| Platform | Transform pattern | How to get the original |
-|----------|------------------|------------------------|
-| **Wix** | `static.wixstatic.com/media/<id>/v1/fill/w_N,h_N,.../<file>` | Remove everything between `/v1/` and the filename |
-| **WordPress** | `example.com/wp-content/uploads/2024/01/logo-300x200.png` | Remove the `-300x200` size suffix |
-| **Squarespace** | `images.squarespace-cdn.com/content/...?format=1500w` | Remove `?format=...` |
-| **Contentstack** | `images.contentstack.io/v3/assets/.../logo.png?width=200` | Remove `?width=...` |
-| **Frontify** | CDN URL with `/transform/...` path segment | Remove the transform segment |
-| **Cloudinary** | `res.cloudinary.com/<account>/image/upload/w_200,h_200/logo.png` | Remove the `w_N,h_N` transform between `/upload/` and the filename |
-| **Imgix** | `example.imgix.net/logo.png?w=200&auto=format` | Remove all query params |
+1. **Best source URL** — the direct link to the highest-quality asset
+2. **Where it came from** — one sentence: which page or path led here
+3. **Why it wins** — format, dimensions, transparency; one sentence
+4. **Official or recipient-hosted** — one sentence
+5. **Licensing note** — one sentence if restrictions are known
 
-When the platform isn't listed here, the general rule still applies: look for
-numeric dimensions, `?width`/`?height`, crop paths, or format conversions in the
-URL and try removing them.
+Do not produce comparison tables unless asked. If the official source was gated,
+say so in one sentence and report the best public copy found.
 
 ## Key Principle
 
-**A thumbnail is not the asset.** Most image search results and page screenshots
-show CMS-resized thumbnails, not the source files. The source file — the one
-uploaded by the asset owner before any web serving transformation — is almost
-always larger, often in a lossless format, and sometimes available as a vector.
-That is the version worth finding.
+The original file uploaded by the asset owner — before CMS serving, before CDN
+resizing, before format conversion — is almost always larger, lossless, and often
+a vector or transparent PNG. Every thumbnail you find is evidence that the original
+exists somewhere upstream. The job is to climb back up that chain.

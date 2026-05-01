@@ -1,0 +1,66 @@
+{
+  "skill_name": "brand-asset-finder",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Find the highest-resolution version of the Gold Bell Seal award logo/badge from Mental Health America.\n\nI do not want a screenshot, social graphic, thumbnail, or cropped/downsampled site-rendered image. I want the best direct image asset URL you can find.\n\nImportant clues:\n- The official Bell Seal page says recipients get a digital badge in a promotion toolkit, but the toolkit may not be public.\n- Recipient and local-news pages may expose better copies than the official site.\n- La Prensa wrote about Gryphon Place receiving the Gold Bell Seal.\n- Gryphon Place's website appears to use the badge in its accreditations/footer area.\n- Inspect CMS/CDN image URLs carefully. If you find a Wix URL with crop/fill/resize/AVIF/WebP parameters, try to recover the original uploaded source file by removing the transformation path.\n\nReturn:\n1. The best direct source image URL.\n2. The rendered/transformed URL it came from, if different.\n3. The evidence trail showing how you found it.\n4. Why you believe it is higher resolution than the other candidates.\n5. Any caveats about official usage rights or whether it came from MHA directly.\n\nSuccess condition: the best source URL should be the original Wix media file, not the transformed thumbnail.",
+      "expected_output": "Response must include the URL https://static.wixstatic.com/media/b55db5_ed59a03ada07404bae57105c173f1d78~mv2.png as the best source. Response should also include an evidence trail, note the transformed/thumbnail URL it was derived from, and flag that this is a recipient-posted copy (Gryphon Place site) rather than a direct MHA download.",
+      "assertions": [
+        {
+          "id": "contains-original-wix-url",
+          "description": "Response contains the original Wix media URL (without transform path)",
+          "check": "Response includes https://static.wixstatic.com/media/b55db5_ed59a03ada07404bae57105c173f1d78~mv2.png"
+        },
+        {
+          "id": "includes-evidence-trail",
+          "description": "Response describes how the URL was found (La Prensa, Gryphon Place, or MHA search path)",
+          "check": "Response mentions Gryphon Place or La Prensa or MHA as part of the evidence trail"
+        },
+        {
+          "id": "separates-official-from-recipient",
+          "description": "Response distinguishes official MHA source from Gryphon Place recipient copy",
+          "check": "Response flags that the asset is hosted on a recipient site (Gryphon Place / gryphonplace.org), not directly from mentalhealth.org or MHA's own CDN"
+        },
+        {
+          "id": "explains-transform-stripping",
+          "description": "Response explains that the URL was derived by stripping Wix transform parameters",
+          "check": "Response mentions removing fill/crop/resize/AVIF/WebP or similar Wix CDN parameters from the URL"
+        },
+        {
+          "id": "includes-licensing-caveat",
+          "description": "Response includes a note about usage rights or licensing",
+          "check": "Response mentions usage rights, licensing, MHA permission, or recipient-only use"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Find the highest-resolution version of the Disability:IN Disability Equality Index (DEI) 'Best Places to Work for Disability Inclusion' badge or seal. Many large corporations display this on their diversity pages.\n\nFind a company that uses this badge on their website, inspect the image URL for CMS or CDN transformations (WordPress size suffixes, Cloudinary transforms, Squarespace format params, etc.), and try to recover the original uploaded source file by stripping the transformation parameters.\n\nReturn:\n1. The best direct source image URL you found.\n2. The rendered/transformed URL it came from, if different.\n3. The evidence trail (which company's site you checked, how you found the image).\n4. Why this is higher resolution than the thumbnail version.\n5. Any caveats about whether this is the official Disability:IN asset or a recipient-hosted copy.",
+      "expected_output": "Response should provide a direct image URL for the DEI badge with CMS transform parameters stripped or absent, an evidence trail identifying a specific company's site, explanation of why the derived URL is higher quality, and a note that it is a recipient-hosted copy rather than a direct Disability:IN download.",
+      "assertions": [
+        {
+          "id": "provides-direct-image-url",
+          "description": "Response contains a direct image URL (not a webpage URL)",
+          "check": "Response includes a URL ending in .png, .jpg, .jpeg, .svg, or .webp as the best source"
+        },
+        {
+          "id": "inspects-cms-transforms",
+          "description": "Response mentions inspecting or stripping CMS/CDN transform parameters",
+          "check": "Response mentions transform parameters, resize, width, crop, Cloudinary, WordPress size suffix, Squarespace format, or similar"
+        },
+        {
+          "id": "names-specific-company",
+          "description": "Response names a specific company whose site was checked",
+          "check": "Response names at least one specific corporation or organization whose website was used to find the badge"
+        },
+        {
+          "id": "separates-official-from-recipient",
+          "description": "Response notes whether asset is from Disability:IN directly or a recipient-hosted copy",
+          "check": "Response distinguishes between official Disability:IN source and a company hosting their own copy of the badge"
+        }
+      ],
+      "files": []
+    }
+  ]
+}
