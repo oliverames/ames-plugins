@@ -115,6 +115,21 @@ class SmartTranscribeTests(unittest.TestCase):
         self.assertEqual(merge_info["runner"], "codex")
         self.assertIn("429", merge_info["fallback_reason"])
 
+    def test_looks_recording_specific(self):
+        fn = smart_transcribe._looks_recording_specific
+        # Should flag as recording-specific
+        self.assertTrue(fn("Call between Oliver and Elias at BCBS VT."))
+        self.assertTrue(fn("Main topic: Google account access for the marketing team."))
+        self.assertTrue(fn("Today session focused on onboarding new hires."))
+        self.assertTrue(fn("Meeting about SharePoint migration 2026-04-30."))
+        self.assertTrue(fn("This call covered Adobe OAuth and VDI limitations."))
+        self.assertTrue(fn("Discussed the budget proposal in detail."))
+        # Should NOT flag as recording-specific (general background)
+        self.assertFalse(fn("Vermont health insurer; speakers are doctors and admin staff."))
+        self.assertFalse(fn("BCBS VT brand guidelines context."))
+        self.assertFalse(fn("Oliver is approximately 6 weeks into his role."))
+        self.assertFalse(fn("Speakers include marketing and IT staff."))
+
     @mock.patch.object(smart_transcribe, "check_engine_runtime")
     @mock.patch.object(smart_transcribe, "resolve_engine_python")
     @mock.patch.object(smart_transcribe, "resolve_key_status")

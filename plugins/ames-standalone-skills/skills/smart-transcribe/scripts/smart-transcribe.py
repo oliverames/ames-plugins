@@ -94,7 +94,7 @@ MERGE_OUTPUT_SCHEMA = {
 
 _RECORDING_SPECIFIC_PATTERNS = re.compile(
     r"\b(main topic|call between|today'?s? (meeting|call|session)|discussed?|"
-    r"covers?|this (call|meeting|session|recording)|about:|"
+    r"this (call|meeting|session|recording)|about:|"
     r"\d{4}-\d{2}-\d{2}|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b.*\d{4})\b",
     re.IGNORECASE,
 )
