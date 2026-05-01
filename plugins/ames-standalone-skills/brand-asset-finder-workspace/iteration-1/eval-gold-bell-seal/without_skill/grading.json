@@ -1,0 +1,31 @@
+{
+  "eval_id": 1,
+  "configuration": "without_skill",
+  "expectations": [
+    {
+      "text": "Response contains the original Wix media URL (without transform path)",
+      "passed": true,
+      "evidence": "https://static.wixstatic.com/media/b55db5_ed59a03ada07404bae57105c173f1d78~mv2.png — listed as Best Direct Source Image URL"
+    },
+    {
+      "text": "Response describes how the URL was found (La Prensa, Gryphon Place, or MHA search path)",
+      "passed": true,
+      "evidence": "Step 2: 'Initial search: Searched Gryphon Place Gold Bell Seal Mental Health America — confirmed Gryphon Place (gryphon.org) is in Kalamazoo, MI and is a Bell Seal recipient'"
+    },
+    {
+      "text": "Response distinguishes official MHA source from Gryphon Place recipient copy",
+      "passed": true,
+      "evidence": "'This image was uploaded by Gryphon Place to their Wix-hosted website as a display asset. It was not sourced directly from MHA's gated promotion toolkit.'"
+    },
+    {
+      "text": "Response explains that the URL was derived by stripping Wix transform parameters",
+      "passed": true,
+      "evidence": "'Removed the entire /v1/crop/.../fill/.../Bell%20Seal%20Logo_Gold%202026.png transformation path, leaving only the base Wix media hash URL'"
+    },
+    {
+      "text": "Response includes a note about usage rights or licensing",
+      "passed": true,
+      "evidence": "'The badge is owned by Mental Health America. Official usage rights are governed by MHA's Bell Seal promotion toolkit terms, which are distributed to certified recipients.'"
+    }
+  ]
+}

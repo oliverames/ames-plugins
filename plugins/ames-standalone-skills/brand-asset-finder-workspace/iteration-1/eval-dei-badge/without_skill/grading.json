@@ -1,0 +1,26 @@
+{
+  "eval_id": 2,
+  "configuration": "without_skill",
+  "expectations": [
+    {
+      "text": "Response contains a direct image URL ending in .png, .jpg, .jpeg, .svg, or .webp as the best source",
+      "passed": true,
+      "evidence": "https://disabilityin-bulk.s3.amazonaws.com/2024/DEI/Disability+Equality+Index+2024+Logos/DEI+Score+Logos-General.svg — official Disability:IN SVG on their own S3 bucket"
+    },
+    {
+      "text": "Response mentions inspecting or stripping CMS/CDN transform parameters",
+      "passed": true,
+      "evidence": "'The Next.js optimizer adds w=1920&q=75...Stripping those parameters recovers the Contentful-hosted source, which is a 2084x2084 px PNG'"
+    },
+    {
+      "text": "Response names at least one specific company whose site was checked",
+      "passed": true,
+      "evidence": "Checked and named: Guardian Life, CAI, CBRE, MillerKnoll — four companies with specific URLs"
+    },
+    {
+      "text": "Response distinguishes between official Disability:IN source and a company hosting their own copy of the badge",
+      "passed": true,
+      "evidence": "'The SVG/AI/EPS files at disabilityin-bulk.s3.amazonaws.com are the official Disability:IN source assets...The CAI PNG is a recipient-hosted copy -- CAI uploaded it to their own server.'"
+    }
+  ]
+}

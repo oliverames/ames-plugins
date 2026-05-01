@@ -1,0 +1,31 @@
+{
+  "eval_id": 1,
+  "configuration": "with_skill",
+  "expectations": [
+    {
+      "text": "Response contains the original Wix media URL (without transform path)",
+      "passed": true,
+      "evidence": "https://static.wixstatic.com/media/b55db5_ed59a03ada07404bae57105c173f1d78~mv2.png — listed as Best Direct Source Image URL"
+    },
+    {
+      "text": "Response describes how the URL was found (La Prensa, Gryphon Place, or MHA search path)",
+      "passed": true,
+      "evidence": "Step 2: 'Recipient page search — Searched for recipients who might display the badge. The task clue pointed to Gryphon Place (Kalamazoo, MI) and La Prensa coverage.'"
+    },
+    {
+      "text": "Response distinguishes official MHA source from Gryphon Place recipient copy",
+      "passed": true,
+      "evidence": "'This is a recipient-hosted copy, not served from MHA's own CDN. The file is served from static.wixstatic.com under Gryphon Place's Wix account (media bucket b55db5). It is not hosted on mhanational.org or any MHA-controlled CDN.'"
+    },
+    {
+      "text": "Response explains that the URL was derived by stripping Wix transform parameters",
+      "passed": true,
+      "evidence": "'Per the Wix URL pattern documented in the skill: static.wixstatic.com/media/<media_id>/v1/<transforms>/<filename> -- removing everything between /v1/ and the trailing filename leaves the base URL'"
+    },
+    {
+      "text": "Response includes a note about usage rights or licensing",
+      "passed": true,
+      "evidence": "'MHA's recognition program terms typically restrict badge use to: the specific year awarded, the specific recipient organization, and approved contexts'"
+    }
+  ]
+}
