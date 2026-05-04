@@ -14,23 +14,47 @@ A structured monthly review process for family finances — a lightweight "close
 
 For detailed reconciliation steps, see `references/reconciliation.md`.
 
-### 2. Review Spending (15 min)
+### 2. Transaction Review (20 min)
+
+Run `review_unapproved` first, then work through the queue systematically. Do NOT bulk-approve everything at once.
+
+**Approval workflow:**
+1. Group unapproved transactions by payee or category
+2. Confirm categories with user per group before approving — some payees are ambiguous (e.g., a gym with a food-sounding name, a streaming credit miscategorized as a subscription)
+3. Fix any miscategorizations FIRST, then approve — never approve then fix
+4. For transfers to credit card accounts, "Uncategorized" is correct YNAB behavior — they don't need a spending category
+
+**Income verification:**
+- Call `get_transactions(month=..., sinceDate=...)` and filter for positive amounts
+- Every external deposit (payroll, tax refunds, transfers in) should be in "Inflow: Ready to Assign"
+- Flag any positive transaction landing in a spending category — it may be a misrouted deposit
+
+**What `get_transactions(type='uncategorized')` returns:**
+- Mostly internal transfers: credit card payments, loan payments, debt account starting balances
+- This is expected YNAB behavior, not errors — don't chase these as miscategorizations
+
+**Approved but miscategorized (easy to miss):**
+- `review_unapproved` only surfaces unapproved transactions — already-approved transactions can still be wrong
+- Scan approved transactions for payees that could be miscategorized: gyms with restaurant-sounding names, statement credits (e.g., an "AMEX DUNKIN' CREDIT" auto-categorized as a streaming bundle), refunds landing in the wrong category
+
+### 3. Review Spending (15 min)
 
 - [ ] Review budget vs actual for each category group
 - [ ] Identify categories that were significantly over budget
 - [ ] Identify categories that were significantly under budget
-- [ ] Check for miscategorized transactions (fix them)
 - [ ] Note any one-time or unusual expenses
+
+**Prior month overspends roll silently into current month TBB.** Before reviewing the current month, check whether last month ended with any negative category balances — they reduce this month's Ready to Assign without any visible warning. Cover them retroactively using a surplus category (e.g., a month where Daycare only had one payment, Electricity didn't bill, etc.) to prevent invisible debt.
 
 For detailed variance analysis, see `references/variance-analysis.md`.
 
-### 3. Review Income (5 min)
+### 4. Review Income (5 min)
 
-- [ ] Verify all paychecks were received and recorded
+- [ ] Verify all expected paychecks arrived and are in "Inflow: Ready to Assign"
 - [ ] Record any side income or reimbursements
 - [ ] Calculate total income for the month
 
-### 4. Calculate Key Numbers (5 min)
+### 5. Calculate Key Numbers (5 min)
 
 - [ ] Net savings for the month (income minus spending)
 - [ ] Savings rate percentage
@@ -38,13 +62,20 @@ For detailed variance analysis, see `references/variance-analysis.md`.
 
 For a full income/expense summary, see `references/income-statement.md`.
 
-### 5. Prepare Next Month (10 min)
+### 6. Prepare Next Month (10 min)
 
-- [ ] Roll over any category overspending in YNAB
-- [ ] Budget all income for the coming month
-- [ ] Account for any known upcoming expenses (annual bills, holidays, trips)
-- [ ] Set aside funds for savings goals
-- [ ] Adjust category budgets if consistent over/underspending
+- [ ] Cover any remaining category overspends from prior month
+- [ ] Budget fixed obligations first (mortgage, loans, insurance, subscriptions)
+- [ ] Fund known upcoming expenses for the next two weeks
+- [ ] Assign personal spending budgets and groceries
+- [ ] Hold remaining TBB for mid-month paychecks rather than over-allocating early
+
+**Predicting upcoming charges:**
+Do NOT rely on YNAB's scheduled transactions list — it only captures manually-entered recurring items; auto-imported charges (subscriptions, utilities, insurance) won't appear there. Instead, pull the prior month's transactions for the equivalent date window (e.g., to predict May 4-18 charges, query April 4-18) and identify what hit. This gives accurate payee names, amounts, and timing.
+
+**Subscription due-date tip:** YNAB returns `goal_day` on categories with monthly goals — this is the expected charge date for that category. Use it to prioritize funding order.
+
+- [ ] Adjust category goals if consistent over/underspending
 
 ## Monthly Review Schedule
 
