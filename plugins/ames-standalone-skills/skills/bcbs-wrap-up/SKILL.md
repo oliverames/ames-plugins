@@ -44,8 +44,10 @@ and report that the helper was unavailable.
 - Do not blindly run destructive or catch-all commands. `commit-push-all` is a
   final safety net only when preflight and git status show expected repos and
   no unrelated dirty work.
-- Before editing skills, configs, or user documents during wrap-up, back up the
-  original file or make an explicit rename first.
+- Before editing skills, configs, or user documents during wrap-up, rely on git,
+  iCloud, and Time Machine for revert protection. Do not create `.bak` files. If
+  making an irreversible change to a file with uncommitted edits, stage or commit
+  the current state first.
 - Preserve user changes. If a repo already has unrelated dirty files, work
   around them and mention the residual state instead of staging everything.
 

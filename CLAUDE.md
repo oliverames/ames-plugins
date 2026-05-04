@@ -1,6 +1,6 @@
 # ames-claude
 
-Oliver's personal plugin marketplace for Claude Code with experimental Codex dual-host support. Ships 6 plugins, 48 skills, 13 MCP servers (split across `ames-dev-mcps` and `ames-general-mcps`). First-party API connectors (`ames-ynab`, `ames-lytho`) live in the separate [ames-connectors](https://github.com/oliverames/ames-connectors) marketplace as of 2026-04-21.
+Oliver's personal plugin marketplace for Claude Code with experimental Codex dual-host support. Ships 6 plugins, 51 skills, 14 MCP servers (split across `ames-dev-mcps` and `ames-general-mcps`). First-party API connectors (`ames-ynab`, `ames-lytho`) live in the separate [ames-connectors](https://github.com/oliverames/ames-connectors) marketplace as of 2026-04-21.
 
 ## Structure
 
@@ -46,9 +46,9 @@ Codex work must be additive. Do not change Claude Code's `.claude-plugin/marketp
 
 | Plugin | Hosts | Description |
 |--------|-------|-------------|
-| `ames-standalone-skills` | Claude + Codex | 30 original skills covering writing, dev, Apple workflows, finance, automation |
+| `ames-standalone-skills` | Claude + Codex | 33 original skills covering writing, dev, Apple workflows, finance, automation, BCBS VT work |
 | `ames-dev-mcps` | Claude + Codex | 6 development-focused MCP servers (Apple Docs, Apple Notifier, macOS Automator, XcodeBuildMCP, Sim Genie, Sosumi) |
-| `ames-general-mcps` | Claude + Codex | 7 day-to-day general-purpose MCP servers (Drafts, Excel, Google Workspace, iMCP, MarkItDown, Pandoc, Peekaboo) |
+| `ames-general-mcps` | Claude + Codex | 8 day-to-day general-purpose MCP servers (Drafts, Excel, Google Workspace, iMCP, MarkItDown, Pandoc, Peekaboo, Tinyfish) |
 | `ames-community-skills` | Claude + Codex | Third-party skills without upstream marketplaces (currently 1: humanizer by blader) |
 | `build-ios-apps-codex` | Claude only | 6 iOS dev skills converted from OpenAI's `build-ios-apps` Codex plugin (MIT) |
 | `build-macos-apps-codex` | Claude only | 11 macOS dev skills + 3 commands converted from OpenAI's `build-macos-apps` Codex plugin (MIT) |
@@ -102,7 +102,7 @@ For Codex (experimental): `codex plugin marketplace add oliverames/ames-claude`,
 ## Gotchas
 
 - **Plugin name must not equal marketplace name** (`ames-claude`). Causes install collision.
-- **`marketplace.json` is auto-generated**; run `./sync`, never edit manually.
+- **`marketplace.json` `plugins[]` is auto-generated**; run `./sync`, never edit the array directly. Exception: the top-level `metadata.version` field is intentionally hand-edited — `./sync` carries it forward unchanged. To bump the marketplace-wide version, edit `.claude-plugin/marketplace.json` directly, then run `./sync` to confirm it persists.
 - **MCP connector secrets**: plugin-spawned MCP servers don't inherit the `op run` environment. Secrets must be declared in `.mcp.json` via `${ENV_VAR}` (resolved from `settings.json` env block), or loaded from a plugin-local `.env` file by the server itself.
 - **Host-specific MCP shape**: Claude Code uses the flat root `.mcp.json`; Codex requires `{ "mcpServers": { ... } }` and reads the generated `.codex-plugin/mcp.json`.
 - **Codex marketplace schema differs from Claude's**: Codex uses nested `source: {source: "local", path: "./..."}` and requires `policy: {installation: "AVAILABLE", authentication: "ON_INSTALL"}`. Claude uses flat `source: "./..."`. Both manifest shapes are maintained side-by-side.
@@ -112,3 +112,7 @@ For Codex (experimental): `codex plugin marketplace add oliverames/ames-claude`,
 - **`bump-and-sync` atomicity**: `bump-and-sync` writes a `.bak` of `plugin.json` before mutating it and restores on `./sync` failure. If a stale `.bak` file is left behind after an interrupted run, delete it manually before the next invocation.
 - **Flat `.mcp.json` enforced at sync time**: `./sync` exits with an error if any Claude plugin's `.mcp.json` contains a top-level `mcpServers` key. Claude's `.mcp.json` must always be flat; the Codex wrapper is generated into `.codex-plugin/mcp.json`.
 - **`"category"` vs `interface.category` in `.codex-plugin/plugin.json`**: The top-level `"category"` field uses kebab-case (`"developer-tools"`, `"productivity"`) to match Claude Code's schema. The nested `interface.category` field uses title case (`"Developer Tools"`, `"Productivity"`) for Codex's UI renderer. Both are intentional and refer to different consumers.
+- **No `displayName` or `interface` block in Claude Code schema**: The `interface` block and `displayName` field in `.codex-plugin/plugin.json` are Codex-only. Writing them into a Claude `.claude-plugin/plugin.json` is silently ignored. Claude Code uses `name` as the sole identifier.
+- **Empty plugins are user-hostile**: When a plugin becomes vestigial after a refactor (skills moved out, purpose retired), delete the whole directory with `git rm -rf`. An empty listing in the marketplace confuses users and adds noise; git history preserves the record. Update `CLAUDE.md`, `README.md`, and any references to the retired plugin, then run `./sync`.
+- **Codex marketplace registration must use Git**: Register Codex marketplaces via `codex plugin marketplace add oliverames/ames-claude` (GitHub source), not as `source_type = "local"`. Local-registered marketplaces do not support `upgrade` — the only refresh path is `remove` + re-`add`. If you find an existing local entry in `~/.codex/config.toml`, convert it to Git.
+- **Back up `~/.codex/config.toml` before any edit**: Copy to `~/.codex/config.toml.backup-$(date '+%Y%m%d-%H%M%S')-<purpose>` before hand-editing, running `marketplace remove/add`, or any Python manipulation. Do not auto-delete old backups; Oliver prunes them himself.

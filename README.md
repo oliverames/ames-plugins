@@ -6,8 +6,8 @@
 
 <p align="center">
   <code>6 plugins</code> &bull;
-  <code>47 skills</code> &bull;
-  <code>13 MCP servers</code> &bull;
+  <code>51 skills</code> &bull;
+  <code>14 MCP servers</code> &bull;
   <code>dual-host</code>
 </p>
 
@@ -97,16 +97,16 @@ Custom first-party MCP connectors moved to [ames-connectors](https://github.com/
 
 | Plugin | Hosts | Version | Summary |
 |--------|-------|---------|---------|
-| [`ames-standalone-skills`](plugins/ames-standalone-skills/) | Claude + Codex | 3.7.0 | Oliver's original skill pack (29 skills) |
-| [`ames-dev-mcps`](plugins/ames-dev-mcps/) | Claude + Codex | 1.0.0 | 6 development-focused MCP servers for iOS/macOS workflows |
-| [`ames-general-mcps`](plugins/ames-general-mcps/) | Claude + Codex | 3.0.0 | 7 day-to-day general-purpose MCP servers |
+| [`ames-standalone-skills`](plugins/ames-standalone-skills/) | Claude + Codex | 3.9.6 | Oliver's original skill pack (33 skills) |
+| [`ames-dev-mcps`](plugins/ames-dev-mcps/) | Claude + Codex | 1.0.1 | 6 development-focused MCP servers for iOS/macOS workflows |
+| [`ames-general-mcps`](plugins/ames-general-mcps/) | Claude + Codex | 3.1.0 | 8 day-to-day general-purpose MCP servers |
 | [`ames-community-skills`](plugins/ames-community-skills/) | Claude + Codex | 2.0.1 | Third-party skills without upstream marketplaces |
 | [`build-ios-apps-codex`](plugins/build-ios-apps-codex/) | **Claude only** | 1.0.1 | 6 iOS dev skills converted from OpenAI's Codex plugin |
 | [`build-macos-apps-codex`](plugins/build-macos-apps-codex/) | **Claude only** | 1.0.1 | 11 macOS dev skills + 3 commands converted from OpenAI's Codex plugin |
 
 ### `ames-standalone-skills`
 
-Oliver's original Claude Code skills covering writing, development, automation, finance, and Apple platform work. 29 skills organized by theme (see [Skills catalog](#skills-catalog)).
+Oliver's original Claude Code skills covering writing, development, automation, finance, and Apple platform work. 33 skills organized by theme (see [Skills catalog](#skills-catalog)).
 
 ### `ames-dev-mcps`
 
@@ -134,6 +134,7 @@ Day-to-day general-purpose MCP servers (formerly `ames-preferred-mcps`):
 | `markitdown` | Convert files to Markdown |
 | `pandoc` | Universal document conversion |
 | `peekaboo` | macOS UI automation and screen capture |
+| `agent-tinyfish-ai` | Tinyfish AI agent (OAuth-protected HTTP MCP) |
 
 Some servers depend on locally installed apps or additional credentials.
 
@@ -157,7 +158,7 @@ Both plugins originated in [openai/plugins](https://github.com/openai/plugins) a
 
 ## Skills catalog
 
-29 skills in `ames-standalone-skills`, grouped by theme:
+33 skills in `ames-standalone-skills`, grouped by theme:
 
 **Writing and communications**
 - [`oliver-tone`](plugins/ames-standalone-skills/skills/oliver-tone/) — Apply Oliver's writing voice to drafts, emails, blog posts, announcements
@@ -165,6 +166,7 @@ Both plugins originated in [openai/plugins](https://github.com/openai/plugins) a
 - [`readme-style`](plugins/ames-standalone-skills/skills/readme-style/) — Apply Oliver's README conventions (used to author this very file)
 - [`resume-style`](plugins/ames-standalone-skills/skills/resume-style/) — Ames-inspired resume typography and layout
 - [`obsidian-notes`](plugins/ames-standalone-skills/skills/obsidian-notes/) — Format Markdown notes to match Oliver's vault style
+- [`brand-asset-finder`](plugins/ames-standalone-skills/skills/brand-asset-finder/) — Find highest-resolution logos, badges, seals, and brand assets online
 
 **Apple platform and media**
 - [`apple-music-rip`](plugins/ames-standalone-skills/skills/apple-music-rip/) — Download DRM-free Apple Music tracks
@@ -185,6 +187,8 @@ Both plugins originated in [openai/plugins](https://github.com/openai/plugins) a
 - [`bcbs-brand`](plugins/ames-standalone-skills/skills/bcbs-brand/) — Context and guidance for BCBS VT work
 - [`bcbs-meeting-notes`](plugins/ames-standalone-skills/skills/bcbs-meeting-notes/) — Structure BCBS VT transcripts into notes with action items
 - [`bcbs-wrap-up`](plugins/ames-standalone-skills/skills/bcbs-wrap-up/) — End-of-session wrap-up, verifies Jira-tracked action items
+- [`bcbs-reviewer`](plugins/ames-standalone-skills/skills/bcbs-reviewer/) — Simulate a Brand & Engagement internal review pass on BCBS VT drafts
+- [`bcbs-imagerelay-sync`](plugins/ames-standalone-skills/skills/bcbs-imagerelay-sync/) — Sync ImageRelay downloads into the BCBS directory
 
 **Workflow and tooling**
 - [`go`](plugins/ames-standalone-skills/skills/go/) — End-to-end verify/simplify/ship pipeline, triggered by `/go`
@@ -194,6 +198,8 @@ Both plugins originated in [openai/plugins](https://github.com/openai/plugins) a
 - [`shared-terminal-tmux`](plugins/ames-standalone-skills/skills/shared-terminal-tmux/) — Shared interactive terminal for user and agent
 - [`auto-web-search`](plugins/ames-standalone-skills/skills/auto-web-search/) — Automatic web search when stuck on a problem
 - [`file-organization`](plugins/ames-standalone-skills/skills/file-organization/) — Oliver's file naming and organization conventions
+- [`dispatch-remote-control`](plugins/ames-standalone-skills/skills/dispatch-remote-control/) — Start a Claude Code session with remote-control access
+- [`verify-live`](plugins/ames-standalone-skills/skills/verify-live/) — Verify documentation against live system state before rewriting
 
 **Context and integrations**
 - [`1password-vault`](plugins/ames-standalone-skills/skills/1password-vault/) — Store, retrieve, and rotate credentials in 1Password
@@ -203,12 +209,12 @@ Plus 6 skills in `build-ios-apps-codex`, 11 skills (+ 3 commands) in `build-maco
 
 ## MCP servers catalog
 
-13 MCP servers split across two plugins:
+14 MCP servers split across two plugins:
 
 | Plugin | Server count | Details |
 |--------|--------------|---------|
 | `ames-dev-mcps` | 6 development-focused servers | See [plugin table](#ames-dev-mcps) above |
-| `ames-general-mcps` | 7 day-to-day servers | See [plugin table](#ames-general-mcps) above |
+| `ames-general-mcps` | 8 day-to-day servers | See [plugin table](#ames-general-mcps) above |
 
 ## Architecture
 
