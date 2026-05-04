@@ -47,6 +47,9 @@
       "args": [
         "markitdown-mcp"
       ]
+    },
+    "agent-tinyfish-ai": {
+      "url": "https://agent.tinyfish.ai/mcp"
     }
   }
 }
