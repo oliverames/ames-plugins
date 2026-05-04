@@ -85,8 +85,8 @@
     },
     {
       "name": "ames-standalone-skills",
-      "version": "3.9.4",
-      "description": "Oliver's original Claude Code skills covering writing, development, automation, finance, and AI tools (31 skills).",
+      "version": "3.9.6",
+      "description": "Oliver's original Claude Code skills covering writing, development, automation, finance, and AI tools (32 skills).",
       "source": "./plugins/ames-standalone-skills",
       "author": {
         "name": "Oliver Ames",
