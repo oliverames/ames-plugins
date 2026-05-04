@@ -1,5 +1,19 @@
 # Worklog
 
+## 2026-05-04 — ames-general-mcps: Tinyfish MCP server (v3.1.0)
+
+**What changed**: Added `agent-tinyfish-ai` HTTP/OAuth MCP server to `ames-general-mcps`. The endpoint (`https://agent.tinyfish.ai/mcp`) is an OAuth-protected remote server using Clerk Bearer auth; Claude Code handles the OAuth flow natively via the `url`-keyed `.mcp.json` entry. Plugin bumped 3.0.1 → 3.1.0 (minor, new capability). Both marketplace manifests and the Codex MCP wrapper regenerated via `./sync`. Also committed accumulated documentation drift: README + CLAUDE.md counts updated (14 total MCP servers, 8 in ames-general-mcps), and fixed the `.bak` guidance in both `wrap-up` and `bcbs-wrap-up` SKILL.md files to align with the no-bak CLAUDE.md rule.
+
+**Decisions made**: Used `url` key (not `command`/`args`) because the server is remote HTTP, not a spawned local process. OAuth detection confirmed from `www-authenticate: Bearer` response header.
+
+**Validated by**: `./sync` clean; both marketplace manifests JSON-valid; Codex `mcp.json` wrapper contains `agent-tinyfish-ai`; `git push` succeeded. Endpoint returns 401 (expected pre-auth) confirming it's live.
+
+**Left off at**: Clean. Two commits pushed: `dd8d03b` (Tinyfish), `f33e574` (docs + skill fixes).
+
+**Open questions**: None new. Prior smart-transcribe Tier 2 items still open (structured error returns, BUNDLE_READY signal).
+
+---
+
 ## 2026-05-01 — smart-transcribe Tier-1 robustness (v3.9.3)
 
 **What changed**: Three robustness fixes to the smart-transcribe pipeline (bcbs-reviewer data expansion also in this bump).
