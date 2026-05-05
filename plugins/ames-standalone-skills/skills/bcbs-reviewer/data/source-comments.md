@@ -162,6 +162,52 @@ Patterns derived from the verbal review discussion of the Google Reviews respons
 
 ---
 
+## 2026-04-27-Google-Reviews-Response-Plan.xlsx (Internal Notes column — v2 analysis)
+
+These patterns come from the "Internal Notes" column of the response tracker and from comparing the "Suggested Response" and "Final Response Queue" columns. They complement the Brand Lead's cell comments captured in the earlier section above. Source: the updated ImageRelay version of the workbook (read May 4, 2026).
+
+**Dick Davis (2025-08-04) — Outdated CEO reference in a public review:** Internal note: "review references Don George as CEO; Beth-Ann Roberts is CEO as of 2026. Do not correct in public reply."
+*Pattern: When a member's review references an outdated BCBS VT CEO by name, do not correct the error in the public response. Keep the reply focused on the member's concern, not on factual corrections about the company.*
+
+**Thomas Good (2023-05-24) — For-profit mischaracterization:** Internal note: "Note: reviewer says 'for-profit' — Blue Cross VT is actually nonprofit. Don't correct in public; brand voice is plain-spoken Vermont neighbor, not defensive."
+*Pattern: When a member describes BCBS VT as a for-profit entity, do not correct the characterization publicly. Focus on the member's underlying concern.*
+
+**Gregory Bissette (2025-10-31) — Critical treatment cost complaint:** Internal note: "High brand risk. References stopping chemo — escalate internally to care management. Be empathetic, not preachy."
+*Pattern: When a review references stopping chemotherapy, radiation, or other critical medical treatment due to cost, escalate internally to care management in addition to standard CS routing. The public response stays empathetic and does not list resources or make commitments.*
+
+**Dom M (2025-04-08) — Coverage specifics dispute:** Internal note: "Note: most BCBS VT plans do cover PT and mental health — possible plan-specific exclusion or HSA-style high-deductible. Don't argue specifics in public."
+*Pattern: When a member claims a specific benefit (PT, mental health, prescriptions) is not covered, do not argue the specifics publicly. Plan-level variation means the claim may reflect a real exclusion. Route to CS with "coverage varies by plan" rather than correcting the member's claim.*
+
+**Final Response Queue — Wait time duration:** Jay Strauss's Suggested Response acknowledged "Twenty-two minutes is a long stretch on hold." The Final Response Queue replaced this with a simple acknowledgment: "We have shared this with our team who should be able to assist."
+*Pattern: Never state a specific wait time duration in a public response, even when the member named it. Acknowledge the concern generally; do not repeat or validate the specific figure.*
+
+**Final Response Queue — No-text review contact routing:** No-text 1-star reviews in the Final Response Queue consistently direct members to communications@bcbsvt.com rather than the general bluecrossvt.org/contact-us link.
+*Pattern: For no-text or very brief low-rating reviews, offer communications@bcbsvt.com as the direct outreach option. Reserve bluecrossvt.org/contact-us for general acknowledgments where direct follow-up is less urgent.*
+
+**Final Response Queue — Approved formula for positive reviews naming staff:** Dan Talbot's final response uses "we all care about doing right by Vermonters, and we love hearing this," stripping acknowledgment of named reps. Mark Belcher's final response removes the Suggested Response reference to "Josh" entirely.
+*Pattern: "We all care about doing right by Vermonters" is the approved team-wide formula for positive reviews that name specific staff. Do not address or reference named individuals in the public response.*
+
+---
+
+## BCBS VT Response Management Strategy.docx (updated April 27, 2026)
+
+**On paid campaign comment volume:** "If a paid promotion receives more than five comments in a single day, the asset may be worth pulling."
+*Pattern: Five or more comments per day on a paid post is the threshold for considering whether to pull the asset. Flag this in any review of a paid campaign response protocol.*
+
+**On pre-launch response planning for paid campaigns:** "Confirm a response management plan with Ashley and ad agency partners (comment thresholds, escalation triggers) before launch."
+*Pattern: Any paid campaign review should check whether a response management plan has been confirmed with both Ashley and ad agency partners before the campaign launches. Flag if it hasn't.*
+
+**On Facebook DMs containing PHI:** "On Facebook, tell the member that the channel isn't secure and let them know Customer Service will follow up another way."
+*Pattern: Facebook DMs with PHI require a specific response: inform the member the channel isn't secure, then route to CS for a secure-channel follow-up. This is distinct from handling PHI in DMs on other platforms.*
+
+**On profanity hiding scope (Ashley Legacy, 2026-05-04):** "Confirm if we are hiding profanity at large, we can remove this 'directed at...;'? It still reads to me like we only remove in this instance."
+*Pattern: Profanity is hidden at large — not only when directed at staff, members, or partners. Any profanity in a comment triggers the hide, regardless of who or what it targets. A response playbook that limits the rule to "directed at" specific parties is too narrow and should be corrected.*
+
+**On cost complaints during affordability campaigns (Oliver Ames, 2026-05-04):** "in the hiding section, under the Don't hide, engage with area....we may need to make a note about the canned responses to work from. I can see hesitation that we just respond to things about cost during the affordability campaign for example."
+*Pattern: When a paid affordability campaign is actively running, cost-complaint responses carry additional brand risk and may require a pre-posting check with Ashley or Teresa before going out. A standard canned response may not be sufficient during that window.*
+
+---
+
 ## Jira-Proposal---One-Sheet.docx
 
 Comments in this document are team planning discussion (phase timing, tool access, meeting logistics) — not brand or editorial review patterns.

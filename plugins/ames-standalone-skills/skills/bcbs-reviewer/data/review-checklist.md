@@ -109,7 +109,7 @@ Apply when reviewing social media response templates, response playbooks, or dra
 - [ ] Low-rating, no-comment reviews: use softer opening tone ("we would like to better understand your rating") and provide a direct contact option
 - [ ] Suspicious reviews (references to things BCBS does not do, e.g. requests for bank information): flag for internal discussion rather than responding as if legitimate
 - [ ] Threatening reviews: can be reported to Google for removal — this has been done successfully before
-- [ ] Profanity: hidden across all channels as standard practice
+- [ ] Profanity: hidden at large across all channels — not limited to profanity directed at staff, members, or partners; any profanity triggers the hide regardless of target
 
 **PHI in public reviews:**
 - [ ] If a review or public comment contains PHI, remind the member not to include such information and suggest they delete it — do not engage with the substance publicly
@@ -122,6 +122,35 @@ Apply when reviewing social media response templates, response playbooks, or dra
 **Organic vs. paid:**
 - [ ] Response protocols for organic posts vs. paid advertising posts may differ — flag if a response playbook does not distinguish between the two
 - [ ] Third-party posts mentioning BCBS (news clips, partner organizations, advocacy accounts) do not automatically warrant a response — if engagement would surface a sensitive topic (executive compensation, rate increases, coverage disputes) or extend a thread that is already going poorly, watch-only is the right call. Respond only when engagement adds clear value and won't amplify a bad thread.
+
+**Factual corrections in public responses:**
+- [ ] Do not correct a member's factual mischaracterization of BCBS VT in a public response — includes: describing BCBS VT as for-profit (it is nonprofit), referencing an outdated CEO name, or asserting incorrect coverage details. Focus on the member's concern, not on correcting the premise
+- [ ] Never state a specific operational figure (wait time duration, call volume, staffing level) in a public response, even when the member named it — acknowledge the concern generally
+
+**Prior authorization denials:**
+- [ ] For prior auth denial reviews, mention the member's right to appeal and the option for a peer-to-peer review between the provider and the medical director
+- [ ] Prior authorization for advanced imaging is reviewed by Carelon (a BCBS VT partner), not BCBS VT directly — public responses should reflect this without promising BCBS VT will override the decision
+
+**Critical treatment cost complaints:**
+- [ ] When a review references stopping chemotherapy, radiation, or other critical medical treatment due to cost, flag for internal escalation to care management in addition to standard CS routing
+- [ ] The public response stays empathetic; do not list resources, cost-saving programs, or payment arrangements in the public reply for these cases
+
+**Coverage dispute specifics:**
+- [ ] When a member claims a specific benefit (PT, mental health, prescriptions) is not covered, do not argue publicly — use "coverage varies by plan" and route to CS for a plan-level review
+- [ ] Do not defend BCBS VT's general coverage policy publicly; the issue may reflect a real plan-specific exclusion
+
+**No-text review contact routing:**
+- [ ] For no-text 1-star or 2-star reviews, direct members to communications@bcbsvt.com — reserve bluecrossvt.org/contact-us for more general acknowledgments
+- [ ] Softer opening tone for no-text low ratings: "we would like to better understand your rating and what you experienced"
+
+**Positive reviews naming staff:**
+- [ ] "We all care about doing right by Vermonters" is the approved team-wide formula for positive reviews naming specific employees — do not reference named staff in the public response
+
+**Paid campaign response protocols:**
+- [ ] Five or more comments per day on a paid post is the threshold for considering whether to pull the asset — flag this in any paid campaign response protocol review
+- [ ] Verify that a response management plan has been confirmed with Ashley and ad agency partners (comment thresholds, escalation triggers) before any paid campaign launches
+- [ ] Facebook DMs containing PHI: inform the member the channel is not secure and that CS will follow up through a secure channel (distinct from other platforms)
+- [ ] When a paid affordability campaign is actively running, cost-complaint responses carry heightened brand risk — flag for pre-posting review by Ashley or Teresa before any response goes out during that window
 
 ---
 
