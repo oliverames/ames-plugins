@@ -91,13 +91,17 @@ For Codex: run `./codex-refresh`. It registers or upgrades `oliverames/ames-clau
 
 ## Install paths
 
-| Component | Location |
-|-----------|----------|
-| Plugin cache | `~/.claude/plugins/cache/ames-claude/<name>/<version>/` |
-| Marketplace cache | `~/.claude/plugins/marketplaces/ames-claude/` |
-| Plugin registry | `~/.claude/plugins/installed_plugins.json` |
-| User-level marketplace registration | `~/.claude/settings.json` `extraKnownMarketplaces` |
-| User-level enabled plugins | `~/.claude/settings.json` `enabledPlugins` |
+| Host | Component | Location |
+|------|-----------|----------|
+| Claude Code | Plugin cache | `~/.claude/plugins/cache/ames-claude/<name>/<version>/` |
+| Claude Code | Marketplace cache | `~/.claude/plugins/marketplaces/ames-claude/` |
+| Claude Code | Plugin registry | `~/.claude/plugins/installed_plugins.json` |
+| Claude Code | User-level marketplace registration | `~/.claude/settings.json` `extraKnownMarketplaces` |
+| Claude Code | User-level enabled plugins | `~/.claude/settings.json` `enabledPlugins` |
+| Codex | Marketplace clone | `~/.codex/.tmp/marketplaces/ames-claude/` |
+| Codex | Plugin cache | `~/.codex/plugins/cache/ames-claude/<name>/<version>/` |
+| Codex | User-level marketplace registration | `~/.codex/config.toml` `[marketplaces.ames-claude]` |
+| Codex | User-level enabled plugins | `~/.codex/config.toml` `[plugins."<name>@ames-claude"]` |
 
 ## Gotchas
 

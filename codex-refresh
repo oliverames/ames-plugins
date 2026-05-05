@@ -7,6 +7,7 @@ aligned with the Codex-compatible plugins published by this repo.
 """
 
 import argparse
+import hashlib
 import json
 import re
 import shutil
@@ -28,6 +29,7 @@ CODEX_MARKETPLACE_ROOT = HOME / ".codex" / ".tmp" / "marketplaces" / "ames-claud
 CODEX_CACHE = HOME / ".codex" / "plugins" / "cache" / "ames-claude"
 MARKETPLACE_NAME = "ames-claude"
 MARKETPLACE_SOURCE = "oliverames/ames-claude"
+IGNORED_TREE_NAMES = {".DS_Store", "__pycache__"}
 
 
 def run(cmd, *, check=True):
@@ -40,6 +42,18 @@ def load_toml(path):
         return {}
     with path.open("rb") as f:
         return tomllib.load(f)
+
+
+def tree_digest(root):
+    digest = hashlib.sha256()
+    for path in sorted(p for p in root.rglob("*") if p.is_file()):
+        rel = path.relative_to(root)
+        if any(part in IGNORED_TREE_NAMES for part in rel.parts):
+            continue
+        digest.update(str(rel).encode())
+        digest.update(b"\0")
+        digest.update(hashlib.sha256(path.read_bytes()).digest())
+    return digest.hexdigest()
 
 
 def ensure_marketplace():
@@ -149,14 +163,23 @@ def enable_plugins(plugins):
 
 
 def materialize_cache(plugins):
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     for plugin in plugins:
         source = CODEX_MARKETPLACE_ROOT / plugin["source_path"]
         target = CODEX_CACHE / plugin["name"] / plugin["version"]
         if not source.exists():
             sys.exit(f"error: source plugin directory missing: {source}")
         if target.exists():
-            print(f"  cache present: {plugin['name']} v{plugin['version']}", flush=True)
-            continue
+            if tree_digest(source) == tree_digest(target):
+                print(f"  cache present: {plugin['name']} v{plugin['version']}", flush=True)
+                continue
+            stale = target.with_name(f"{target.name}.stale-{timestamp}")
+            suffix = 1
+            while stale.exists():
+                suffix += 1
+                stale = target.with_name(f"{target.name}.stale-{timestamp}-{suffix}")
+            target.rename(stale)
+            print(f"  moved stale cache aside: {target} -> {stale}", flush=True)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(source, target)
         print(f"  cached {plugin['name']} v{plugin['version']}", flush=True)

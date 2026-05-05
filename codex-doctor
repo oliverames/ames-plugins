@@ -7,6 +7,7 @@ Codex mirror, generated wrappers, cache, and optional live MCP visibility.
 """
 
 import argparse
+import hashlib
 import json
 import re
 import shutil
@@ -26,8 +27,10 @@ PLUGINS_DIR = ROOT / "plugins"
 MARKETPLACE = ROOT / ".agents" / "plugins" / "marketplace.json"
 CODEX_CONFIG = Path.home() / ".codex" / "config.toml"
 CODEX_CACHE = Path.home() / ".codex" / "plugins" / "cache" / "ames-claude"
+CODEX_MARKETPLACE_ROOT = Path.home() / ".codex" / ".tmp" / "marketplaces" / "ames-claude"
 
 INSTALLATION_VALUES = {"AVAILABLE", "INSTALLED_BY_DEFAULT", "NOT_AVAILABLE"}
+IGNORED_TREE_NAMES = {".DS_Store", "__pycache__"}
 
 
 class Reporter:
@@ -67,10 +70,17 @@ def read_json(path, reporter):
         with path.open() as f:
             return json.load(f)
     except FileNotFoundError:
-        reporter.error(f"missing file: {path.relative_to(ROOT)}")
+        reporter.error(f"missing file: {display_path(path)}")
     except json.JSONDecodeError as exc:
-        reporter.error(f"invalid JSON in {path.relative_to(ROOT)}: {exc}")
+        reporter.error(f"invalid JSON in {display_path(path)}: {exc}")
     return None
+
+
+def display_path(path):
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
 
 
 def is_relative_to(path, parent):
@@ -96,6 +106,21 @@ def normalize_mcp(data):
     if isinstance(data, dict) and isinstance(data.get("mcpServers"), dict):
         return data
     return {"mcpServers": data}
+
+
+def tree_digest(root):
+    digest = hashlib.sha256()
+    if not root.exists():
+        return None
+
+    for path in sorted(p for p in root.rglob("*") if p.is_file()):
+        rel = path.relative_to(root)
+        if any(part in IGNORED_TREE_NAMES for part in rel.parts):
+            continue
+        digest.update(str(rel).encode())
+        digest.update(b"\0")
+        digest.update(hashlib.sha256(path.read_bytes()).digest())
+    return digest.hexdigest()
 
 
 def parse_enabled_plugins():
@@ -266,6 +291,7 @@ def validate_codex_plugin(entry, reporter):
     return {
         "name": name,
         "version": codex_meta.get("version"),
+        "source_path": source_path,
         "mcp_names": mcp_names,
     }
 
@@ -300,6 +326,34 @@ def validate_marketplace(reporter):
     return checked
 
 
+def check_cache_content(plugin, reporter, strict=False):
+    source_path = plugin.get("source_path")
+    if not source_path:
+        return
+    if not CODEX_MARKETPLACE_ROOT.exists():
+        reporter.warn(f"Codex marketplace clone not found at {CODEX_MARKETPLACE_ROOT}; cache content check skipped")
+        return
+
+    source = (CODEX_MARKETPLACE_ROOT / source_path[2:]).resolve()
+    target = CODEX_CACHE / plugin["name"] / plugin["version"]
+    if not source.exists():
+        reporter.warn(f"Codex marketplace clone is missing {plugin['name']} source at {source}")
+        return
+    source_digest = tree_digest(source)
+    target_digest = tree_digest(target)
+    if source_digest != target_digest:
+        message = (
+            f"Codex cache for {plugin['name']} v{plugin['version']} differs from the marketplace clone; "
+            "run `./codex-refresh`"
+        )
+        if strict:
+            reporter.error(message)
+        else:
+            reporter.warn(message)
+    else:
+        reporter.ok(f"Codex cache content matches marketplace clone for {plugin['name']} v{plugin['version']}")
+
+
 def check_cache(plugins, reporter, require_enabled=False):
     if not CODEX_CACHE.exists():
         reporter.warn(f"Codex cache not found at {CODEX_CACHE}; run `./codex-refresh` to materialize it")
@@ -320,12 +374,15 @@ def check_cache(plugins, reporter, require_enabled=False):
 
         versions = cached.get(name, [])
         if version not in versions:
-            if is_enabled:
+            if is_enabled and require_enabled:
                 reporter.error(f"enabled Codex cache for {name} is not at v{version}; run `./codex-refresh`")
+            elif is_enabled:
+                reporter.warn(f"Codex cache for enabled plugin {name} is not at v{version}; run `./codex-refresh`")
             else:
                 reporter.note(f"{key} is disabled and not cached at v{version}")
         else:
             reporter.ok(f"Codex cache has {name} v{version}")
+            check_cache_content(next(p for p in plugins if p["name"] == name), reporter, strict=require_enabled)
 
     for name in sorted(set(cached) - set(expected)):
         reporter.warn(f"stale Codex cache entry under ames-claude: {name} ({', '.join(cached[name])})")
