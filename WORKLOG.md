@@ -1,5 +1,19 @@
 # Worklog
 
+## 2026-05-05 - Codex marketplace support graduation
+
+**What changed**: Promoted Codex support from experimental to a maintained path. Added `codex-refresh` to register or upgrade the Codex marketplace, enable all four Codex-compatible `ames-claude` plugins, materialize missing plugin cache entries, and run `codex-doctor`. Tightened `codex-doctor` so local install verification can require enabled plugins, matching cache versions, matching cache content, and live MCP visibility. Removed "experimental Codex support" language from README and project docs, bumped marketplace metadata to `3.6.0`, fixed the stale `ames-standalone-skills` README version, and documented Codex install/cache paths.
+
+**Decisions made**: Kept Codex compatibility additive in `.agents/`, `.codex-plugin/`, `sync`, `codex-refresh`, and `codex-doctor`. Left Claude Code's flat `.mcp.json` contract untouched. Treated `codex mcp list` as the authoritative proof of MCP visibility. Because Codex CLI currently has no standalone plugin install command, `codex-refresh` safely copies missing plugin versions from Codex's refreshed marketplace clone and moves stale same-version caches aside instead of overwriting them.
+
+**Left off at**: Clean. Two implementation commits pushed before this closeout: `00c6cbb` (`promote codex marketplace support`) and `83adee4` (`harden codex cache verification`). Local Codex config points at revision `83adee4033e89511dd9a53e4d694a28704fdcdbe`; all four Codex-compatible plugins are enabled and cached.
+
+**Open questions**: None for Codex marketplace support. Still open from prior smart-transcribe work: structured engine error returns and an explicit `SMART_TRANSCRIBE_BUNDLE_READY:` stdout signal.
+
+**Validated by**: `python3 -m py_compile sync codex-doctor codex-refresh`; JSON validation for both marketplace manifests and plugin manifests; `./sync --check-codex`; `./codex-refresh --no-live`; `./codex-doctor --live --require-enabled -v`, which confirmed all 14 expected MCP servers visible in Codex with 0 warnings.
+
+---
+
 ## 2026-05-04 — ames-general-mcps: Tinyfish MCP server (v3.1.0)
 
 **What changed**: Added `agent-tinyfish-ai` HTTP/OAuth MCP server to `ames-general-mcps`. The endpoint (`https://agent.tinyfish.ai/mcp`) is an OAuth-protected remote server using Clerk Bearer auth; Claude Code handles the OAuth flow natively via the `url`-keyed `.mcp.json` entry. Plugin bumped 3.0.1 → 3.1.0 (minor, new capability). Both marketplace manifests and the Codex MCP wrapper regenerated via `./sync`. Also committed accumulated documentation drift: README + CLAUDE.md counts updated (14 total MCP servers, 8 in ames-general-mcps), and fixed the `.bak` guidance in both `wrap-up` and `bcbs-wrap-up` SKILL.md files to align with the no-bak CLAUDE.md rule.
