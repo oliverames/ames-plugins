@@ -7,8 +7,8 @@ same on its own schedule.
 
 Handles both hosts:
   Claude Code: .claude-plugin/marketplace.json (authoritative source of truth)
-  Codex (experimental): .agents/plugins/marketplace.json (regenerated, Codex
-      plugin.json versions propagated from Claude side)
+  Codex: .agents/plugins/marketplace.json (regenerated, Codex plugin.json
+      versions propagated from Claude side)
 
 Usage:
     ./sync
@@ -203,9 +203,9 @@ if CODEX_MARKETPLACE.exists():
             "category": meta.get("category", "productivity"),
         }
         codex_plugins.append(entry)
-    # Preserve root metadata.version from existing file; bootstrap from Claude
-    # side if not present yet.
-    codex_metadata = codex_current.get("metadata") or claude_current.get("metadata", {})
+    # Keep marketplace-level metadata in lockstep across hosts. Claude remains
+    # the authoring source of truth, but Codex should advertise the same release.
+    codex_metadata = claude_current.get("metadata") or codex_current.get("metadata", {})
     codex_output = {
         "name": codex_current["name"],
         "interface": codex_current.get("interface", {"displayName": codex_current["name"]}),
@@ -215,7 +215,7 @@ if CODEX_MARKETPLACE.exists():
     with open(CODEX_MARKETPLACE, "w") as f:
         json.dump(codex_output, f, indent=2)
         f.write("\n")
-    _success(f".agents/plugins/marketplace.json: {len(codex_plugins)} plugin(s) (experimental)")
+    _success(f".agents/plugins/marketplace.json: {len(codex_plugins)} plugin(s)")
     if propagated:
         _dim(f"propagated {propagated} Claude-to-Codex version(s)")
     if codex_metadata_synced:

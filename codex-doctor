@@ -300,9 +300,9 @@ def validate_marketplace(reporter):
     return checked
 
 
-def check_cache(plugins, reporter):
+def check_cache(plugins, reporter, require_enabled=False):
     if not CODEX_CACHE.exists():
-        reporter.warn(f"Codex cache not found at {CODEX_CACHE}; install or upgrade marketplace to verify cache")
+        reporter.warn(f"Codex cache not found at {CODEX_CACHE}; run `./codex-refresh` to materialize it")
         return
 
     expected = {p["name"]: p["version"] for p in plugins}
@@ -310,20 +310,26 @@ def check_cache(plugins, reporter):
     for plugin_dir in sorted(p for p in CODEX_CACHE.iterdir() if p.is_dir()):
         cached[plugin_dir.name] = sorted(p.name for p in plugin_dir.iterdir() if p.is_dir())
 
+    enabled = parse_enabled_plugins()
     for name, version in expected.items():
+        key = f"{name}@ames-claude"
+        is_enabled = enabled.get(key, False) if enabled else True
+        if enabled and require_enabled and not is_enabled:
+            reporter.error(f"{key} is not enabled in Codex config")
+            continue
+
         versions = cached.get(name, [])
         if version not in versions:
-            reporter.warn(
-                f"Codex cache for {name} is not at v{version}; run "
-                "`codex plugin marketplace upgrade ames-claude` if this should be installed"
-            )
+            if is_enabled:
+                reporter.error(f"enabled Codex cache for {name} is not at v{version}; run `./codex-refresh`")
+            else:
+                reporter.note(f"{key} is disabled and not cached at v{version}")
         else:
             reporter.ok(f"Codex cache has {name} v{version}")
 
     for name in sorted(set(cached) - set(expected)):
         reporter.warn(f"stale Codex cache entry under ames-claude: {name} ({', '.join(cached[name])})")
 
-    enabled = parse_enabled_plugins()
     for key, is_enabled in sorted(enabled.items()):
         if not key.endswith("@ames-claude"):
             continue
@@ -370,7 +376,7 @@ def check_live_mcp(plugins, reporter, timeout):
         # inside "mcp-pandoc". re.escape handles names with special characters.
         pattern = re.compile(rf"(?m)^\s*{re.escape(mcp_name)}\b")
         if not pattern.search(output):
-            reporter.warn(f"live Codex MCP list is missing expected server: {mcp_name}")
+            reporter.error(f"live Codex MCP list is missing expected server: {mcp_name}")
         else:
             reporter.ok(f"live Codex MCP visible: {mcp_name}")
 
@@ -379,6 +385,11 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Validate the ames-claude Codex marketplace mirror")
     parser.add_argument("--live", action="store_true", help="run live `codex mcp list` visibility checks")
     parser.add_argument("--no-live", action="store_true", help="skip live `codex mcp list` visibility checks")
+    parser.add_argument(
+        "--require-enabled",
+        action="store_true",
+        help="fail if any Codex-compatible ames-claude plugin is not enabled locally",
+    )
     parser.add_argument("--timeout", type=int, default=15, help="seconds to wait for live Codex checks")
     parser.add_argument("-v", "--verbose", action="store_true", help="print successful checks")
     args = parser.parse_args(argv)
@@ -388,7 +399,7 @@ def main(argv=None):
     print("codex-doctor: validating ames-claude Codex marketplace mirror")
     reporter = Reporter(verbose=args.verbose)
     plugins = validate_marketplace(reporter)
-    check_cache(plugins, reporter)
+    check_cache(plugins, reporter, require_enabled=args.require_enabled)
     if not args.no_live:
         check_live_mcp(plugins, reporter, args.timeout)
     return reporter.finish()

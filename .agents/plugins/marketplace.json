@@ -1,11 +1,11 @@
 {
   "name": "ames-claude",
   "interface": {
-    "displayName": "Oliver's Plugins (experimental Codex support)"
+    "displayName": "Oliver's Plugins"
   },
   "metadata": {
     "description": "Oliver's personal Claude Code plugins and skills",
-    "version": "3.5.0"
+    "version": "3.6.0"
   },
   "plugins": [
     {

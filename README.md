@@ -1,7 +1,7 @@
 <h1 align="center">ames-claude</h1>
 
 <p align="center">
-  <strong>Personal plugin marketplace for Claude Code, with experimental Codex support</strong>
+  <strong>Personal plugin marketplace for Claude Code and Codex</strong>
 </p>
 
 <p align="center">
@@ -22,7 +22,7 @@
 
 ---
 
-A single repo that ships Oliver Ames' personal plugin catalog to two AI coding agents at once: **Claude Code** (official, supported) and **Codex** (experimental). The same plugin tree carries both manifest formats side by side, so one `git push` updates both hosts.
+A single repo that ships Oliver Ames' personal plugin catalog to two AI coding agents at once: **Claude Code** and **Codex**. The same plugin tree carries both manifest formats side by side, so one `git push` updates both hosts.
 
 ## Why this exists
 
@@ -30,7 +30,7 @@ Running two agents without duplicating content is a real problem. Claude Code an
 
 ames-claude takes the additive route. One tree, two manifest namespaces, identical skill and MCP content underneath. Skills are portable by spec (the SKILL.md format is shared across hosts per Anthropic's Agent Skills and OpenAI's Codex Skills). Only the plugin and marketplace manifests differ, and both sit in the same repo. The cost is a small amount of duplicated JSON; the benefit is a single source of truth for an otherwise split ecosystem.
 
-**Claude Code support is production.** **Codex support is experimental**, since Codex's plugin marketplace launched March 2026 and its CLI surface is still stabilizing.
+Claude Code and Codex support are both maintained paths. Claude Code remains the source-of-truth authoring target, and Codex support is additive: Codex-specific manifests, MCP wrappers, cache refresh, and live MCP visibility checks live beside the Claude files without reshaping Claude's contract.
 
 ## Quick start
 
@@ -78,16 +78,20 @@ Restart Claude Code. The marketplace registers, plugins install, and `autoUpdate
 /plugin install build-macos-apps-codex@ames-claude
 ```
 
-### Codex (experimental)
+### Codex (supported)
 
 ```
 codex plugin marketplace add oliverames/ames-claude
-codex plugin marketplace upgrade ames-claude
+./codex-refresh
 ```
 
-Then install plugins through Codex's plugin UI or CLI. `build-ios-apps-codex` and `build-macos-apps-codex` are intentionally absent from the Codex side (see below).
+`codex-refresh` upgrades the marketplace clone, enables the four Codex-compatible `ames-claude` plugins in `~/.codex/config.toml`, materializes missing plugin cache entries, and runs `./codex-doctor --live --require-enabled`. `build-ios-apps-codex` and `build-macos-apps-codex` are intentionally absent from the Codex side (see below).
 
-> **Heads-up:** Codex's marketplace commands are still stabilizing. Verify exact syntax with `codex plugin marketplace --help` before scripting. File an issue if any Codex manifest in this repo falls out of spec.
+For a read-only check after any change:
+
+```
+./codex-doctor --live --require-enabled
+```
 
 ## Plugins
 
@@ -223,7 +227,7 @@ The repo carries two parallel manifest namespaces under a shared plugin tree:
 ```
 ames-claude/
 ├── .claude-plugin/marketplace.json        # Claude Code marketplace (authoritative)
-├── .agents/plugins/marketplace.json       # Codex marketplace (experimental)
+├── .agents/plugins/marketplace.json       # Codex marketplace
 └── plugins/
     └── <plugin-name>/
         ├── .claude-plugin/plugin.json     # Claude Code plugin manifest
@@ -236,7 +240,7 @@ ames-claude/
 | Host | Marketplace manifest | Per-plugin manifest | Plugins |
 |------|----------------------|---------------------|---------|
 | Claude Code | `.claude-plugin/marketplace.json` | `.claude-plugin/plugin.json` | 6 |
-| Codex (experimental) | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | 4 (excludes `build-ios-apps-codex`, `build-macos-apps-codex`, and first-party connectors now in `ames-connectors`) |
+| Codex | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | 4 (excludes `build-ios-apps-codex`, `build-macos-apps-codex`, and first-party connectors now in `ames-connectors`) |
 
 ### What crosses the boundary
 
@@ -270,9 +274,9 @@ Each plugin's version lives in three places that must stay in sync:
 2. `plugins/<name>/.codex-plugin/plugin.json` — Codex mirror (must match 1)
 3. Root `.claude-plugin/marketplace.json` — per-plugin `version` (must match 1)
 
-The marketplace itself has a separate version at `.claude-plugin/marketplace.json`'s top-level `metadata.version`, currently `3.5.0`.
+The marketplace itself has a separate version at `.claude-plugin/marketplace.json`'s top-level `metadata.version`, currently `3.6.0`.
 
-Workflow scripts at the repo root (`sync`, `bump-and-sync`, `codex-doctor`) help keep these aligned after content changes. `./sync` propagates `version` and shared metadata from `.claude-plugin/plugin.json` into the matching `.codex-plugin/plugin.json`, threads enriched metadata fields into the generated marketplace entry, and refreshes Codex MCP wrappers. Use `./sync --check-codex` for generated-file and cache validation, and `./codex-doctor --live` when you also want live `codex mcp list` verification. Always run one of those before committing version-bearing changes.
+Workflow scripts at the repo root (`sync`, `bump-and-sync`, `codex-refresh`, `codex-doctor`) help keep these aligned after content changes. `./sync` propagates `version` and shared metadata from `.claude-plugin/plugin.json` into the matching `.codex-plugin/plugin.json`, threads enriched metadata fields into the generated marketplace entry, and refreshes Codex MCP wrappers. `./codex-refresh` makes the local Codex install match the published Codex marketplace. Use `./sync --check-codex` for generated-file and cache validation, and `./codex-doctor --live --require-enabled` when you also want live `codex mcp list` verification. Always run one of those before committing version-bearing changes.
 
 ## Development
 
@@ -289,7 +293,7 @@ Workflow scripts at the repo root (`sync`, `bump-and-sync`, `codex-doctor`) help
 2. For dual-host support, also create `plugins/<plugin-name>/.codex-plugin/plugin.json` mirroring the Claude manifest with Codex-specific `interface` and `category` fields
 3. Run `./sync` to regenerate `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json`
 4. Add content (skills, commands, MCPs) at the plugin root per spec
-5. Run `./codex-doctor --live` for Codex-facing plugins, then `bump-and-sync` and commit
+5. Run `./codex-refresh` or `./codex-doctor --live --require-enabled` for Codex-facing plugins, then `bump-and-sync` and commit
 
 ## My Claude Code configuration
 

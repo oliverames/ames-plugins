@@ -1,0 +1,186 @@
+#!/usr/bin/env python3
+"""Refresh the local Codex install for the ames-claude marketplace.
+
+Codex currently exposes marketplace add/upgrade commands, but not a standalone
+plugin install command. This helper keeps Oliver's local Codex config and cache
+aligned with the Codex-compatible plugins published by this repo.
+"""
+
+import argparse
+import json
+import re
+import shutil
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+
+try:
+    import tomllib
+except ImportError:  # pragma: no cover, only used on Python < 3.11.
+    tomllib = None
+
+
+ROOT = Path(__file__).resolve().parent
+HOME = Path.home()
+CODEX_CONFIG = HOME / ".codex" / "config.toml"
+CODEX_MARKETPLACE_ROOT = HOME / ".codex" / ".tmp" / "marketplaces" / "ames-claude"
+CODEX_CACHE = HOME / ".codex" / "plugins" / "cache" / "ames-claude"
+MARKETPLACE_NAME = "ames-claude"
+MARKETPLACE_SOURCE = "oliverames/ames-claude"
+
+
+def run(cmd, *, check=True):
+    print(f"  $ {' '.join(cmd)}", flush=True)
+    return subprocess.run(cmd, cwd=str(ROOT), text=True, check=check)
+
+
+def load_toml(path):
+    if not path.exists() or tomllib is None:
+        return {}
+    with path.open("rb") as f:
+        return tomllib.load(f)
+
+
+def ensure_marketplace():
+    if not shutil.which("codex"):
+        sys.exit("error: codex CLI is not on PATH")
+
+    data = load_toml(CODEX_CONFIG)
+    marketplaces = data.get("marketplaces", {})
+    if MARKETPLACE_NAME in marketplaces:
+        run(["codex", "plugin", "marketplace", "upgrade", MARKETPLACE_NAME])
+    else:
+        result = run(["codex", "plugin", "marketplace", "add", MARKETPLACE_SOURCE], check=False)
+        if result.returncode != 0:
+            print("  ! add failed; trying upgrade in case the marketplace is already registered", flush=True)
+            run(["codex", "plugin", "marketplace", "upgrade", MARKETPLACE_NAME])
+
+    if not CODEX_MARKETPLACE_ROOT.exists():
+        sys.exit(f"error: Codex marketplace clone not found at {CODEX_MARKETPLACE_ROOT}")
+
+
+def marketplace_plugins():
+    marketplace = CODEX_MARKETPLACE_ROOT / ".agents" / "plugins" / "marketplace.json"
+    if not marketplace.exists():
+        marketplace = ROOT / ".agents" / "plugins" / "marketplace.json"
+    data = json.loads(marketplace.read_text())
+    plugins = []
+    for entry in data.get("plugins", []):
+        source = entry.get("source")
+        source_path = source.get("path") if isinstance(source, dict) else source
+        if not source_path or not source_path.startswith("./"):
+            sys.exit(f"error: unsupported source path for {entry.get('name')}: {source_path!r}")
+        plugins.append(
+            {
+                "name": entry["name"],
+                "version": entry["version"],
+                "source_path": source_path[2:],
+            }
+        )
+    return plugins
+
+
+def backup_config():
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    backup = CODEX_CONFIG.with_name(f"{CODEX_CONFIG.name}.backup-{timestamp}-codex-refresh")
+    shutil.copy2(CODEX_CONFIG, backup)
+    print(f"  backed up {CODEX_CONFIG} to {backup}", flush=True)
+
+
+def section_bounds(lines, header):
+    start = None
+    header_pattern = re.compile(r"^\[.+\]\s*$")
+    for idx, line in enumerate(lines):
+        if line.strip() == header:
+            start = idx
+            break
+    if start is None:
+        return None
+    end = len(lines)
+    for idx in range(start + 1, len(lines)):
+        if header_pattern.match(lines[idx].strip()):
+            end = idx
+            break
+    return start, end
+
+
+def enable_plugins(plugins):
+    CODEX_CONFIG.parent.mkdir(parents=True, exist_ok=True)
+    if not CODEX_CONFIG.exists():
+        CODEX_CONFIG.write_text("")
+
+    text = CODEX_CONFIG.read_text()
+    lines = text.splitlines()
+    changed = False
+
+    for plugin in plugins:
+        key = f'{plugin["name"]}@{MARKETPLACE_NAME}'
+        header = f'[plugins."{key}"]'
+        bounds = section_bounds(lines, header)
+        if bounds is None:
+            if lines and lines[-1].strip():
+                lines.append("")
+            lines.extend([header, "enabled = true"])
+            changed = True
+            print(f"  enabled {key}", flush=True)
+            continue
+
+        start, end = bounds
+        enabled_idx = None
+        for idx in range(start + 1, end):
+            if re.match(r"^\s*enabled\s*=", lines[idx]):
+                enabled_idx = idx
+                break
+        if enabled_idx is None:
+            lines.insert(start + 1, "enabled = true")
+            changed = True
+            print(f"  enabled {key}", flush=True)
+        elif lines[enabled_idx].strip().lower() != "enabled = true":
+            lines[enabled_idx] = "enabled = true"
+            changed = True
+            print(f"  enabled {key}", flush=True)
+
+    if changed:
+        backup_config()
+        CODEX_CONFIG.write_text("\n".join(lines) + "\n")
+    else:
+        print("  Codex config already enables all ames-claude Codex plugins", flush=True)
+
+
+def materialize_cache(plugins):
+    for plugin in plugins:
+        source = CODEX_MARKETPLACE_ROOT / plugin["source_path"]
+        target = CODEX_CACHE / plugin["name"] / plugin["version"]
+        if not source.exists():
+            sys.exit(f"error: source plugin directory missing: {source}")
+        if target.exists():
+            print(f"  cache present: {plugin['name']} v{plugin['version']}", flush=True)
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(source, target)
+        print(f"  cached {plugin['name']} v{plugin['version']}", flush=True)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Refresh ames-claude in Codex")
+    parser.add_argument("--no-enable", action="store_true", help="do not edit ~/.codex/config.toml")
+    parser.add_argument("--no-live", action="store_true", help="skip live `codex mcp list` verification")
+    parser.add_argument("--skip-doctor", action="store_true", help="skip the final codex-doctor run")
+    args = parser.parse_args(argv)
+
+    print("codex-refresh: syncing local Codex install for ames-claude", flush=True)
+    ensure_marketplace()
+    plugins = marketplace_plugins()
+    if not args.no_enable:
+        enable_plugins(plugins)
+    materialize_cache(plugins)
+
+    if not args.skip_doctor:
+        doctor = [str(ROOT / "codex-doctor"), "--require-enabled", "-v"]
+        doctor.append("--no-live" if args.no_live else "--live")
+        run(doctor)
+
+
+if __name__ == "__main__":
+    main()

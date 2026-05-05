@@ -1,6 +1,6 @@
 # ames-claude
 
-Oliver's personal plugin marketplace for Claude Code with experimental Codex dual-host support. Ships 6 plugins, 47 skills, 13 MCP servers (split across `ames-dev-mcps` and `ames-general-mcps`). First-party API connectors (`ames-ynab`, `ames-lytho`) live in the separate [ames-connectors](https://github.com/oliverames/ames-connectors) marketplace as of 2026-04-21.
+Oliver's personal plugin marketplace for Claude Code and Codex. Ships 6 plugins, 51 skills, 14 MCP servers (split across `ames-dev-mcps` and `ames-general-mcps`). First-party API connectors (`ames-ynab`, `ames-lytho`) live in the separate [ames-connectors](https://github.com/oliverames/ames-connectors) marketplace as of 2026-04-21.
 
 ## Structure
 
@@ -11,10 +11,11 @@ plugins/ames-community-skills/skills/       Curated third-party skills (1: human
 plugins/build-ios-apps-codex/skills/        iOS skills converted from OpenAI's Codex plugin (6)
 plugins/build-macos-apps-codex/skills/      macOS skills converted from OpenAI's Codex plugin (11)
 .claude-plugin/marketplace.json             Claude Code marketplace manifest
-.agents/plugins/marketplace.json            Codex marketplace manifest (experimental)
+.agents/plugins/marketplace.json            Codex marketplace manifest
 plugins/<name>/.codex-plugin/plugin.json    Codex plugin manifest (for dual-host plugins)
 plugins/<name>/.codex-plugin/mcp.json       Generated Codex MCP wrapper (when a plugin has .mcp.json)
 sync                                        Regenerates marketplace.json from plugin manifests
+codex-refresh                               Installs/updates the local Codex config and plugin cache
 codex-doctor                                Report-only Codex marketplace/cache/MCP validator
 bump-and-sync                               Bumps a plugin version + runs sync + pushes (generic; previously wired to ames-ynab, now in ames-connectors)
 ```
@@ -34,21 +35,21 @@ The repo carries two parallel manifest namespaces under a shared plugin tree:
 | Host | Marketplace manifest | Per-plugin manifest | Plugins |
 |------|----------------------|---------------------|---------|
 | Claude Code (primary) | `.claude-plugin/marketplace.json` | `.claude-plugin/plugin.json` | 6 |
-| Codex (experimental) | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | 3 (excludes `build-ios-apps-codex`, `build-macos-apps-codex`, and first-party connectors now in `ames-connectors`) |
+| Codex | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | 4 (excludes `build-ios-apps-codex`, `build-macos-apps-codex`, and first-party connectors now in `ames-connectors`) |
 
 Skill content (`SKILL.md`) is portable across hosts. MCP config starts as Claude Code's flat root `.mcp.json`; `./sync` generates a Codex-native `.codex-plugin/mcp.json` wrapper with a top-level `mcpServers` key. `build-ios-apps-codex` and `build-macos-apps-codex` are Claude-only because their skills were converted from OpenAI's Codex plugins (which exist upstream in `openai/plugins`) and cannot round-trip.
 
 When bumping a plugin version, update `plugins/<name>/.claude-plugin/plugin.json`, then run `./sync`. Sync propagates the version to `plugins/<name>/.codex-plugin/plugin.json` when present, regenerates both marketplace manifests, and refreshes Codex MCP wrappers.
 
-Codex work must be additive. Do not change Claude Code's `.claude-plugin/marketplace.json`, `.claude-plugin/plugin.json`, or flat root `.mcp.json` shape just to satisfy Codex. Put Codex-only compatibility in `.agents/`, `.codex-plugin/`, `sync`, and `codex-doctor`.
+Codex work must be additive. Do not change Claude Code's `.claude-plugin/marketplace.json`, `.claude-plugin/plugin.json`, or flat root `.mcp.json` shape just to satisfy Codex. Put Codex-only compatibility in `.agents/`, `.codex-plugin/`, `sync`, `codex-refresh`, and `codex-doctor`.
 
 ## Plugins
 
 | Plugin | Hosts | Description |
 |--------|-------|-------------|
-| `ames-standalone-skills` | Claude + Codex | 29 original skills covering writing, dev, Apple workflows, finance, automation |
+| `ames-standalone-skills` | Claude + Codex | 33 original skills covering writing, dev, Apple workflows, finance, automation, BCBS VT work |
 | `ames-dev-mcps` | Claude + Codex | 6 development-focused MCP servers (Apple Docs, Apple Notifier, macOS Automator, XcodeBuildMCP, Sim Genie, Sosumi) |
-| `ames-general-mcps` | Claude + Codex | 7 day-to-day general-purpose MCP servers (Drafts, Excel, Google Workspace, iMCP, MarkItDown, Pandoc, Peekaboo) |
+| `ames-general-mcps` | Claude + Codex | 8 day-to-day general-purpose MCP servers (Drafts, Excel, Google Workspace, iMCP, MarkItDown, Pandoc, Peekaboo, Tinyfish) |
 | `ames-community-skills` | Claude + Codex | Third-party skills without upstream marketplaces (currently 1: humanizer by blader) |
 | `build-ios-apps-codex` | Claude only | 6 iOS dev skills converted from OpenAI's `build-ios-apps` Codex plugin (MIT) |
 | `build-macos-apps-codex` | Claude only | 11 macOS dev skills + 3 commands converted from OpenAI's `build-macos-apps` Codex plugin (MIT) |
@@ -86,7 +87,7 @@ When bumping a plugin under dual-host, keep Claude and Codex plugin.json version
 
 Registered in Claude Code as `ames-claude` pointing to `oliverames/ames-claude`. After any change: run `./sync`, commit, push. Claude Code will detect the update on next marketplace refresh.
 
-For Codex (experimental): `codex plugin marketplace add oliverames/ames-claude`, then `codex plugin marketplace upgrade ames-claude`. Use `./codex-doctor --live` to check the Codex cache and live MCP visibility.
+For Codex: run `./codex-refresh`. It registers or upgrades `oliverames/ames-claude`, enables Codex-compatible plugins, materializes missing cache entries, and runs `./codex-doctor --live --require-enabled` to check live MCP visibility.
 
 ## Install paths
 
@@ -105,6 +106,7 @@ For Codex (experimental): `codex plugin marketplace add oliverames/ames-claude`,
 - **MCP connector secrets**: plugin-spawned MCP servers don't inherit the `op run` environment. Secrets must be declared in `.mcp.json` via `${ENV_VAR}` (resolved from `settings.json` env block), or loaded from a plugin-local `.env` file by the server itself.
 - **Host-specific MCP shape**: Claude Code uses the flat root `.mcp.json`; Codex requires `{ "mcpServers": { ... } }` and reads the generated `.codex-plugin/mcp.json`.
 - **Codex marketplace schema differs from Claude's**: Codex uses nested `source: {source: "local", path: "./..."}` and requires `policy: {installation: "AVAILABLE", authentication: "ON_INSTALL"}`. Claude uses flat `source: "./..."`. Both manifest shapes are maintained side-by-side.
-- **Do not disturb Claude to fix Codex**: if Codex needs a workaround, keep it in the Codex mirror/generator and verify with `./codex-doctor`; do not mutate the Claude marketplace contract.
+- **Do not disturb Claude to fix Codex**: if Codex needs a workaround, keep it in the Codex mirror/generator/install helper and verify with `./codex-refresh` or `./codex-doctor`; do not mutate the Claude marketplace contract.
 - **`build-ios-apps-codex` and `build-macos-apps-codex` are Claude Code only** by design. Their skills were converted from OpenAI's Codex plugins and cannot be republished to Codex (they already exist upstream in `openai/plugins` in their original form). Both are promoted to top-level plugins (rather than nested inside an umbrella plugin) so Claude Code's shallow auto-discovery finds each sub-skill directly.
 - **Version parity across manifests** is enforced by `./sync`, with the Claude Code plugin manifest as the source of truth.
+- **Codex CLI has no standalone plugin install command**: `codex plugin marketplace upgrade` refreshes the marketplace clone but may not materialize newly enabled plugin cache entries. Use `./codex-refresh`, which copies missing plugin versions from Codex's refreshed marketplace clone into `~/.codex/plugins/cache/ames-claude/` without overwriting existing cache directories.
