@@ -28,6 +28,38 @@ Pick the workflow that matches the user's request, then read the corresponding r
 
 If the request spans multiple workflows (e.g., "do my month-end review"), start with `monthly-close.md` — it references the others as sub-steps.
 
+## Transaction Approval Workflow
+
+### Before approving a batch
+
+Never batch-approve transactions based on vague phrasing like "the other items" or "everything else." Always:
+
+1. List the exact transactions you intend to approve (payee, amount, category)
+2. Wait for explicit confirmation before calling `update_transactions` with `approved: true` on more than 3 transactions at once
+3. State clearly which transactions you are **not** approving and why
+
+### Flags from `review_unapproved`
+
+Pay attention to the `flags` field on each transaction:
+
+| Flag | Meaning | Action |
+|------|---------|--------|
+| `manually_entered` | Not from bank import; was hand-keyed | Confirm it's intentional |
+| `match_broken` | Has a stale match reference | Do not approve; ask user to verify |
+| `no_prior_amount_match` | First time this amount has appeared for this payee | Flag for user review before approving |
+| `category_drift:was_X` | Payee was previously in a different category | Ask if recategorization was intentional |
+| `new_payee` | No transaction history for this payee | Confirm payee and category before approving |
+| `scheduled_transaction_realized` | Originated from a scheduled entry | Verify amount and category match expectations |
+
+Transactions with `match_broken` or `manually_entered` + `no_prior_amount_match` should always require explicit user sign-off before approval, regardless of how many other clean transactions are being approved.
+
+### Gmail receipt verification
+
+When verifying a charge via Gmail:
+- Search: `from:no_reply@email.apple.com subject:receipt after:YYYY/MM/DD` for Apple charges (not broad "Apple" searches which return trade-in, subscription expiry, and other noise)
+- If `FULL_CONTENT` returns only a snippet (no dollar amount visible), state explicitly: "Email body not retrievable; could not verify amount via receipt"
+- Do not claim verification succeeded if the email body was inaccessible
+
 ## Key Metrics
 
 Track these across all workflows:
