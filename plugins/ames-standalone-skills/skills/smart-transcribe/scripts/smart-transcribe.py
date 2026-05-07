@@ -162,6 +162,67 @@ def _run_context_interview(name: str) -> dict:
     return context
 
 
+REFERENCE_SIDECAR_SUFFIXES: tuple[str, ...] = (
+    ".reference.md",
+    ".reference.txt",
+    ".transcript.md",
+    ".transcript.txt",
+    ".txt",
+)
+
+
+def resolve_reference_source(audio_path: Path, explicit: str | None) -> Path | None:
+    """Find an external-transcript reference file.
+
+    Resolution order:
+      1. If `--reference FILE` is passed explicitly, use that (must exist).
+      2. Otherwise, look for sidecar files next to the audio with the suffixes
+         listed in REFERENCE_SIDECAR_SUFFIXES, in priority order.
+
+    Returns the resolved Path or None. Sidecar matching uses the audio's
+    full stem so 'Call Recording.m4a' picks up 'Call Recording.transcript.md'
+    (not just 'Call Recording.txt' alone — explicit '.transcript.*' wins for
+    disambiguation when the user has both).
+    """
+    if explicit:
+        explicit_path = Path(explicit).expanduser().resolve()
+        if not explicit_path.exists():
+            print(f"⚠️  --reference path not found: {explicit_path}", file=sys.stderr)
+            return None
+        return explicit_path
+    for suffix in REFERENCE_SIDECAR_SUFFIXES:
+        candidate = audio_path.with_suffix("").with_name(audio_path.stem + suffix)
+        if candidate.exists() and candidate.resolve() != audio_path.resolve():
+            return candidate
+    return None
+
+
+def log_dictionary_misfire(entry: str) -> None:
+    """Append a misfire datapoint to ~/.config/smart-transcribe/dictionary-misfires.jsonl.
+
+    Format: {"old": "...", "new": "...", "logged_at": "..."}.
+    The user can later review this log to decide whether to scope or remove a rule.
+    """
+    if "=" not in entry:
+        print(f"⚠️  --report-dictionary-misfire expects OLD=NEW format, got: {entry!r}", file=sys.stderr)
+        return
+    old, new = entry.split("=", 1)
+    old, new = old.strip(), new.strip()
+    if not old or not new:
+        print(f"⚠️  Empty OLD or NEW in --report-dictionary-misfire {entry!r}", file=sys.stderr)
+        return
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    log_path = CONFIG_DIR / "dictionary-misfires.jsonl"
+    record = {
+        "old": old,
+        "new": new,
+        "logged_at": datetime.now().isoformat(),
+    }
+    with log_path.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+    print(f"📝 Logged misfire: {old} -> {new} ({log_path})", file=sys.stderr)
+
+
 def _flatten_corrections(corrections: dict) -> dict:
     """Normalise corrections from JSON storage to flat wrong->right.
 
@@ -562,13 +623,21 @@ def _format_engine_status_block(engine_results: dict[str, dict] | None) -> list[
     if not engine_results:
         return []
     lines = ["## Engine Status", ""]
-    lines.append("| Engine | Status | Chars | Quality | Notes |")
+    lines.append("| Source | Status | Chars | Quality | Notes |")
     lines.append("|---|---|---|---|---|")
+    has_reference = False
     for label, result in engine_results.items():
         status = result.get("status", "unknown")
         char_count = result.get("char_count", len(result.get("text", "") or ""))
         quality = result.get("quality_concern")
-        if status == "complete" and quality is None:
+        is_reference = (result.get("metadata") or {}).get("source") == "external_reference"
+        if is_reference:
+            has_reference = True
+        if is_reference:
+            status_icon = "📑 reference"
+            quality_str = "high-trust"
+            notes_str = f"External transcript: {(result.get('metadata') or {}).get('path', '')}"
+        elif status == "complete" and quality is None:
             status_icon = "✅ complete"
             quality_str = "OK"
             notes_str = ""
@@ -587,11 +656,21 @@ def _format_engine_status_block(engine_results: dict[str, dict] | None) -> list[
             f"| {label} | {status_icon} | {char_count:,} | {quality_str} | {notes_str} |"
         )
     lines.append("")
-    lines.append(
-        "> **Trust ranking for merge:** treat ❌ failed engines as absent (do not include in merge); "
-        "treat ⚠️ engines with quality concerns as low-confidence (use only as a tiebreaker, never as the spine); "
-        "✅ engines are normal-confidence inputs."
-    )
+    trust_lines = [
+        "> **Trust ranking for merge:**",
+    ]
+    if has_reference:
+        trust_lines.append(
+            "> - 📑 external reference: **highest trust for word-level content and speaker attribution.** "
+            "When the reference disagrees with engine output on what was said, prefer the reference. "
+            "Note the reference may itself have ASR errors though, so verify against engine consensus when in doubt."
+        )
+    trust_lines.extend([
+        "> - ✅ engines: normal-confidence inputs.",
+        "> - ⚠️ engines with quality concerns: low-confidence (use only as a tiebreaker, never as the spine).",
+        "> - ❌ failed engines: absent — do not include in merge.",
+    ])
+    lines.extend(trust_lines)
     lines.append("")
     return lines
 
@@ -2476,6 +2555,30 @@ Examples:
         action="store_true",
         help="Interactively review applied corrections before saving (dispute false positives)",
     )
+    parser.add_argument(
+        "--reference",
+        metavar="FILE",
+        help=(
+            "Path to a known-good external transcript (e.g. Apple Phone app auto-transcript, "
+            "Otter export, Riverside export, hand-corrected version). Included in the merge "
+            "bundle as a high-trust source. Auto-detected from sidecar files if omitted: "
+            "looks for <audio_basename>.txt, .transcript.md, .transcript.txt, .reference.md, "
+            ".reference.txt next to the audio."
+        ),
+    )
+    parser.add_argument(
+        "--report-dictionary-misfire",
+        metavar="OLD=NEW",
+        action="append",
+        default=[],
+        help=(
+            "Log a dictionary rule that misfired in a recent transcript "
+            "(e.g. 'mont-royal=Mont-Royal' when speaker actually said 'Montreal'). "
+            "Appends to ~/.config/smart-transcribe/dictionary-misfires.jsonl for periodic "
+            "review. May be passed multiple times. Does not modify the dictionary; lets you "
+            "audit misfires before deciding to scope or remove the rule."
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -2493,6 +2596,13 @@ Examples:
     if args.context == "":
         list_contexts()
         sys.exit(0)
+
+    # --report-dictionary-misfire can run standalone (just logs; no audio needed)
+    if args.report_dictionary_misfire:
+        for entry in args.report_dictionary_misfire:
+            log_dictionary_misfire(entry)
+        if not any([args.audio_file, args.fix_transcript, args.doctor, args.check_engine, args.warm_cohere]):
+            return 0  # Standalone misfire logging — done
 
     # Require at least one input unless running a maintenance command
     if not any([args.audio_file, args.fix_transcript, args.doctor, args.check_engine, args.warm_cohere]):
@@ -2906,6 +3016,44 @@ Examples:
             print(f"\n❌ Only {len(successful)} engine(s) succeeded.")
             print(f"   Failed: {', '.join(failed)}")
             sys.exit(1)
+
+    # Resolve external reference transcript (explicit --reference, sidecar fallback,
+    # or none). When present, include it as a high-trust source in the merge bundle
+    # so the merging agent can cross-check engine outputs against ground truth.
+    reference_path = resolve_reference_source(audio_path, args.reference)
+    if reference_path is not None:
+        try:
+            ref_text = parse_transcript_file(reference_path)
+            if ref_text:
+                ref_label = f"External Reference ({reference_path.name})"
+                successful[ref_label] = ref_text
+                # Reference is not a transcription "engine" — synthesize a result
+                # entry so the engine-status block treats it as a high-trust source
+                # rather than dropping it.
+                engine_results[ref_label] = {
+                    "engine_id": "external-reference",
+                    "label": ref_label,
+                    "status": "complete",
+                    "failure_reason": None,
+                    "python": None,
+                    "text": ref_text,
+                    "segments": [],
+                    "metadata": {
+                        "source": "external_reference",
+                        "path": str(reference_path),
+                        "trust_level": "high",
+                    },
+                    "char_count": len(ref_text),
+                    "quality_concern": None,
+                }
+                origin = "explicit --reference" if args.reference else "auto-detected sidecar"
+                print(
+                    f"📑 External reference loaded ({origin}): {reference_path.name} "
+                    f"({len(ref_text):,} chars)",
+                    file=sys.stderr,
+                )
+        except Exception as exc:
+            print(f"⚠️  Could not load reference transcript {reference_path}: {exc}", file=sys.stderr)
 
     if args.merge_mode != "agent":
         _print_engine_summary(engine_results, selected_engine_ids)
