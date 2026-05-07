@@ -17,7 +17,7 @@ paths:
   - "**/BCBS/**"
   - "**/bcbs-*/**"
   - "**/Documents/BCBS/**"
-version: 1.1.0
+version: 1.2.0
 ---
 
 # BCBS VT Internal Reviewer
@@ -96,6 +96,39 @@ When a member-cadence term in one sentence is followed by an operational descrip
 This is a logical-flow check that depends on operator knowledge of how the work actually happens; rules-based catches (department names, Medicare compliance, em-dash use) will not surface it. Worth a deliberate read-through whenever copy bridges member-facing terms and operational descriptions.
 
 Example flag: "The first sentence mentions the *monthly* premium, then the next jumps into how we look at claims and forecast costs — that implies we do it monthly. Let's note that what we do is for the annual rate filing."
+
+### 7. Organic vs. Paid Voice (Brand Lead)
+Organic social posts must read as value-add for the reader, not promotion of BCBS VT. Watch for and decline:
+- Promotional adjectives applied to ourselves ("meticulous," "thorough," "careful," "comprehensive," "robust"). The structure of the sentences that follow typically does the work of showing rigor without us telling readers it does.
+- Self-praise in any form, even when offered as a "stronger" rewrite from a reviewer.
+- Framing that positions BCBS as the active hero rather than the reader as the active beneficiary.
+
+This rule is stricter for organic than for paid. Paid promotion has a different brief; organic earns reader trust by being useful, not flattering. Reviewer suggestions that "strengthen" copy by adding a positive adjective are the most common form this takes — they look like quality improvements but tip toward promotion.
+
+Example flag: "On 'It's a meticulous process,' I'd leave this as-is. Organic social has to read as value-add for the reader, not promotion of us. Self-labeling our process as 'meticulous' tips it toward promotion. The factor list right after already shows the process is careful and comprehensive without us telling readers it is."
+
+### 8. Regulatory-Positioning Defense (Brand Lead, Director)
+When BCBS VT-specific copy describes regulatory processes (rate filings, oversight, reviews, hearings, agreements), watch for framing that could reinforce a prior regulatory narrative readers may remember. If BCBS has had recent or ongoing public regulatory action, lead body content with the universe of regulated entities rather than naming BCBS in isolation.
+
+Surgical fix: change "Blue Cross VT files our rates with the GMCB" to "all major insurance plans in Vermont, including Blue Cross VT, must file proposed premium rates with the GMCB."
+
+This check elevates from preference toward red-flag when:
+- There is current or recent public regulatory action against BCBS
+- Operator-aware reviewers (Brand Lead, Director) signal "the optics are eh right now" or similar non-public context
+- The copy is going to a public-facing channel with permanent visibility (organic social, blog, press release)
+
+Confirm context with operator-aware reviewers before deciding whether to apply. Defer to their reading of current legislative-optics conditions; they may have non-public visibility into how the framing would land.
+
+Example flag: "Given our very public history with our regulators, I feel strongly about including the fact that all major insurance plans in VT must file with the GMCB at the top of the post."
+
+### 9. Source-Bounded Precision (Brand Lead)
+When reviewers suggest reframing copy for emotional emphasis or "leading with the positive," check whether the new framing introduces a precision claim the source (the approved blog, press release, fact sheet) doesn't actually make. Numerical inversions are especially prone to this: "less than 6 cents to admin" does NOT equal "94 cents to care," because the remaining 94 cents may split among care, reserves, taxes/fees, and other categories the source also lists.
+
+If the spirit of the reframe is good (e.g., lead with the positive), honor it with language that matches the source's level of precision ("most of every premium dollar pays for the care our members rely on") rather than importing an unbacked specific figure that the source doesn't quantify.
+
+This applies in both directions: don't downgrade approved precise claims to vague ones either, and don't upgrade approved vague claims to invented precise ones.
+
+Example flag: "On the 94 cents claim, the blog only quantifies admin ('less than 6 cents'); it doesn't say what percentage of the rest goes to care vs. reserves vs. taxes/fees. '94 cents pays for care our members need' is more specific than the source supports."
 
 ## Output Format
 
