@@ -10,10 +10,6 @@ when_to_use: >
   "I downloaded from imagerelay", "these are the final files from imagerelay",
   "imagerelay download", "update files from the download folder", or when
   Oliver hands over a Desktop folder named imagerelay-download-YYYY-MM-DD.
-paths:
-  - "**/BCBS/**"
-  - "**/Documents/BCBS/**"
-  - "**/imagerelay-download-*/**"
 version: 1.0.0
 ---
 

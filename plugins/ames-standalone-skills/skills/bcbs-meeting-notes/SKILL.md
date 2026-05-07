@@ -2,9 +2,10 @@
 name: bcbs-meeting-notes
 description: >
   Processes a SmartTranscribe transcript or recording from a BCBS VT meeting
-  into structured notes, routes files to the right BCBS folder, and creates
-  Jira tasks from action items. Always invoke this skill for any BCBS
-  meeting transcript — do not just summarize ad hoc.
+  into structured notes, routes files to the right BCBS folder, and proposes
+  Jira tasks from action items for Oliver to review before any are created.
+  Always invoke this skill for any BCBS meeting transcript — do not just
+  summarize ad hoc.
 when_to_use: >
   Oliver provides a SmartTranscribe transcript or recording from a BCBS VT
   meeting. Triggers on: "process this meeting", "write up notes", "meeting
@@ -12,19 +13,16 @@ when_to_use: >
   transcript", or when a .md file from SmartTranscribe is handed over. Also
   triggers after SmartTranscribe finishes if the user says "now process it"
   or "now do the notes".
-paths:
-  - "**/BCBS/**"
-  - "**/bcbs-*/**"
-  - "**/Documents/BCBS/**"
-  - "**/*transcript*.md"
-version: 1.3.0
+version: 1.4.0
 ---
 
 # BCBS Meeting Notes
 
 Processes a SmartTranscribe transcript into rich, structured meeting notes,
-routes the files to the right BCBS folder, and creates Jira tasks from
-action items.
+routes the files to the right BCBS folder, and proposes Jira tasks from
+action items. Jira issues are never created automatically — the skill
+compiles a proposal list and waits for Oliver's explicit confirmation before
+calling any create-issue tool.
 
 ## BCBS Operating Defaults
 
@@ -33,10 +31,16 @@ action items.
   projects, issue search, issue creation, and issue updates. Do not use another
   task system unless Oliver explicitly asks for it in the current request.
 - **Verify Jira before acting.** Confirm the accessible Jira workspace and
-  destination project before creating or updating issues. Prefer structured
-  project and JQL tools over generic search when available.
+  destination project before searching, proposing, or updating issues. Prefer
+  structured project and JQL tools over generic search when available.
+- **Never auto-create Jira issues.** Compile a proposed list in Step 4 and
+  wait for Oliver's explicit confirmation before calling any create-issue
+  tool. JQL searches, project lookups, and other read-only Jira calls are
+  fine without confirmation.
 - **Action item tags use Jira.** Notes should use `*(→ Jira: [Project Name])*`
-  while routing and `*(→ Jira: PROJECT-123)*` after an issue exists.
+  while routing, `*(→ Jira: PROJECT-123)*` once an issue exists, and
+  `*(→ Jira: proposed)*` for items in the proposal list that Oliver has not
+  yet approved.
 
 ## Input
 
@@ -256,44 +260,93 @@ Do not just restate the SmartTranscribe summary.]
   that over") and implicit ones ("I can look into that", "let me follow up on
   X"). If someone expressed intent to do something, it is an action item.
 - **Jira tags on all action items**: Add `*(→ Jira: [Project Name])*` to every
-  action item regardless of owner, not just Oliver's. After a Jira issue exists,
-  replace the project-name tag with the issue key: `*(→ Jira: PROJECT-123)*`.
-  This supports handoffs and accountability tracking even for tasks owned by
-  others.
+  action item regardless of owner, not just Oliver's. Tag becomes
+  `*(→ Jira: proposed)*` once the item is on the Step 4 proposal list, and
+  `*(→ Jira: PROJECT-123)*` only after Oliver confirms creation and the issue
+  exists. This supports handoffs and accountability tracking even for tasks
+  owned by others.
 - **Routing context stays out of the notes file**: The notes file should read
   as a clean standalone document. Do not include routing decisions, metadata
   about where the file was moved, or skill execution notes inside it.
 
 ---
 
-## Step 4: Create Jira Issues
+## Step 4: Propose Jira Issues — Do Not Auto-Create
 
-For each action item assigned to **Oliver**, create a Jira issue in the matching
-Blue Cross VT Jira project.
+**Never call a Jira create-issue tool without Oliver's explicit confirmation
+in this session.** The skill compiles a proposal list and presents it for
+review. Read-only Jira calls (project lookups, JQL search for existing
+related issues, issue-type metadata) are fine without confirmation and are
+encouraged so the proposal is grounded in real project state.
 
-If you have not already confirmed Jira access in this session, do so now before
-searching or creating. Use structured Atlassian/Jira tools when available:
-visible-project lookup, JQL issue search, issue type metadata, issue creation,
-and issue edit/update tools. In Codex, the Atlassian Rovo tools are the
-preferred path. In other hosts, use the equivalent Jira MCP tools discovered
-through the available tool surface.
+### 4a — Build the proposal list
 
-Match action items to existing Jira projects using project search, local project
-folder names, and JQL searches for similar work. If no matching Jira project
-exists, do not create a new project automatically. Use the nearest valid project
-or report the ambiguity in Step 5.
+For each Oliver-owned action item, decide whether it warrants a new Jira
+issue:
 
-After creating an issue:
-- Update the note's action item tag from `*(→ Jira: [Project Name])*` to
-  `*(→ Jira: ISSUE-123)*`
+- **Already tracked.** If a JQL search surfaces an existing open issue that
+  covers the action item, reference that issue key in the notes (strike
+  through the task and tag with `*(→ Jira: PROJECT-123)*`). Do not propose a
+  duplicate. Mention the matched issue in the proposal section as "already
+  covered by PROJECT-123."
+- **Tactical execution within an existing workstream.** If the action item is
+  one step inside a larger workstream that already has a ticket, reference
+  the parent and skip the proposal — too-granular tickets are noise.
+- **Genuinely new and worth tracking.** If neither of the above applies,
+  add it to the proposal list.
+
+For action items assigned to others (Cass, Ashley, Kristina, etc.), list
+them in the notes but do not propose Jira issues for them unless Oliver asks
+explicitly.
+
+### 4b — Present the proposal to Oliver
+
+Output the proposal as a compact, scannable list inline in the chat (not in
+the notes file). Format:
+
+```
+Proposed new Jira issues (please confirm before I create any):
+
+1. Summary: "..."
+   Project: BAE  |  Type: Task  |  Parent: BAE-123 (workstream name)
+   Rationale: [one short line — why this is its own ticket vs. parent]
+
+2. Summary: "..."
+   Project: BAE  |  Type: Task  |  Parent: (none)
+   Rationale: ...
+
+Already covered by existing issues:
+- "Action item phrasing" → BAE-456
+- ...
+
+Reply "create all", "create 1, 3", or "skip" to proceed.
+```
+
+Use `mcp__...searchJiraIssuesUsingJql` and `mcp__...getVisibleJiraProjects`
+freely while building this list — those are read-only.
+
+### 4c — Wait for confirmation, then create only what's approved
+
+After Oliver responds, create only the items he confirmed. For each newly
+created issue:
+
+- Update the note's action item tag from `*(→ Jira: proposed)*` (or the
+  project-name placeholder) to `*(→ Jira: ISSUE-123)*`.
 - Strike through the task text to show it is tracked in Jira:
-  `- [ ] ~~Task description~~ *(→ Jira: ISSUE-123)*`
+  `- [ ] ~~Task description~~ *(→ Jira: ISSUE-123)*`.
+- For items Oliver declined, leave the tag as `*(→ Jira: not tracked)*` so
+  it's clear the decision was deliberate, not an oversight.
 
-For action items assigned to others (Cass, Ashley, etc.), list them in the
-notes but do not create Jira issues unless Oliver asks.
+If Oliver does not respond before the session ends, leave all action items
+in the notes with their `*(→ Jira: proposed)*` tags intact. Nothing to clean
+up — the next session can resume from the proposal.
 
-If Jira tools are unavailable or throw an auth error, skip issue creation, note
-it clearly in the Step 5 report, and continue.
+### When Jira tools are unavailable
+
+If the Atlassian/Jira MCP throws an auth error or the tools aren't loaded,
+skip the read-only search step too. List action items with
+`*(→ Jira: not tracked — Jira tools unavailable)*` and flag the failure in
+the Step 5 report.
 
 ---
 
@@ -303,11 +356,15 @@ it clearly in the Step 5 report, and continue.
 Notes:       ~/Documents/BCBS/[path]/YYYY-MM-DD – Meeting Name – Notes.md
 Transcript:  ~/Documents/BCBS/[path]/YYYY-MM-DD – Meeting Name – Transcript.md  (moved)
 Audio:       [path] — awaiting confirmation to delete / deleted
-Jira:        N issues created / skipped (auth error or ambiguous project)
+Jira:        N proposed (awaiting confirmation) / N created / N skipped
+             — see proposal list above OR auth error / tools unavailable
 ```
 
-Call out anything ambiguous (routing judgment calls, unresolved speakers,
-Jira failures) so Oliver can review.
+Call out anything ambiguous: routing judgment calls, unresolved speakers,
+Jira failures, action items that defied easy bucketing into proposed-vs-
+already-covered. The goal is for Oliver to be able to scan the report and
+know exactly what's been written, what's tracked, and what's still waiting
+on his decision.
 
 ---
 

@@ -13,10 +13,6 @@ when_to_use: >
   notes", "run a review pass on this", "BCBS reviewer", "pre-flight this
   for review", "what would the Brand Lead flag", "review this response
   template".
-paths:
-  - "**/BCBS/**"
-  - "**/bcbs-*/**"
-  - "**/Documents/BCBS/**"
 version: 1.2.0
 ---
 
