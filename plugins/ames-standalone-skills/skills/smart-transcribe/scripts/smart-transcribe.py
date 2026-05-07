@@ -13,6 +13,7 @@ import sys
 import os
 import re
 import json
+import math
 import argparse
 import copy
 import shutil
@@ -28,7 +29,7 @@ from common import (
     HTTP_RETRYABLE_SIGNALS, HTTP_NON_RETRYABLE_SIGNALS, HTTP_BACKOFF_DELAYS_S,
     resolve_key, load_dictionary, get_context_terms,
     get_dictionary_paths, flatten_entities, merge_dicts,
-    compress_audio, convert_16khz_mono, chunk_audio,
+    compress_audio, convert_16khz_mono, chunk_audio, get_audio_duration,
     run_engine_text, retry_engine,
     print_runtime_banner, resolve_engine_python, require_supported_python,
     supported_python_string, python_version_supported, resolve_key_status, check_ffmpeg_tools,
@@ -550,6 +551,51 @@ def emit_manual_merge_bundle(output_dir: Path, engine_results: dict[str, dict]) 
     return bundle_path
 
 
+def _format_engine_status_block(engine_results: dict[str, dict] | None) -> list[str]:
+    """Build the **Engine Status** markdown block for the agent-merge bundle.
+
+    Surfaces success/failure/quality concerns at the top so the merging agent
+    knows up-front which transcripts to trust, rather than having to dig through
+    a separate run.log to learn that (e.g.) Scribe v2 was quota-blocked or
+    Cohere produced suspiciously sparse output.
+    """
+    if not engine_results:
+        return []
+    lines = ["## Engine Status", ""]
+    lines.append("| Engine | Status | Chars | Quality | Notes |")
+    lines.append("|---|---|---|---|---|")
+    for label, result in engine_results.items():
+        status = result.get("status", "unknown")
+        char_count = result.get("char_count", len(result.get("text", "") or ""))
+        quality = result.get("quality_concern")
+        if status == "complete" and quality is None:
+            status_icon = "✅ complete"
+            quality_str = "OK"
+            notes_str = ""
+        elif status == "complete" and quality is not None:
+            status_icon = "⚠️ complete with concern"
+            quality_str = quality.get("flag", "concern")
+            notes_str = (
+                f"{quality.get('chars_per_minute', '?')} chars/min — "
+                f"{quality.get('detail', '')[:120]}"
+            )
+        else:
+            status_icon = "❌ failed"
+            quality_str = "n/a"
+            notes_str = (result.get("failure_reason") or "")[:120]
+        lines.append(
+            f"| {label} | {status_icon} | {char_count:,} | {quality_str} | {notes_str} |"
+        )
+    lines.append("")
+    lines.append(
+        "> **Trust ranking for merge:** treat ❌ failed engines as absent (do not include in merge); "
+        "treat ⚠️ engines with quality concerns as low-confidence (use only as a tiebreaker, never as the spine); "
+        "✅ engines are normal-confidence inputs."
+    )
+    lines.append("")
+    return lines
+
+
 def emit_agent_merge_bundle(
     output_dir: Path,
     transcripts: dict[str, str],
@@ -557,6 +603,7 @@ def emit_agent_merge_bundle(
     source_file: str,
     speakers: list | None = None,
     mode: str = "merge",
+    engine_results: dict[str, dict] | None = None,
 ) -> Path:
     """Write a merge bundle for the current chat agent to consume."""
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -634,6 +681,12 @@ def emit_agent_merge_bundle(
         "- Or: 'No new dictionary suggestions from this recording.'",
         "````",
         "",
+    ]
+
+    # Engine status block — what succeeded, what failed, what's suspect
+    parts.extend(_format_engine_status_block(engine_results))
+
+    parts.extend([
         "## Run Metadata",
         "",
         "```json",
@@ -647,7 +700,7 @@ def emit_agent_merge_bundle(
         "",
         "## Known Corrections",
         "",
-    ]
+    ])
     if corrections:
         parts.extend(f"- {wrong} -> {right}" for wrong, right in corrections)
     else:
@@ -733,6 +786,44 @@ def build_doctor_report(
         },
     }
     return report
+
+
+# Conversational speech is typically 800-1500 chars/min. Below this threshold
+# the engine output is suspect — likely truncation, VAD-less hallucination on
+# silence, or a transient API error that returned a partial response. Cohere
+# Transcribe in particular has no built-in voice-activity detection and has
+# been observed producing 4,674 chars on a 58-minute file (≈80 chars/min) by
+# hallucinating word salad through stretches of audio.
+COHERENCE_MIN_CHARS_PER_MINUTE = 100.0
+
+
+def assess_engine_coherence(text: str, audio_duration_s: float | None) -> dict | None:
+    """Return a quality-concern dict if engine output looks suspiciously sparse.
+
+    Returns None if everything's normal, or a dict like:
+        {"flag": "low_text_density",
+         "chars_per_minute": 79.6,
+         "expected_min": 100.0,
+         "detail": "Output ≪ typical conversational rate; may be truncated or VAD-less hallucination."}
+    """
+    if not text or not audio_duration_s or audio_duration_s <= 0:
+        return None
+    minutes = audio_duration_s / 60.0
+    if minutes < 0.5:
+        return None  # Too short to make a reliable judgment
+    chars_per_min = len(text) / minutes
+    if chars_per_min < COHERENCE_MIN_CHARS_PER_MINUTE:
+        return {
+            "flag": "low_text_density",
+            "chars_per_minute": round(chars_per_min, 1),
+            "expected_min": COHERENCE_MIN_CHARS_PER_MINUTE,
+            "detail": (
+                f"Engine output is {chars_per_min:.0f} chars/min vs. ~800-1500 typical for "
+                "conversational speech. Likely truncation, partial response, or VAD-less "
+                "hallucination. Treat as low-confidence in the merge."
+            ),
+        }
+    return None
 
 
 ENGINE_SDK_PROBES: dict[str, str] = {
@@ -1292,17 +1383,92 @@ except Exception as e:
 
 # Engine: ElevenLabs Scribe v2
 
-def _check_elevenlabs_quota(key: str, audio_path: str, python_bin: str | None = None) -> tuple[bool, str]:
-    """Pre-flight: verify API key and surface quota state before transcription starts.
+# ElevenLabs Scribe v2 STT pricing (credits per minute, observed empirically
+# from a 58:43 file requiring 4,698 credits per the API's own error message).
+ELEVENLABS_STT_CREDITS_PER_MINUTE = 80.0
+ELEVENLABS_CREDITS_CACHE = CONFIG_DIR / "elevenlabs-credits.json"
+_ELEVENLABS_QUOTA_RE = re.compile(
+    r"You have\s+([\d,]+)\s+credits remaining,\s*while\s+([\d,]+)\s+credits are required",
+    re.IGNORECASE,
+)
 
-    Queries client.user.get() for subscription info. Note: the character quota
-    returned is TTS-based; ElevenLabs STT credits are a separate pool not yet
-    exposed by a stable public endpoint. This check catches: invalid/expired keys,
-    accounts with zero remaining characters (strong proxy for depleted STT credits),
-    and accounts where the API itself returns a quota error on basic access.
 
-    Returns (sufficient, message). Fails open if quota info is unavailable.
+def _load_elevenlabs_credits_cache() -> dict | None:
+    """Read the last-known {credits_remaining, credits_limit, recorded_at}.
+
+    Returns None if the cache doesn't exist or can't be read; callers fail open.
     """
+    if not ELEVENLABS_CREDITS_CACHE.exists():
+        return None
+    try:
+        return json.loads(ELEVENLABS_CREDITS_CACHE.read_text())
+    except Exception:
+        return None
+
+
+def _save_elevenlabs_credits_cache(remaining: int, required: int | None = None) -> None:
+    """Persist a fresh credits-remaining datapoint, gleaned from a quota_exceeded error."""
+    try:
+        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        ELEVENLABS_CREDITS_CACHE.write_text(json.dumps({
+            "credits_remaining": remaining,
+            "last_request_required": required,
+            "recorded_at": datetime.now().isoformat(),
+            "source": "quota_exceeded_error",
+        }, indent=2))
+    except Exception:
+        pass  # Cache is best-effort; never block a run
+
+
+def _parse_elevenlabs_quota_error(error_text: str) -> tuple[int, int] | None:
+    """Extract (remaining, required) from an ElevenLabs quota_exceeded error string."""
+    if not error_text:
+        return None
+    match = _ELEVENLABS_QUOTA_RE.search(error_text)
+    if not match:
+        return None
+    try:
+        remaining = int(match.group(1).replace(",", ""))
+        required = int(match.group(2).replace(",", ""))
+        return remaining, required
+    except (TypeError, ValueError):
+        return None
+
+
+def _check_elevenlabs_quota(key: str, audio_path: str, python_bin: str | None = None) -> tuple[bool, str]:
+    """Pre-flight: refuse to start a Scribe v2 run if cached credits are insufficient.
+
+    Two-stage check:
+    1. Duration-based STT estimate against the cached `credits_remaining` from the
+       last `quota_exceeded` error. If we know the account is short, fail fast and
+       cheap before burning the other engines' parallel runs.
+    2. TTS character pool via client.user.get() (different pool from STT but a
+       useful "is this account totally cooked" signal). Catches invalid/expired
+       keys, fully depleted TTS allowances, and basic API access failures.
+
+    Returns (sufficient, message). Fails open if neither signal is conclusive —
+    the actual transcribe call still parses any quota_exceeded error and updates
+    the cache, so we self-heal on the next run.
+    """
+    # Stage 1: cached-credits check based on audio duration
+    try:
+        from common import get_audio_duration
+        duration_s = get_audio_duration(audio_path)
+        if duration_s and duration_s > 0:
+            estimated_required = math.ceil(duration_s * ELEVENLABS_STT_CREDITS_PER_MINUTE / 60.0)
+            cache = _load_elevenlabs_credits_cache()
+            if cache and isinstance(cache.get("credits_remaining"), int):
+                cached_remaining = int(cache["credits_remaining"])
+                if cached_remaining < estimated_required:
+                    return False, (
+                        f"ElevenLabs: cached credits insufficient — "
+                        f"{cached_remaining:,} remaining, ~{estimated_required:,} needed for "
+                        f"{duration_s/60:.1f}-min file (cache from {cache.get('recorded_at', 'unknown')}). "
+                        f"Top up at elevenlabs.io or use --engines without scribe-v2."
+                    )
+    except Exception:
+        pass  # Audio duration unavailable; fall through to TTS check
+
     script = '''
 import sys, json, os
 try:
@@ -1421,7 +1587,25 @@ except Exception as e:
 '''
     env = {**os.environ, "ELEVENLABS_API_KEY": key, "ST_AUDIO_PATH": audio_path,
            "ST_KEYTERMS": keyterms_json}
-    return run_engine_text(script, env, "ElevenLabs Scribe v2", python_bin=python_bin, log_path=log_path)
+    text = run_engine_text(script, env, "ElevenLabs Scribe v2", python_bin=python_bin, log_path=log_path)
+    # If the engine failed due to quota_exceeded, scrape the credits-remaining
+    # and credits-required from the engine log and update the cache so the next
+    # pre-flight has accurate data without needing a billing API.
+    if not text and log_path is not None and log_path.exists():
+        try:
+            log_text = log_path.read_text(encoding="utf-8", errors="replace")
+            parsed = _parse_elevenlabs_quota_error(log_text)
+            if parsed is not None:
+                remaining, required = parsed
+                _save_elevenlabs_credits_cache(remaining, required)
+                print(
+                    f"  ElevenLabs: cached new credit balance — "
+                    f"{remaining:,} remaining (last request needed {required:,}).",
+                    file=sys.stderr,
+                )
+        except Exception:
+            pass
+    return text
 
 
 # Engine: Google Gemini audio input
@@ -2549,6 +2733,12 @@ Examples:
     output_root = Path(args.output).expanduser().resolve() if args.output else audio_path.parent
     run_dir = output_root / f".smart-transcribe-runs" / audio_path.stem
     run_dir.mkdir(parents=True, exist_ok=True)
+    # Audio duration is needed for the coherence sanity check (chars/minute) and
+    # for ElevenLabs credit estimation. Compute once via ffprobe; harmless if 0.
+    try:
+        audio_duration_seconds = float(get_audio_duration(audio_path))
+    except Exception:
+        audio_duration_seconds = 0.0
     status_path = run_dir / STATUS_FILE_NAME
     run_log_path = run_dir / RUN_LOG_NAME
     if not run_log_path.exists():
@@ -2638,6 +2828,7 @@ Examples:
         text = retry_result.get("text") or ""
         status = retry_result["status"]
         failure_reason: str | None = retry_result.get("error") if not text else None
+        coherence = assess_engine_coherence(text, audio_duration_seconds)
         result = {
             "engine_id": engine_id,
             "label": label,
@@ -2648,7 +2839,15 @@ Examples:
             "segments": normalize_segments(extract_basic_segments(text or "", engine_id), engine_id),
             "metadata": {"source_engine": engine_id},
             "raw_response_path": str(raw_response_path),
+            "char_count": len(text or ""),
+            "quality_concern": coherence,
         }
+        if coherence is not None:
+            print(
+                f"⚠️  {label}: {coherence['detail']} "
+                f"({coherence['chars_per_minute']} chars/min)",
+                file=sys.stderr,
+            )
         normalized_path.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         if text:
             raw_response_path.write_text(json.dumps({"text": text}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -2742,6 +2941,7 @@ Examples:
             source_file=str(audio_path),
             speakers=speakers_list,
             mode="merge",
+            engine_results=engine_results,
         )
         write_status(status_path, {
             "source_file": str(audio_path),
