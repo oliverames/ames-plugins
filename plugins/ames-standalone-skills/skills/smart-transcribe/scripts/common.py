@@ -402,10 +402,7 @@ def load_dictionary(path: Path | None = None) -> dict:
         return result
 
     if "corrections" in data:
-        for _cat, mappings in data["corrections"].items():
-            if isinstance(mappings, dict):
-                for wrong, right in mappings.items():
-                    result["corrections"][wrong.lower()] = right
+        result["corrections"] = flatten_corrections(data["corrections"])
     if "entities" in data:
         for _cat, items in data["entities"].items():
             if isinstance(items, list):
@@ -437,6 +434,25 @@ def flatten_entities(entities: dict | list) -> list:
             result.extend(items)
         return result
     return list(entities)
+
+
+def flatten_corrections(corrections: dict) -> dict:
+    """Normalise corrections from JSON storage to flat lowercased {wrong: right}.
+
+    Accepts either nested {category: {old: new}} or already-flat {old: new}.
+    Lowercases keys to match the lookup convention used by load_dictionary().
+    """
+    if not isinstance(corrections, dict) or not corrections:
+        return {}
+    first_value = next(iter(corrections.values()), None)
+    if isinstance(first_value, dict):
+        flat: dict = {}
+        for mappings in corrections.values():
+            if isinstance(mappings, dict):
+                for wrong, right in mappings.items():
+                    flat[str(wrong).lower()] = right
+        return flat
+    return {str(k).lower(): v for k, v in corrections.items()}
 
 
 def merge_dicts(base: dict, overlay: dict) -> dict:

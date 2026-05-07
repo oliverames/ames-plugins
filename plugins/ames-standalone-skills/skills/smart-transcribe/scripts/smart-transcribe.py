@@ -30,6 +30,7 @@ from common import (
     resolve_key, load_dictionary, get_context_terms,
     get_dictionary_paths, flatten_entities, merge_dicts,
     compress_audio, convert_16khz_mono, chunk_audio, get_audio_duration,
+    flatten_corrections,
     run_engine_text, retry_engine,
     print_runtime_banner, resolve_engine_python, require_supported_python,
     supported_python_string, python_version_supported, resolve_key_status, check_ffmpeg_tools,
@@ -39,6 +40,10 @@ from common import (
 DEFAULT_ENGINES = ["assemblyai-u3-pro", "scribe-v2", "voxtral-small", "gemini-3-pro"]
 DEFAULT_FALLBACK_ENGINE = "gpt4o-mini-transcribe"
 LOCAL_ENGINE_IDS = {"voxtral-mini-local", "cohere-transcribe"}
+
+# Sentinel used in engine_results[label]["metadata"]["source"] to mark a row that
+# came from --reference / sidecar auto-detection rather than a transcription engine.
+_SOURCE_EXTERNAL_REFERENCE = "external_reference"
 ENGINE_TIMEOUTS = {
     "assemblyai-u3-pro": 3600,
     "scribe-v2": 3600,
@@ -285,25 +290,6 @@ def log_dictionary_misfire(entry: str) -> None:
     print(f"📝 Logged misfire: {old} -> {new} ({log_path})", file=sys.stderr)
 
 
-def _flatten_corrections(corrections: dict) -> dict:
-    """Normalise corrections from JSON storage to flat wrong->right.
-
-    Accepts either nested {category: {old: new}} (current format) or already-flat
-    {old: new} (legacy/user contexts). Lowercases keys to match load_dictionary().
-    """
-    if not isinstance(corrections, dict) or not corrections:
-        return {}
-    first_value = next(iter(corrections.values()), None)
-    if isinstance(first_value, dict):
-        flat: dict = {}
-        for mappings in corrections.values():
-            if isinstance(mappings, dict):
-                for wrong, right in mappings.items():
-                    flat[str(wrong).lower()] = right
-        return flat
-    return {str(k).lower(): v for k, v in corrections.items()}
-
-
 def _resolve_context_path(name: str) -> Path | None:
     """Find a context file by name. User-side wins over skill-shipped."""
     user_path = CONTEXTS_DIR / f"{name}.json"
@@ -329,7 +315,7 @@ def _load_context(name: str) -> dict:
     if ctx_path is not None:
         try:
             data = json.loads(ctx_path.read_text())
-            flat_corrections = _flatten_corrections(data.get("corrections", {}))
+            flat_corrections = flatten_corrections(data.get("corrections", {}))
             flat_entities = flatten_entities(data.get("entities", {}))
             origin = "user" if ctx_path.parent == CONTEXTS_DIR else "shipped"
             print(f"🗂️  Context '{name}' [{origin}]: {len(flat_corrections)} corrections, {len(flat_entities)} entities")
@@ -374,48 +360,46 @@ def list_contexts() -> None:
             print(f"  {p.stem}{tag}")
 
 
+_MIGRATION_NOTICE_TEMPLATE: tuple[str, ...] = (
+    "─" * 60,
+    "📢 ONE-TIME NOTICE: Dictionary structure changed (v3 → v4)",
+    "─" * 60,
+    "Your user dictionary at {dict_path} contains VT/BCBS-specific rules",
+    "(places, breweries, Beta Aviation, etc.) that are now scoped to a",
+    "dedicated context overlay rather than applied globally to every run.",
+    "",
+    "To get the same behavior as before for VT/BCBS recordings:",
+    "    smart-transcribe.py audio.m4a --context bcbs-vt",
+    "",
+    "Your existing user dictionary is unchanged. To fully migrate, edit",
+    "    {dict_path}",
+    "and remove the VT-specific categories (they live in the shipped",
+    "bcbs-vt context now). This notice will not appear again.",
+    "─" * 60,
+    "",
+)
+
+_MIGRATION_VT_CATEGORIES: tuple[str, ...] = (
+    "places", "beer_breweries", "beta_aviation", "ski_industry",
+)
+
+
 def _maybe_print_migration_notice(dictionary: dict, dict_path: Path) -> None:
     """Print a one-time notice if user dict still contains pre-4.0 VT/BCBS rules.
 
-    The 2026-05-06 split moved 206 VT-anchored rules into the bcbs-vt context
-    overlay. Users who synced before that split have an over-stuffed user dict
-    that applies VT corrections globally — exactly the misfire that prompted
-    the split. We don't auto-migrate (would clobber user customizations) but we
-    do nudge once.
+    Don't auto-migrate (would clobber user customizations) but nudge once.
     """
     MIGRATION_MARKER_DIR.mkdir(parents=True, exist_ok=True)
     marker = MIGRATION_MARKER_DIR / "2026-05-bcbs-vt-split.done"
     if marker.exists():
         return
-    # Heuristic: if user dict has the old VT category key, it's pre-split.
     corrections = dictionary.get("corrections", {})
-    has_vt_categories = any(
-        cat in corrections for cat in ("places", "beer_breweries", "beta_aviation", "ski_industry")
-    )
+    has_vt_categories = any(cat in corrections for cat in _MIGRATION_VT_CATEGORIES)
     if not has_vt_categories:
         marker.write_text(f"no-action {datetime.now().isoformat()}\n")
         return
-    print("─" * 60, file=sys.stderr)
-    print("📢 ONE-TIME NOTICE: Dictionary structure changed (v3 → v4)", file=sys.stderr)
-    print("─" * 60, file=sys.stderr)
-    print(f"Your user dictionary at {dict_path} contains VT/BCBS-specific rules", file=sys.stderr)
-    print("(places, breweries, Beta Aviation, etc.) that are now scoped to a", file=sys.stderr)
-    print("dedicated context overlay rather than applied globally.", file=sys.stderr)
-    print(file=sys.stderr)
-    print("Why: a 'mont-royal -> Mont-Royal' rule was misfiring on a Rivian", file=sys.stderr)
-    print("service call where Oliver actually said 'Montreal'. Same pattern", file=sys.stderr)
-    print("affected 'bar -> Barre' on a 'light bar' reference. Domain-specific", file=sys.stderr)
-    print("rules don't belong in the global default.", file=sys.stderr)
-    print(file=sys.stderr)
-    print("To get the same behavior as before for VT/BCBS recordings:", file=sys.stderr)
-    print("    smart-transcribe.py audio.m4a --context bcbs-vt", file=sys.stderr)
-    print(file=sys.stderr)
-    print("Your existing user dictionary is unchanged. To fully migrate, edit", file=sys.stderr)
-    print(f"    {dict_path}", file=sys.stderr)
-    print("and remove the VT-specific categories (they live in the shipped", file=sys.stderr)
-    print("bcbs-vt context now). This notice will not appear again.", file=sys.stderr)
-    print("─" * 60, file=sys.stderr)
-    print(file=sys.stderr)
+    for line in _MIGRATION_NOTICE_TEMPLATE:
+        print(line.format(dict_path=dict_path), file=sys.stderr)
     marker.write_text(f"shown {datetime.now().isoformat()}\n")
 
 
@@ -692,10 +676,9 @@ def _format_engine_status_block(engine_results: dict[str, dict] | None) -> list[
         status = result.get("status", "unknown")
         char_count = result.get("char_count", len(result.get("text", "") or ""))
         quality = result.get("quality_concern")
-        is_reference = (result.get("metadata") or {}).get("source") == "external_reference"
+        is_reference = (result.get("metadata") or {}).get("source") == _SOURCE_EXTERNAL_REFERENCE
         if is_reference:
             has_reference = True
-        if is_reference:
             status_icon = "📑 reference"
             quality_str = "high-trust"
             notes_str = f"External transcript: {(result.get('metadata') or {}).get('path', '')}"
@@ -864,17 +847,14 @@ def emit_agent_merge_bundle(
     parts.extend(["", "## Source Transcript Outputs", ""])
 
     # If every engine emitted timestamped segments, render the per-engine
-    # transcripts side-by-side per 5-minute window so the merging agent can
-    # compare engines at the same wall-clock position rather than scrolling
-    # full-document. When any engine lacks segments (e.g. Cohere ships without
-    # timestamps), fall back to the original concatenated layout.
+    # transcripts side-by-side per 5-minute window. When any engine lacks
+    # segments (e.g. Cohere ships without timestamps), fall back to the
+    # concatenated layout.
+    chunked: list[str] = []
     if engine_results and _all_engines_have_segments(engine_results, transcripts):
         chunked = _format_time_aligned_chunks(engine_results, transcripts, window_s=300.0)
-        if chunked:
-            parts.extend(chunked)
-        else:
-            for label, text in transcripts.items():
-                parts.extend([f"### {label}", "", text or "_No transcript produced._", ""])
+    if chunked:
+        parts.extend(chunked)
     else:
         for label, text in transcripts.items():
             parts.extend([f"### {label}", "", text or "_No transcript produced._", ""])
@@ -894,7 +874,7 @@ def _all_engines_have_segments(engine_results: dict[str, dict], transcripts: dic
         result = engine_results.get(label) or {}
         # External references opt out of the segment requirement
         meta = result.get("metadata") or {}
-        if meta.get("source") == "external_reference":
+        if meta.get("source") == _SOURCE_EXTERNAL_REFERENCE:
             continue
         segments = result.get("segments") or []
         if not any(seg.get("start") is not None for seg in segments):
@@ -935,14 +915,14 @@ def _format_time_aligned_chunks(
     lines.append("")
 
     num_windows = int(max_end // window_s) + 1
-    engine_labels = [
-        lbl for lbl in transcripts
-        if (engine_results.get(lbl, {}).get("metadata") or {}).get("source") != "external_reference"
-    ]
-    reference_labels = [
-        lbl for lbl in transcripts
-        if (engine_results.get(lbl, {}).get("metadata") or {}).get("source") == "external_reference"
-    ]
+    engine_labels: list[str] = []
+    reference_labels: list[str] = []
+    for lbl in transcripts:
+        meta = (engine_results.get(lbl, {}).get("metadata") or {})
+        if meta.get("source") == _SOURCE_EXTERNAL_REFERENCE:
+            reference_labels.append(lbl)
+        else:
+            engine_labels.append(lbl)
 
     for w in range(num_windows):
         win_start = w * window_s
@@ -1092,6 +1072,21 @@ ENGINE_SDK_PROBES: dict[str, str] = {
 }
 
 
+ENGINE_SDK_VERSIONS_CACHE = CONFIG_DIR / "engine-sdk-versions.json"
+
+
+def _venv_signature(python_bin: str) -> str:
+    """Cheap fingerprint for a venv: the python binary's mtime as a string.
+
+    Changes whenever the venv is rebuilt or upgraded via pip. Cheaper than
+    importing the SDK to read its version, which is the actual ~50-200ms work.
+    """
+    try:
+        return str(Path(python_bin).stat().st_mtime_ns)
+    except Exception:
+        return "unknown"
+
+
 def collect_engine_sdk_versions(
     engine_ids: list[str],
     engine_python_overrides: dict[str, str] | None = None,
@@ -1099,12 +1094,19 @@ def collect_engine_sdk_versions(
 ) -> dict[str, str]:
     """Return {engine_id: sdk_version} for selected engines.
 
-    Used to record exactly which SDK build produced each engine's output, so
-    later sessions can tell whether a transcript was generated by the same
-    Voxtral/Scribe/AssemblyAI version. Failures are recorded as
-    'unavailable: <reason>' rather than raising — the run continues either way.
+    Used to record exactly which SDK build produced each engine's output. Cached
+    per venv-signature in ~/.config/smart-transcribe/engine-sdk-versions.json so
+    repeated runs don't pay the ~200-800ms cost of probing each venv every time.
+    Cache busts when a venv is rebuilt (mtime changes).
     """
+    cache: dict = {}
+    try:
+        cache = json.loads(ENGINE_SDK_VERSIONS_CACHE.read_text())
+    except Exception:
+        pass
+
     versions: dict[str, str] = {}
+    cache_dirty = False
     for engine_id in engine_ids:
         probe = ENGINE_SDK_PROBES.get(engine_id)
         if not probe:
@@ -1112,6 +1114,15 @@ def collect_engine_sdk_versions(
             continue
         try:
             python_bin = resolve_engine_python(engine_id, engine_python_overrides, use_system_python)
+        except Exception as exc:
+            versions[engine_id] = f"unavailable: {str(exc)[:80]}"
+            continue
+        sig = _venv_signature(python_bin)
+        cached_entry = cache.get(engine_id) or {}
+        if cached_entry.get("signature") == sig and cached_entry.get("version"):
+            versions[engine_id] = cached_entry["version"]
+            continue
+        try:
             result = subprocess.run(
                 [python_bin, "-c", probe],
                 capture_output=True, text=True, timeout=8,
@@ -1123,6 +1134,15 @@ def collect_engine_sdk_versions(
                 versions[engine_id] = f"unavailable: {err[:80]}"
         except Exception as exc:
             versions[engine_id] = f"unavailable: {str(exc)[:80]}"
+        cache[engine_id] = {"signature": sig, "version": versions[engine_id]}
+        cache_dirty = True
+
+    if cache_dirty:
+        try:
+            CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+            ENGINE_SDK_VERSIONS_CACHE.write_text(json.dumps(cache, indent=2))
+        except Exception:
+            pass
     return versions
 
 
@@ -1652,8 +1672,6 @@ def _load_elevenlabs_credits_cache() -> dict | None:
 
     Returns None if the cache doesn't exist or can't be read; callers fail open.
     """
-    if not ELEVENLABS_CREDITS_CACHE.exists():
-        return None
     try:
         return json.loads(ELEVENLABS_CREDITS_CACHE.read_text())
     except Exception:
@@ -1689,7 +1707,12 @@ def _parse_elevenlabs_quota_error(error_text: str) -> tuple[int, int] | None:
         return None
 
 
-def _check_elevenlabs_quota(key: str, audio_path: str, python_bin: str | None = None) -> tuple[bool, str]:
+def _check_elevenlabs_quota(
+    key: str,
+    audio_path: str,
+    python_bin: str | None = None,
+    audio_duration_s: float | None = None,
+) -> tuple[bool, str]:
     """Pre-flight: refuse to start a Scribe v2 run if cached credits are insufficient.
 
     Two-stage check:
@@ -1702,11 +1725,12 @@ def _check_elevenlabs_quota(key: str, audio_path: str, python_bin: str | None = 
 
     Returns (sufficient, message). Fails open if neither signal is conclusive —
     the actual transcribe call still parses any quota_exceeded error and updates
-    the cache, so we self-heal on the next run.
+    the cache, so we self-heal on the next run. Pass `audio_duration_s` from the
+    caller to avoid re-probing via ffprobe; defaults to fresh probe if omitted.
     """
     # Stage 1: cached-credits check based on audio duration
     try:
-        duration_s = get_audio_duration(audio_path)
+        duration_s = audio_duration_s if audio_duration_s is not None else get_audio_duration(audio_path)
         if duration_s and duration_s > 0:
             estimated_required = math.ceil(duration_s * ELEVENLABS_STT_CREDITS_PER_MINUTE / 60.0)
             cache = _load_elevenlabs_credits_cache()
@@ -1776,12 +1800,13 @@ except Exception as e:
 
 
 def transcribe_elevenlabs(audio_path: str, context_bias: list | None = None,
-                          python_bin: str | None = None, log_path: Path | None = None) -> str | None:
+                          python_bin: str | None = None, log_path: Path | None = None,
+                          audio_duration_s: float | None = None) -> str | None:
     key = resolve_key("ELEVENLABS_API_KEY") or ""
     if not key:
         print("⚠️  ELEVENLABS_API_KEY not set. Skipping ElevenLabs.", file=sys.stderr)
         return None
-    quota_ok, quota_msg = _check_elevenlabs_quota(key, audio_path, python_bin)
+    quota_ok, quota_msg = _check_elevenlabs_quota(key, audio_path, python_bin, audio_duration_s)
     if not quota_ok:
         print(f"⚠️  Skipping ElevenLabs Scribe v2: {quota_msg}", file=sys.stderr)
         return None
@@ -2803,13 +2828,16 @@ Examples:
     dict_path = Path(args.dict) if args.dict else default_dict_path
     dictionary = load_dictionary(dict_path)
 
-    # One-time notice if user dict still carries pre-4.0 VT/BCBS categories
-    # (the 2026-05-06 split moved 206 VT-anchored rules into bcbs-vt overlay).
-    try:
-        raw_user = json.loads(dict_path.read_text()) if dict_path.exists() else {}
-        _maybe_print_migration_notice(raw_user, dict_path)
-    except Exception:
-        pass
+    # One-time notice if user dict still carries pre-4.0 VT/BCBS categories.
+    # Skip the dict re-read once the migration marker exists (every run after
+    # the first nudge), since the function would just early-return anyway.
+    _migration_marker = MIGRATION_MARKER_DIR / "2026-05-bcbs-vt-split.done"
+    if not _migration_marker.exists():
+        try:
+            raw_user = json.loads(dict_path.read_text())
+            _maybe_print_migration_notice(raw_user, dict_path)
+        except Exception:
+            pass
 
     if args.context:
         ctx = _load_context(args.context)
@@ -3126,6 +3154,14 @@ Examples:
                     python_bin=python_bin,
                     log_path=engine_log,
                 )
+            elif engine_id == "scribe-v2":
+                t = transcribe_elevenlabs(
+                    str(target_path),
+                    context_bias,
+                    python_bin=python_bin,
+                    log_path=engine_log,
+                    audio_duration_s=audio_duration_seconds,
+                )
             else:
                 t = func(str(target_path), context_bias, python_bin=python_bin, log_path=engine_log)  # type: ignore[operator]
             if t:
@@ -3182,7 +3218,13 @@ Examples:
     local_jobs = [(eid, ch_label, ch_path) for eid in local_ids for (ch_label, ch_path) in channel_streams]
 
     if cloud_jobs:
-        with ThreadPoolExecutor(max_workers=max(1, len(cloud_jobs))) as executor:
+        # Cap concurrency at the engine count, NOT the (engine × channel) count.
+        # With --split-channels and 4 engines we'd otherwise spawn 8 threads hitting
+        # 4 different cloud APIs at once, which trips per-second rate limits on at
+        # least some providers. Channels-per-engine serialize naturally inside the
+        # pool when max_workers == engine count.
+        max_workers = max(1, len(cloud_ids))
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {
                 executor.submit(_run_one_engine, eid, ch_label, ch_path): (eid, ch_label)
                 for (eid, ch_label, ch_path) in cloud_jobs
@@ -3256,7 +3298,7 @@ Examples:
                     "text": ref_text,
                     "segments": [],
                     "metadata": {
-                        "source": "external_reference",
+                        "source": _SOURCE_EXTERNAL_REFERENCE,
                         "path": str(reference_path),
                         "trust_level": "high",
                     },
