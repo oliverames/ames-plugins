@@ -214,3 +214,12 @@ Comments in this document are team planning discussion (phase timing, tool acces
 
 **One generalizable pattern — plain language (team member):** A contributor flagged "triage board" as unclear, prompting the response: "we can find another way to say this."
 *Pattern: Internal jargon in documents shared across teams should be flagged and replaced with plain-language alternatives.*
+
+---
+
+## 2026-05-07 Premium-Setting Blog Social Caption (Teams chat review)
+
+Cross-channel social caption drafted to amplify the approved blog "How is the Cost of Your Health Insurance Premium Decided?" — reviewed by Ashley Legacy via Teams chat.
+
+**Brand Lead (Ashley Legacy):** "I think we need to note that what we do is for the rate filing... we don't do it each month. Just thinking of the flow from the first to second sentences."
+*Pattern: Cadence implication in social copy. When a sentence uses a member-experienced cadence ("your *monthly* health care premium") and the next sentence immediately describes operational work (analyzing claims, forecasting costs, factoring in regulatory changes), readers can infer the operational work happens at the member cadence. In reality, rate-setting is annual — the rate filing happens once a year. Fix: either reset the cadence in the next sentence ("Each year, Blue Cross VT files our rates with the Green Mountain Care Board...") or avoid the monthly framing in the opener. This is a logical-flow catch that depends on operator knowledge of the actual rate-filing rhythm; rules-based checks (department names, Medicare compliance, em-dash use) will not surface it.*

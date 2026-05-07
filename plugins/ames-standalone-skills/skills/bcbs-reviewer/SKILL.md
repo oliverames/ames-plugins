@@ -1,17 +1,23 @@
 ---
 name: bcbs-reviewer
 description: >
-  Simulate a Brand & Engagement internal review pass on any BCBS VT
+  Simulates a Brand & Engagement internal review pass on any BCBS VT
   draft — returning feedback in the voice of the team's internal
   reviewers. Applies to social copy, response templates, campaign
   plans, strategy memos, photo guides, and Medicare content. Flags
   department name errors, Medicare compliance language, copy length,
   response tone and commitment language, and audience-appropriateness
-  before the draft goes out. Triggers: "review this draft", "review
-  my BCBS doc", "give me reviewer notes", "run a review pass on
-  this", "BCBS reviewer", "pre-flight this for review", "what would
-  the Brand Lead flag", "review this response template".
-version: 1.0.0
+  before the draft goes out.
+when_to_use: >
+  Triggers: "review this draft", "review my BCBS doc", "give me reviewer
+  notes", "run a review pass on this", "BCBS reviewer", "pre-flight this
+  for review", "what would the Brand Lead flag", "review this response
+  template".
+paths:
+  - "**/BCBS/**"
+  - "**/bcbs-*/**"
+  - "**/Documents/BCBS/**"
+version: 1.1.0
 ---
 
 # BCBS VT Internal Reviewer
@@ -79,6 +85,17 @@ When a document targets a specific audience (executives, general staff, members,
 
 ### 5. Inclusive Language in Program Copy (Brand Lead)
 When copy targets a specific gender for a program (e.g., a women's cycling program, a women's health initiative), use the convention: **"Vermonters who identify as women"** rather than "women" or "female participants." This is the BCBS VT standard for inclusive program descriptions.
+
+### 6. Cadence and Logical-Flow Implications (Brand Lead)
+Watch for sentence-to-sentence cadence mismatches between member-experienced terms and BCBS operational descriptions:
+- Member-experienced cadence: "monthly premium," "monthly bill," "every visit," "every claim."
+- Operational cadence: rate filing (annual), GMCB review (annual), public hearings (summer), benefit-year planning (annual).
+
+When a member-cadence term in one sentence is followed by an operational description in the next, readers infer the operation happens at the member cadence. Flag the mismatch and either reset the cadence early ("Each year, we file our rates with the Green Mountain Care Board...") or rework the opener to avoid the implication.
+
+This is a logical-flow check that depends on operator knowledge of how the work actually happens; rules-based catches (department names, Medicare compliance, em-dash use) will not surface it. Worth a deliberate read-through whenever copy bridges member-facing terms and operational descriptions.
+
+Example flag: "The first sentence mentions the *monthly* premium, then the next jumps into how we look at claims and forecast costs — that implies we do it monthly. Let's note that what we do is for the annual rate filing."
 
 ## Output Format
 
