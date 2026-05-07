@@ -1,5 +1,54 @@
 # Worklog
 
+## 2026-05-07 — smart-transcribe 9-issue triage + Cohere removal (commit 60491b1, v3.11.2)
+
+**What changed**: Two-pass overhaul of the `smart-transcribe` skill from a single session. Pass 1 was a triage of 9 issues that surfaced during yesterday's BCBS 6-file (~915 MB) stress test; pass 2 was a complete removal of the Cohere Transcribe (local) engine after persistent reliability problems.
+
+Pass 1 (triage):
+- **Codex JSON schema (BLOCKING)**: `additionalProperties: True` on the merge schema's `metadata` sub-object violated OpenAI's structured-output contract. Flipping to `false` unblocks `--merge-mode claude` falling back to Codex.
+- **Silent merge-failure**: when both Claude and Codex headless merge fail, the script silently shipped a single-engine fallback that read as "merged". Now a prominent `> ⚠️ MERGE DEGRADED` banner, `merge_degraded: true` in the JSON header, and dictionary corrections re-applied to the fallback engine text.
+- **Folder/file naming**: rebuilt around the audio stem so `YYYY-MM-DD – <stem> – <desc>/` is greppable back to source even when LLM titles in a batch collide. `generate_title()` now falls through to `audio_path.stem` instead of the literal "Transcript".
+- **Run-dir collisions**: `.smart-transcribe-runs/<stem>/` → `.smart-transcribe-runs/<stem>-<sha256[:8]>/`. Legacy pre-hash dirs honoured by `--resume`.
+- **Recording date**: now resolves via LLM `date_mentioned` → ffprobe `creation_time` → file `mtime` → today (was: today only — worse than `mtime` despite my earlier audit claiming otherwise).
+- **Quota in --doctor**: ElevenLabs balance surfaced both in `--doctor` and as an upfront banner before the engine pool spawns. Other engines documented as N/A (no remaining-credits API).
+- **Batch wrapper**: `batch-transcribe-folder.py` rewritten to forward `--merge-mode`, `--context`, `--description`, `--speakers`, `--engines`, plus accept an optional JSON manifest mapping filename → `{description, speakers}` for per-file overrides.
+- **Engine-prompt leak**: merge prompt restructured. Instructions and `engine_profiles` fenced inside `[BEGIN BACKGROUND]…[END BACKGROUND]` placed ABOVE the transcripts. Transcripts wrapped in `<<<BEGIN/END TRANSCRIPTS>>>`. Final no-echo reminder appended.
+- **Long-recording chunking**: new `--chunk-minutes N` flag with 5s overlap, ffmpeg time-based splits, per-chunk engine runs that consolidate to one entry per engine before merge. Skips per-chunk coherence assessment (full-duration baseline produces false positives on a chunk).
+
+Pass 2 (Cohere removal):
+- Dropped `transcribe_cohere`, `--warm-cohere`, ENGINES + ENGINE_ALIASES + ENGINE_TIMEOUTS + ENGINE_SDK_PROBES entries, the cohere `check_engine_runtime` self-test, the cohere branch in `engine_profiles`, the "Use Cohere as a tiebreaker" merge-strategy line, the `huggingface` block in `--doctor`, `HF_TOKEN` from doctor keys list, "Cohere Transcribe (local)" from `choose_recommended_base`.
+- `common.py`: dropped `DEFAULT_ENGINE_PYTHONS` entry + `HF_TOKEN` map entry. `setup.sh`: dropped from ENGINES array. `ensemble.py`: dropped `transcribe_cohere_local` + MODELS entry + ENGINE_FUNCS + DEFAULT_CONFIG. `requirements.txt`: dropped `transformers`, `torch`, `accelerate`, `librosa`. `SKILL.md`: row 8 dropped, section 8 replaced with a "Removed in 3.11.x" tombstone, `HF_TOKEN` dropped from API-keys section. Test + eval fixtures rewritten.
+- Local: `~/.cache/huggingface/hub/models--CohereLabs--cohere-transcribe-03-2026/`, `~/.cache/huggingface/hub/models--mlx-community--cohere-transcribe-03-2026-mlx-8bit/`, and `~/.config/smart-transcribe/runtimes/cohere-transcribe/` deleted (~9 GB freed).
+
+**Decisions made**:
+- **One bundled commit, not two**: the two passes are tightly coupled (pass 2 was prompted directly by frustration during pass 1's deep-dive into the codebase). Splitting would have meant force-pushing or complicating the diff. The commit message explicitly lists both passes.
+- **HF_TOKEN dropped from the skill but NOT from 1Password**: HF_TOKEN was only used for Cohere model gating, but the user might use it for other Hugging Face workflows. The skill's credential map stops referencing it; the credential itself stays where it lives.
+- **`--warm-cohere` removed cleanly, including all gating conds**: pyright caught two `args.warm_cohere` references in `if not any(...)` checks that grep-only would have missed. The diagnostic feedback loop prevented a runtime AttributeError.
+- **`assess_engine_coherence()` kept, name not changed**: the function is about *linguistic* coherence (chars/min), not Cohere the brand. Just updated the docstring to be engine-agnostic.
+- **Three "deferred" fixes folded into pass 1** (#3 folder naming, #5 ffprobe date, #6 run-dir hash) because they sit in adjacent code and one verification cycle covers them all. The user's later "don't defer anything" reply validated the choice.
+- **Edit tool can't always match `–` escape sequences in source**: the file stores en-dash as a 6-char escape in Python strings. Editing surrounding lines that contain it required either splitting the edit or working from non-en-dash anchors. Three failed Edit attempts before realising the issue.
+
+**Verification**:
+- `python3 -m py_compile` clean for both `smart-transcribe.py` and `batch-transcribe-folder.py`.
+- `python3 -m unittest tests.test_smart_transcribe` → 14/14 pass.
+- `python3 smart-transcribe.py --list-engines` → 7 engines, no Cohere.
+- `python3 smart-transcribe.py --doctor` → no `huggingface` block, no `HF_TOKEN`, ElevenLabs quota present.
+- `python3 -m json.tool` clean for both marketplace manifests, both plugin.json files, and evals.json.
+- `./sync` propagated 3.10.2 → 3.11.0 → 3.11.1 (user/linter touch) → 3.11.2 cleanly to both Claude and Codex marketplaces.
+- Smoke-tested `audio_content_hash()` and `resolve_recording_date()` on a tempfile.
+
+**Left off at**: `origin/main` at `60491b1` with the smart-transcribe overhaul. Working tree clean. Marketplace caches will pick up 3.11.2 on next refresh.
+
+**Open questions**:
+- (NEW) **Pre-existing pyright noise in `merge_info` typing** wasn't fixed in this pass — there are 10 type-check diagnostics about `dict[str, None]` inference and an unbound variable in `retry_engine`. Not blocking runtime; deferred to a future cleanup. A one-liner fix (`merge_info: dict[str, str | None] = {...}`) would clear the cluster.
+- (NEW) **Engine-prompt leak fix is structural, not reproducer-tested**. The user reported the leak from yesterday's BCBS run; I don't have the actual leaked transcript artifact. The fix (fenced background + no-echo reminder) is the right architectural move regardless, but if the leak recurs, the artifact would help debug whether the issue is structural or a different mechanism (e.g. an engine itself contaminating its output).
+- (NEW) **`--chunk-minutes` is implemented but not stress-tested**. The chunking path passes unit tests and the smoke checks but hasn't been run against a real >30-minute recording. AssemblyAI segment-boundary chunking (smarter than time-based) is documented as future work in SKILL.md.
+- (Still open from prior session) **smart-transcribe dictionary v3.4 audit work in marketplace clone working tree** — those edits live in the marketplace clone, not canonical, and are still pending a port to the v4.0 partitioned schema. My `./sync` only touched canonical's marketplace.json files, so I didn't disturb the marketplace clone's audit work, but Claude Code's next marketplace refresh might. Port plan still unresolved.
+- (Still open from prior session) **`wrap-up-preflight.py` host inference**: today's run again returned "codex" with medium confidence despite all three Claude markers being true. The `local-agent-mode-sessions/...` path token still mis-fires.
+- (Still open from prior session) **`claude-code-headless` skill rename**: pending an enforcement signal from Anthropic.
+
+---
+
 ## 2026-05-07 — marketplace audit + skill description refactor (commits 872fe57, 4d5f691)
 
 **What changed**: End-to-end audit of both marketplace manifests followed by a batch refactor that brought the schema in line with current Claude Code skill-authoring best practices.
