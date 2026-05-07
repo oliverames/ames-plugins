@@ -4,7 +4,8 @@
     "format": "json",
     "updated": "2026-05-06",
     "context": "bcbs-vt",
-    "description": "Vermont and Blue Cross Blue Shield of Vermont (BCBS) context overlay for Oliver Ames. Includes VT places, breweries, personal contacts, and BCBS-specific organizations. Activate via --context bcbs-vt."
+    "description": "Vermont and Blue Cross Blue Shield of Vermont (BCBS) context overlay for Oliver Ames. Includes VT places, breweries, personal contacts, and BCBS-specific organizations. Activate via --context bcbs-vt.",
+    "provenance": "Created 2026-05-06 by partitioning the legacy seed dictionary (transcription-dictionary.json v3.0). 206 corrections + 167 entities + 23 notes + 11 speakers were moved here from the universal seed. See commits ff8095e (rationale and partition rules) and the smart-transcribe SKILL.md changelog for the categories that move whole, the categories that stay universal, and the per-entry split rules for mixed categories."
   },
   "corrections": {
     "places": {

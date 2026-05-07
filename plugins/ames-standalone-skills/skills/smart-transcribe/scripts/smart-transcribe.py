@@ -1706,7 +1706,6 @@ def _check_elevenlabs_quota(key: str, audio_path: str, python_bin: str | None = 
     """
     # Stage 1: cached-credits check based on audio duration
     try:
-        from common import get_audio_duration
         duration_s = get_audio_duration(audio_path)
         if duration_s and duration_s > 0:
             estimated_required = math.ceil(duration_s * ELEVENLABS_STT_CREDITS_PER_MINUTE / 60.0)
