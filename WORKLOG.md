@@ -1,5 +1,82 @@
 # Worklog
 
+## 2026-05-07 — smart-transcribe dictionary empirical-quality audit (parallel session, NOT MERGED)
+
+**Status**: Edits live in the marketplace clone (`~/.claude/plugins/marketplaces/ames-claude/...`) as uncommitted working-tree changes. They were authored against the **3.9.7 baseline before the v4.0 partition landed in canonical**. Not yet ported to the new `data/transcription-dictionary.json` (universal) + `data/contexts/bcbs-vt.json` (overlay) architecture. **Do not run `./sync` until the port is complete** — sync would overwrite the marketplace clone's working tree and lose the work.
+
+**What changed**: A separate Claude Code session ran a four-round empirical-quality audit on `data/transcription-dictionary.json` (3.9.7 monolithic version), prompted by the same Mont-Royal misfire that triggered the v4.0 partition. The audit found and addressed problems the partition itself didn't touch:
+
+1. **Mont-Royal removal** (round 1) — `mont-royal -> Mont-Royal` correction + entity removed. Confirmation: **the partition copied this rule into `data/contexts/bcbs-vt.json` verbatim** (`corrections.places.mont-royal = "Mont-Royal"`, `entities.places` includes `Mont-Royal`). Trap is still active on `--context bcbs-vt`.
+
+2. **BCBS additions (v3.2)** — 5 corrections + 49 entities + 6 explanatory notes added based on a scan of all 37 BCBS folder transcripts. Highest-value entry: `litho -> Lytho` (~34% miss rate observed across 19+ BCBS transcripts; Lytho is BCBS's content management/DAM platform). Plus `sauna -> Asana`, `easter eyes -> EastRise`, `velino -> Volino`, `megan peak -> Megan Peek`. Entities span ~40 people/tools/programs. Empirical regression-tested: `\b`-boundary regex preserves "lithograph"/"lithography" untouched.
+
+3. **v3.3 cleanup** — empirical-misfire spot-check across 109 BCBS .md files + 7 non-BCBS transcripts. Findings, all confirmed with file/line evidence:
+   - `data -> Beta`: **170+ misfires across BCBS/Hydrel/Rivian** ("data center", "data governance", "raw data" etc.) — ~100% misfire rate. Removed.
+   - `david -> Beta`: **7 confirmed person-name rewrites** including Oliver's Rivian mobile-service tech "David" and "David at Washington County Family Center" in BCBS intro emails. Removed.
+   - `green up -> Green Up Day`: over-extends to "Clean Up Green Up" (a separate program) and "Green Up at Berlin Pond". Tightened to `green up day -> Green Up Day`.
+   - Defensive removals (zero positive fires, all-misfire-when-they-fire): `gary -> Jerry`, `barry -> Barre`, `hilda -> Nilda`, `javon -> Jevonne`, `janelle -> Janalee`.
+   - Risky common_words rewrites removed: `palette -> palate`, `coming end -> cutting edge`, `start a phone -> start a farm`, `nice things -> scaling curves`.
+   - Identity no-ops removed: `switcheroo -> switcheroo`, `recondenser -> recondenser`.
+   - Duplicate removed: `stone mountain resort -> Stowe Mountain Resort` (was in both `places` and `ski_industry`).
+   - Caitlin fix: `caitlyn -> Caitlin` (legacy half-fix) → `caitlyn -> Kaitlin` (matches Family CLAUDE.md). Confirmed with Oliver no other Caitlin/Caitlyn worth preserving.
+
+4. **v3.4 cleanup** — found 8 additional Mont-Royal-pattern semantic-rewrite traps the v3.3 round had missed (these are screened by static rule-pattern analysis, not empirical evidence):
+   - `gandhi -> Gondi` — Mahatma Gandhi globally rewritten to Stowe gondola slang.
+   - `pa -> People's Academy` — every "PA system", "Pennsylvania, PA", "informal Pa" rewritten. Most aggressive trap in the dict.
+   - `ctv -> CCV` — CTV is Canada's largest TV network.
+   - `ccb -> CCV` — CCB is many things.
+   - `amp -> A&P` — amplifier, ampere all rewritten.
+   - `tiles -> Citations` — floor tiles, mosaic tiles, game tiles all rewritten.
+   - `seal it -> sealant` — generic verb phrase.
+   - `kulwicki -> Kulwicki Program` — rewrites the NASCAR driver's surname.
+
+   Plus 17 cosmetic case-fix removals on generic English (`topper`, `tree house`, `treehouse`, `zero gravity`, `magic hat`, `long trail`, `simple roots`, `kingdom brewing`, `whirligig`, `wicked weed`, `burial`, `fiddlehead`, `high wire`, `hula`, `phenom`, `new london`, `milk bowl`).
+
+   Plus 12 corrections + 30 entities added for Hydrel client / Rivian / Trust contexts. Including Vermont's capital `Montpelier` to `entities.places` (was missing!), 5 Montpelier mishearing variants (Voxtral consistently mangles it), `Hydrel`/`Tridium`/`Ballard`/`Phoenix Marine` (Hydrel-client vocabulary), `Wassym Bensaid`/`frunk`/`kneel` (Rivian-context), `Roth 401(k)`/`Rule of 72`/`pour-over will` (Trust-context).
+
+5. **Verified across all rounds**: 269 patterns compile, 372 bias terms shipped to engines. 27 real-world regression spot-checks pass (including: "Mahatma Gandhi was a leader of India" → unchanged, "PA system is broken" → unchanged, "color palette" → unchanged, "data center" → unchanged, "lithograph prints" → unchanged, "Caitlyn made dinner" → "Kaitlin made dinner", "Schedule it in litho today" → "Schedule it in Lytho today", "Mont-Royal dish" → unchanged).
+
+**Decisions made**:
+- Two corrections were deliberately NOT added because they have real-name/real-company collision risk: `wasim -> Wassym` (Wasim is a real common Arabic/Pakistani name), `hydra energy -> Hydrel Energy` (Hydra Energy is a real Canadian hydrogen company). Entity-only `Wassym Bensaid` and `Hydrel` are sufficient.
+- `BeWell at Work` and `Catharine` were added as entity-only, NOT as corrections, to avoid renaming generic "be well" phrases or all real Catherines.
+- Found that `corrections."caitlyn": "Caitlin"` was a legacy half-fix; corrected to `Kaitlin` after explicit user confirmation.
+
+**Left off at**: All four rounds shipped to the **marketplace clone working tree** at `~/.claude/plugins/marketplaces/ames-claude/plugins/ames-standalone-skills/skills/smart-transcribe/data/transcription-dictionary.json` (uncommitted) and to the **plugin cache** at `~/.claude/plugins/cache/ames-claude/ames-standalone-skills/3.9.7/...`. Both files are at the session's v3.4 state. They are NOT in canonical because the session worked against a stale 3.9.7 baseline; the v4.0 partition that landed in canonical was discovered only at wrap-up time.
+
+**Open questions / port plan** (NEW, all unresolved):
+
+The right merge isn't a blind port. The v4.0 partition split the dictionary along clean lines (universal vs. bcbs-vt overlay), and most of my session's work belongs in the bcbs-vt overlay — but a few entries are genuinely universal. Recommended split:
+
+- **`data/transcription-dictionary.json` (universal) — apply these from session work:**
+  - Add `corrections.technology."litho": "Lytho"` and `corrections.technology."sauna": "Asana"` (Lytho and Asana are generic SaaS, multi-domain).
+  - Add `entities.companies` section (would need to add — currently universal has only `acronyms` + `vehicles`): `Lytho`, `Asana`, `Jira`, `Workfront`, `Smartsheet`, `Image Relay`, `Alchemer`, `Trellis`, `Polite Mail`, `Omnissa`, `Horizon Client`, `Athena Health` — all generic SaaS.
+  - Add `entities.acronyms`: `J1772`, `CCS` (universal EV charging standards).
+  - Add new sections `entities.ev_vocabulary` (`frunk`, `kneel`) and `entities.financial_terms` (`Roth 401(k)`, `Rule of 72`, `pour-over will`).
+
+- **`data/contexts/bcbs-vt.json` (BCBS overlay) — apply these from session work:**
+  - **Remove the harmful rules still present** (verified live):
+    - `corrections.beta_aviation`: `data`, `david`, `amp`, `tiles`, `seal it`, `phenom`
+    - `corrections.places`: `barry`, `mont-royal`, `stone mountain resort` (duplicate of ski_industry), `new london`
+    - `corrections.personal_names`: `gary`, `hilda`, `javon`, `janelle`; fix `caitlyn` from `Caitlin` to `Kaitlin`
+    - `corrections.organizations`: replace `green up` with `green up day`; remove `hula`
+    - `corrections.ski_industry`: `gandhi`
+    - `corrections.schools`: `pa`, `ctv`, `ccb`
+    - `corrections.racing`: `kulwicki`, `milk bowl`
+    - `corrections.beer_breweries`: `topper`, `tree house`, `treehouse`, `zero gravity`, `magic hat`, `long trail`, `simple roots`, `kingdom brewing`, `whirligig`, `wicked weed`, `burial`, `fiddlehead`, `high wire`
+    - `entities.places`: remove `Mont-Royal`
+  - **Add the BCBS additions**: corrections (`easter eyes`, `velino`, `megan peak`, `analopee`, `weights river`, 5 Montpelier variants, `finel`, `finil`, `camala`, `cockrits`, `hydrrell`); ~50 entities (BCBS people, tools, programs); add `Montpelier` and `Laval` to `entities.places` (both currently missing).
+  - **Add the v3.4 explanatory notes** (8 new notes documenting why each cleanup was made, so future audits don't reintroduce the rules — see notes 23+ in marketplace-clone working tree).
+
+- **Marketplace clone**: revert working tree once port is complete (`git checkout -- plugins/ames-standalone-skills/...`), then run `./sync` to repopulate from canonical.
+
+**Validated by**:
+- Static comparison: marketplace-clone v3.4 dictionary is at 269 corrections / 372 bias terms / 39 notes. Canonical v4.0 universal: 24 corrections + 2 entity sections (acronyms, vehicles) + 0 notes. Canonical bcbs-vt overlay: 206 corrections / 167 entities / 23 notes / 11 speakers.
+- Spot-check confirmed all 25 harmful rules from the audit are still live in `bcbs-vt.json` — the v4.0 partition was a structural move, not a content audit.
+- Empirical evidence base lives in `~/Documents/BCBS/` (109 .md files searched) + 7 non-BCBS transcripts (Family/Money trust calls, Rivian service call, GMCF Steve+Cady, Hydrel Kyle meeting, Aloy "How We Met"). Concrete misfire-evidence file:line citations were documented in the originating chat session.
+- Marketplace clone is in `[ahead 3]` state with 1 modified file: `plugins/ames-standalone-skills/skills/smart-transcribe/data/transcription-dictionary.json`. The 3 ahead commits are unrelated (ynab-finance + bcbs-reviewer; pre-existing).
+
+---
+
 ## 2026-05-07 — smart-transcribe overhaul + simplify pass (v3.10.0)
 
 **What changed**: 12 substantive improvements to the smart-transcribe skill, prompted by a real Rivian customer-service call where the existing pipeline misapplied a `mont-royal -> Mont-Royal` dictionary rule (speaker actually said "Montreal") and a `bar -> Barre` rule (speaker referenced the truck's "light bar"). Domain-specific rules were leaking into the universal default.
