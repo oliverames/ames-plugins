@@ -23,7 +23,8 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from common import (
-    CONTEXTS_DIR, VENV_PYTHON, CONFIG_DIR, STATUS_FILE_NAME, RUN_LOG_NAME,
+    CONTEXTS_DIR, SKILL_CONTEXTS_DIR, MIGRATION_MARKER_DIR,
+    VENV_PYTHON, CONFIG_DIR, STATUS_FILE_NAME, RUN_LOG_NAME,
     HTTP_RETRYABLE_SIGNALS, HTTP_NON_RETRYABLE_SIGNALS, HTTP_BACKOFF_DELAYS_S,
     resolve_key, load_dictionary, get_context_terms,
     get_dictionary_paths, flatten_entities, merge_dicts,
@@ -160,22 +161,56 @@ def _run_context_interview(name: str) -> dict:
     return context
 
 
+def _flatten_corrections(corrections: dict) -> dict:
+    """Normalise corrections from JSON storage to flat wrong->right.
+
+    Accepts either nested {category: {old: new}} (current format) or already-flat
+    {old: new} (legacy/user contexts). Lowercases keys to match load_dictionary().
+    """
+    if not isinstance(corrections, dict) or not corrections:
+        return {}
+    first_value = next(iter(corrections.values()), None)
+    if isinstance(first_value, dict):
+        flat: dict = {}
+        for mappings in corrections.values():
+            if isinstance(mappings, dict):
+                for wrong, right in mappings.items():
+                    flat[str(wrong).lower()] = right
+        return flat
+    return {str(k).lower(): v for k, v in corrections.items()}
+
+
+def _resolve_context_path(name: str) -> Path | None:
+    """Find a context file by name. User-side wins over skill-shipped."""
+    user_path = CONTEXTS_DIR / f"{name}.json"
+    if user_path.exists():
+        return user_path
+    skill_path = SKILL_CONTEXTS_DIR / f"{name}.json"
+    if skill_path.exists():
+        return skill_path
+    return None
+
+
 def _load_context(name: str) -> dict:
     """Load a named context, running the first-run interview if it doesn't exist.
+
+    Resolution order: user contexts dir → skill-shipped contexts dir → interview.
+    User-side overlay overrides skill-shipped, so users can extend or replace.
 
     Returns a dict in standard dictionary schema ready for merge_dicts().
     """
     CONTEXTS_DIR.mkdir(parents=True, exist_ok=True)
-    ctx_path = CONTEXTS_DIR / f"{name}.json"
+    ctx_path = _resolve_context_path(name)
 
-    if ctx_path.exists():
+    if ctx_path is not None:
         try:
             data = json.loads(ctx_path.read_text())
-            corrections_count = len(data.get("corrections", {}))
+            flat_corrections = _flatten_corrections(data.get("corrections", {}))
             flat_entities = flatten_entities(data.get("entities", {}))
-            print(f"🗂️  Context '{name}': {corrections_count} corrections, {len(flat_entities)} entities")
+            origin = "user" if ctx_path.parent == CONTEXTS_DIR else "shipped"
+            print(f"🗂️  Context '{name}' [{origin}]: {len(flat_corrections)} corrections, {len(flat_entities)} entities")
             return {
-                "corrections": data.get("corrections", {}),
+                "corrections": flat_corrections,
                 "entities": flat_entities,
                 "speakers": data.get("speakers", {}),
                 "notes": data.get("notes", []),
@@ -187,23 +222,77 @@ def _load_context(name: str) -> dict:
     context = _run_context_interview(name)
 
     # Persist
-    ctx_path.write_text(json.dumps(context, indent=2, ensure_ascii=False) + "\n")
-    print(f"\n✅ Context '{name}' saved to {ctx_path}")
+    user_path = CONTEXTS_DIR / f"{name}.json"
+    user_path.write_text(json.dumps(context, indent=2, ensure_ascii=False) + "\n")
+    print(f"\n✅ Context '{name}' saved to {user_path}")
 
     context["entities"] = flatten_entities(context.get("entities", {}))
     return context
 
 
 def list_contexts() -> None:
-    """Print all saved context names and exit."""
+    """Print all saved context names from user dir AND skill-shipped contexts."""
     CONTEXTS_DIR.mkdir(parents=True, exist_ok=True)
-    contexts = sorted(CONTEXTS_DIR.glob("*.json"))
-    if not contexts:
+    user_contexts = sorted(CONTEXTS_DIR.glob("*.json"))
+    skill_contexts = sorted(SKILL_CONTEXTS_DIR.glob("*.json")) if SKILL_CONTEXTS_DIR.exists() else []
+    user_names = {p.stem for p in user_contexts}
+    if not user_contexts and not skill_contexts:
         print("No saved contexts. Create one with --context <name>.")
-    else:
-        print("Saved contexts:")
-        for p in contexts:
+        return
+    if user_contexts:
+        print("User contexts (~/.config/smart-transcribe/contexts):")
+        for p in user_contexts:
             print(f"  {p.stem}")
+    if skill_contexts:
+        print("\nSkill-shipped contexts (read-only, override by saving same name in user dir):")
+        for p in skill_contexts:
+            tag = " [shadowed by user]" if p.stem in user_names else ""
+            print(f"  {p.stem}{tag}")
+
+
+def _maybe_print_migration_notice(dictionary: dict, dict_path: Path) -> None:
+    """Print a one-time notice if user dict still contains pre-4.0 VT/BCBS rules.
+
+    The 2026-05-06 split moved 206 VT-anchored rules into the bcbs-vt context
+    overlay. Users who synced before that split have an over-stuffed user dict
+    that applies VT corrections globally — exactly the misfire that prompted
+    the split. We don't auto-migrate (would clobber user customizations) but we
+    do nudge once.
+    """
+    MIGRATION_MARKER_DIR.mkdir(parents=True, exist_ok=True)
+    marker = MIGRATION_MARKER_DIR / "2026-05-bcbs-vt-split.done"
+    if marker.exists():
+        return
+    # Heuristic: if user dict has the old VT category key, it's pre-split.
+    corrections = dictionary.get("corrections", {})
+    has_vt_categories = any(
+        cat in corrections for cat in ("places", "beer_breweries", "beta_aviation", "ski_industry")
+    )
+    if not has_vt_categories:
+        marker.write_text(f"no-action {datetime.now().isoformat()}\n")
+        return
+    print("─" * 60, file=sys.stderr)
+    print("📢 ONE-TIME NOTICE: Dictionary structure changed (v3 → v4)", file=sys.stderr)
+    print("─" * 60, file=sys.stderr)
+    print(f"Your user dictionary at {dict_path} contains VT/BCBS-specific rules", file=sys.stderr)
+    print("(places, breweries, Beta Aviation, etc.) that are now scoped to a", file=sys.stderr)
+    print("dedicated context overlay rather than applied globally.", file=sys.stderr)
+    print(file=sys.stderr)
+    print("Why: a 'mont-royal -> Mont-Royal' rule was misfiring on a Rivian", file=sys.stderr)
+    print("service call where Oliver actually said 'Montreal'. Same pattern", file=sys.stderr)
+    print("affected 'bar -> Barre' on a 'light bar' reference. Domain-specific", file=sys.stderr)
+    print("rules don't belong in the global default.", file=sys.stderr)
+    print(file=sys.stderr)
+    print("To get the same behavior as before for VT/BCBS recordings:", file=sys.stderr)
+    print("    smart-transcribe.py audio.m4a --context bcbs-vt", file=sys.stderr)
+    print(file=sys.stderr)
+    print("Your existing user dictionary is unchanged. To fully migrate, edit", file=sys.stderr)
+    print(f"    {dict_path}", file=sys.stderr)
+    print("and remove the VT-specific categories (they live in the shipped", file=sys.stderr)
+    print("bcbs-vt context now). This notice will not appear again.", file=sys.stderr)
+    print("─" * 60, file=sys.stderr)
+    print(file=sys.stderr)
+    marker.write_text(f"shown {datetime.now().isoformat()}\n")
 
 
 # =============================================================================
@@ -483,7 +572,67 @@ def emit_agent_merge_bundle(
         "",
         "Merge the source transcript outputs into one accurate Markdown transcript. Apply dictionary corrections conservatively, preserve intentional casual speech, and put uncertain passages in a transparency report instead of guessing.",
         "",
-        "Return or save a final transcript with: metadata, summary, transcript, transparency report, and dictionary suggestions.",
+        "Save the final transcript using the **Output Template** below. The structure is mandatory — fields render in a consistent order across runs so future readers and downstream tooling can scan transcripts uniformly.",
+        "",
+        "### Output Template (mandatory structure)",
+        "",
+        "````markdown",
+        "# {Title} — Transcript",
+        "",
+        "## Metadata",
+        "",
+        "- **Source file:** `{path}`",
+        "- **Duration:** {hh:mm:ss}",
+        "- **Transcribed:** {YYYY-MM-DD}",
+        "- **Engines used:** {engine list with success/failure note from Engine Status block above}",
+        "- **Verification source:** {if any external --reference or sidecar was provided; else 'none'}",
+        "",
+        "## Speakers",
+        "",
+        "- **{Speaker A name or label}** — {role/context if known}",
+        "- **{Speaker B name or label}** — {role/context if known}",
+        "",
+        "## Summary",
+        "",
+        "{2–4 paragraph plain-prose summary. No bullets. Cover the actual content of the call, not engine performance.}",
+        "",
+        "---",
+        "",
+        "## Transcript",
+        "",
+        "**{Speaker}:** {turn text}",
+        "",
+        "**{Speaker}:** {turn text}",
+        "",
+        "...",
+        "",
+        "---",
+        "",
+        "## Transparency Report",
+        "",
+        "### APPLIED corrections",
+        "",
+        "| Original (engine output) | Corrected | Source / Reason |",
+        "|---|---|---|",
+        "| {token as engines rendered it} | {corrected form} | {which engine had it right; or which dictionary rule applied; or which reference confirmed} |",
+        "",
+        "### UNCERTAIN — left as-is, flagged",
+        "",
+        "- **{passage or token}** — {why it's uncertain; what would resolve it}",
+        "",
+        "### PRESERVED — intentional casual speech",
+        "",
+        "- {kept as-spoken: filler words, false starts, profanity, regional phrasing, etc.}",
+        "",
+        "### Engine-degradation note",
+        "",
+        "{One short paragraph noting any engine that failed, was skipped, or produced suspect output (per the Engine Status block). Omit this section if all engines succeeded cleanly.}",
+        "",
+        "### Dictionary suggestions",
+        "",
+        "- {new proper nouns, recurring mis-corrections, or rule misfires worth adding/removing/scoping}",
+        "- Or: 'No new dictionary suggestions from this recording.'",
+        "````",
         "",
         "## Run Metadata",
         "",
@@ -584,6 +733,52 @@ def build_doctor_report(
         },
     }
     return report
+
+
+ENGINE_SDK_PROBES: dict[str, str] = {
+    "assemblyai-u3-pro": "import assemblyai; print(getattr(assemblyai, '__version__', 'unknown'))",
+    "scribe-v2": "import elevenlabs; print(getattr(elevenlabs, '__version__', 'unknown'))",
+    "voxtral-small": "import mistralai; print(getattr(mistralai, '__version__', 'unknown'))",
+    "voxtral-mini-local": "import mlx_audio; print(getattr(mlx_audio, '__version__', 'unknown'))",
+    "cohere-transcribe": "import transformers; print(getattr(transformers, '__version__', 'unknown'))",
+    "gemini-3-pro": "from google import genai; print(getattr(genai, '__version__', 'unknown'))",
+    "gpt4o-transcribe": "import openai; print(getattr(openai, '__version__', 'unknown'))",
+    "gpt4o-mini-transcribe": "import openai; print(getattr(openai, '__version__', 'unknown'))",
+}
+
+
+def collect_engine_sdk_versions(
+    engine_ids: list[str],
+    engine_python_overrides: dict[str, str] | None = None,
+    use_system_python: bool = False,
+) -> dict[str, str]:
+    """Return {engine_id: sdk_version} for selected engines.
+
+    Used to record exactly which SDK build produced each engine's output, so
+    later sessions can tell whether a transcript was generated by the same
+    Voxtral/Scribe/AssemblyAI version. Failures are recorded as
+    'unavailable: <reason>' rather than raising — the run continues either way.
+    """
+    versions: dict[str, str] = {}
+    for engine_id in engine_ids:
+        probe = ENGINE_SDK_PROBES.get(engine_id)
+        if not probe:
+            versions[engine_id] = "unknown-engine"
+            continue
+        try:
+            python_bin = resolve_engine_python(engine_id, engine_python_overrides, use_system_python)
+            result = subprocess.run(
+                [python_bin, "-c", probe],
+                capture_output=True, text=True, timeout=8,
+            )
+            if result.returncode == 0:
+                versions[engine_id] = (result.stdout.strip() or "unknown")
+            else:
+                err = (result.stderr or "").strip().splitlines()[-1] if result.stderr else "probe-failed"
+                versions[engine_id] = f"unavailable: {err[:80]}"
+        except Exception as exc:
+            versions[engine_id] = f"unavailable: {str(exc)[:80]}"
+    return versions
 
 
 def check_engine_runtime(engine_id: str, python_bin: str) -> dict:
@@ -2066,10 +2261,20 @@ Examples:
         ),
     )
     parser.add_argument("--list-engines", action="store_true", help="List available engine IDs and exit")
-    parser.add_argument("--output", help="Output directory (overrides default)")
+    parser.add_argument(
+        "--output",
+        "--output-dir",
+        dest="output",
+        metavar="DIR",
+        help="Output DIRECTORY for the run folder (.smart-transcribe-runs/<audio-stem>/ is created inside DIR). Defaults to the audio file's parent directory. Use --transcripts-out for a custom raw-JSON file path with --transcribe-only.",
+    )
     parser.add_argument("--transcribe-only", action="store_true",
                         help="Run transcription only, output raw JSON (no merge)")
-    parser.add_argument("--transcripts-out", help="Path for raw transcripts JSON (with --transcribe-only)")
+    parser.add_argument(
+        "--transcripts-out",
+        metavar="FILE",
+        help="Path for raw transcripts JSON FILE (used with --transcribe-only). Different from --output, which sets the run-directory parent.",
+    )
     parser.add_argument("--merge-mode", choices=["agent", "claude", "manual"], default="claude",
                         help="agent writes a merge bundle for the current chat agent; claude uses headless Claude/Codex; manual emits a comparison bundle")
     parser.add_argument("--resume", action="store_true", help="Reuse existing per-engine outputs in the run directory")
@@ -2118,6 +2323,14 @@ Examples:
     default_dict_path, _ = get_dictionary_paths()
     dict_path = Path(args.dict) if args.dict else default_dict_path
     dictionary = load_dictionary(dict_path)
+
+    # One-time notice if user dict still carries pre-4.0 VT/BCBS categories
+    # (the 2026-05-06 split moved 206 VT-anchored rules into bcbs-vt overlay).
+    try:
+        raw_user = json.loads(dict_path.read_text()) if dict_path.exists() else {}
+        _maybe_print_migration_notice(raw_user, dict_path)
+    except Exception:
+        pass
 
     if args.context:
         ctx = _load_context(args.context)
@@ -2343,9 +2556,23 @@ Examples:
     with run_log_path.open("a", encoding="utf-8") as fh:
         fh.write(f"{datetime.now().isoformat()} start source={audio_path} engines={','.join(selected_engine_ids)} merge_mode={args.merge_mode}\n")
 
+    # Capture SDK versions per engine venv so run.log records exactly which
+    # build of each engine produced the output. Useful when re-running months
+    # later or diagnosing an engine-specific regression.
+    engine_sdk_versions = collect_engine_sdk_versions(
+        selected_engine_ids, engine_python_overrides, args.use_system_python
+    )
+    with run_log_path.open("a", encoding="utf-8") as fh:
+        fh.write(
+            f"{datetime.now().isoformat()} engine_sdk_versions "
+            + " ".join(f"{eid}={ver}" for eid, ver in engine_sdk_versions.items())
+            + "\n"
+        )
+
     write_status(status_path, {
         "source_file": str(audio_path),
         "selected_engines": selected_engine_ids,
+        "engine_sdk_versions": engine_sdk_versions,
         "merge_mode": args.merge_mode,
         "state": "starting",
         "updated_at": datetime.now().isoformat(),

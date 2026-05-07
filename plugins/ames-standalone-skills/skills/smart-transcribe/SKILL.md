@@ -38,6 +38,19 @@ Use `--merge-mode claude` only when you intentionally want the script to call ne
 | `--resume` | Reuse completed per-engine outputs from the run directory |
 | `--rerun-engine ENGINE_ID` | Re-run just one engine while resuming |
 | `--use-system-python` / `--engine-python scribe-v2=/path/to/python` | Escape hatches for runtime selection |
+| `--output DIR` (alias `--output-dir DIR`) | Parent DIRECTORY for the run folder (`.smart-transcribe-runs/<audio-stem>/` is created inside DIR). Defaults to the audio file's parent. |
+| `--transcripts-out FILE` | Path for raw transcripts JSON FILE — only used with `--transcribe-only`. Distinct from `--output`. |
+
+### Output flag cheat-sheet
+
+The `--output` and `--transcripts-out` flags do different things and are easy to confuse:
+
+| Want to… | Use |
+|----------|-----|
+| Set the **parent directory** for the run folder containing per-engine outputs and the merge bundle | `--output DIR` (or its alias `--output-dir DIR`) |
+| Stream all engine transcripts to a single raw JSON **file** (with `--transcribe-only`) | `--transcripts-out FILE` |
+
+A common mistake is passing a flag named `--output-dir` not yet aware that the canonical name is `--output`. Both names are now accepted as aliases for the same destination.
 
 ## Modes
 
