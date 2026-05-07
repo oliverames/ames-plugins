@@ -1,5 +1,57 @@
 # Worklog
 
+## 2026-05-07 — smart-transcribe overhaul + simplify pass (v3.10.0)
+
+**What changed**: 12 substantive improvements to the smart-transcribe skill, prompted by a real Rivian customer-service call where the existing pipeline misapplied a `mont-royal -> Mont-Royal` dictionary rule (speaker actually said "Montreal") and a `bar -> Barre` rule (speaker referenced the truck's "light bar"). Domain-specific rules were leaking into the universal default.
+
+Shipped across 7 commits + a simplify-pass cleanup:
+
+1. **Dictionary scoping** — partitioned 293 corrections + 218 entities + 23 notes + 11 speakers into a universal seed (87 corrections, 51 entities) and a `bcbs-vt` context overlay (206 corrections, 167 entities, all notes, all speakers) at `data/contexts/bcbs-vt.json`. Users opt in with `--context bcbs-vt`. One-time migration notice fires on pre-4.0 user dicts.
+2. **Real ElevenLabs quota check** — replaced the placeholder check (which queried the wrong pool) with a duration-based credit estimator (~80 credits/min) against a self-healing cache at `~/.config/smart-transcribe/elevenlabs-credits.json`. Pre-flight refuses to start scribe-v2 on insufficient credits; cache populates from any `quota_exceeded` error so the next run knows.
+3. **Coherence sanity check** — engines emitting < 100 chars/min get tagged with `quality_concern: low_text_density`. Catches the failure mode where Cohere produced 4,674 chars on a 58-minute file by hallucinating through silence.
+4. **Engine status block** in agent-merge-bundle — top-of-bundle table with ✅/⚠️/❌/📑 icons and an explicit trust ranking telling the merging agent which sources to weight how.
+5. **External reference support** (`--reference FILE`) — accept a known-good transcript (Apple, Otter, Riverside) and label it as a high-trust source in the bundle. Sidecar auto-detection looks for `<basename>.transcript.md` etc next to audio.
+6. **Dictionary misfire logger** (`--report-dictionary-misfire OLD=NEW`) — append candidate misfires to a JSONL log for periodic dictionary review. Standalone-runnable.
+7. **Per-channel transcription** (`--split-channels`) — extract per-speaker channels via ffmpeg pan filter, run each engine per channel for ground-truth speaker attribution.
+8. **Time-aligned chunked merge bundle** — when all engines have segment timestamps, render outputs in 5-min windows side-by-side; falls back to concatenated when any engine lacks segments (e.g. Cohere).
+9. **Engine SDK version logging**, cached by venv mtime to avoid 200-800ms hot-path overhead per run.
+10. **Strict transparency-report template** embedded in the bundle so merge agents produce consistent Metadata / Speakers / Summary / Transcript / Transparency Report structure across runs.
+11. `--output-dir` alias + clarified flag docs (the original ambiguity caused a wasted run earlier in the session).
+12. Simplify pass: deduped `flatten_corrections` across `common.py`, collapsed byte-identical bundle fallback branches, fixed redundant `is_reference` test, threaded `audio_duration_s` through to avoid double ffprobe, capped ThreadPoolExecutor to `len(cloud_ids)` (not `len(cloud_jobs)`) to prevent rate-limit fan-out under `--split-channels`, cached SDK version probe by venv mtime, extracted `_SOURCE_EXTERNAL_REFERENCE` constant, hoisted migration marker check, dropped TOCTOU `.exists()` on credits cache, and stripped a too-specific Rivian/Montreal anecdote from user-facing stderr.
+
+**Decisions made**:
+- Apple Phone-app sidecar detection (originally listed as #6 in the audit) was reframed: iOS doesn't save sidecar files for call-recorder transcripts, so the implementation is just the generic basename-matched sidecar lookup. Phone-app users still need to copy/paste and pass `--reference`.
+- Rule scoping uses an opt-in `--context` overlay rather than auto-detection of "is this a VT recording?" — auto-detection would be too fragile.
+- Per-channel splitting and chunked layouts are gated behind explicit flags / engine-segment availability rather than auto-applying. Avoids regressing existing single-stream / Cohere-included workflows.
+- Engine SDK probe caching is by venv mtime, not a TTL. Mtime changes on rebuild/upgrade; this is the right invalidation signal for "did the SDK actually change."
+- Skipped two simplify-pass items as false positives: the `engine_results`/`transcripts`/`successful` triplet predates this work, and `_run_one_engine`'s default channel args are actually used by the fallback-engine retry path.
+
+**Left off at**: Clean. 8 commits ahead of origin/main; not pushed (not asked). Plugin manifest at `3.10.0`, marketplace JSON regenerated, README plugin table updated to match.
+
+Commits:
+- `ff8095e` (#5, #11, #12, #4) — dictionary scoping, SDK versions, transparency template, output-flag docs
+- `c16834e` (#1, #2, #3) — quota fix, coherence check, engine status block
+- `73a156b` (#8, #6, #9) — --reference, sidecar fallback, misfire log
+- `86612d6` (#7, #10) — --split-channels, time-aligned chunks
+- `1420ccb` — version bump 3.9.7 → 3.10.0 + sync regeneration
+- `9e913fc` — post-merge cleanup (redundant import, overlay provenance metadata)
+- `a53e688` — simplify pass (dedupe, cache, tighten across 11 review-flagged items)
+- `ebf837d` — README version sync
+
+**Open questions**: NEW — periodic review of `~/.config/smart-transcribe/dictionary-misfires.jsonl` is now possible but not scheduled. Worth a recurring `/loop` once the file accumulates entries.
+
+Still open from prior smart-transcribe work (NOT addressed this session): structured engine error returns and an explicit `SMART_TRANSCRIBE_BUNDLE_READY:` stdout signal. Those remain Tier 2 items.
+
+**Validated by**:
+- `python3 -m unittest tests.test_smart_transcribe`: 14/14 pass throughout (no regressions across the 8 commits).
+- Bundle render integration test (synthetic engine_results, healthy + quality-concern + failed + reference): icons render correctly, chunked-vs-concatenated gating works, fallback layout activates when any engine lacks segments.
+- Dictionary partition spot-check: `mont-royal`/`barry`/`jen kimmich`/`crosby`/`hula` all in overlay only; `palette`/`gpt 4`/`r1s`/`b roll`/`glycosate`/`iconic` all in seed only.
+- `_load_context('bcbs-vt')` returns 205 corrections (one intentional duplicate dedup), 167 entities, 23 notes, 11 speakers.
+- `--doctor` runs cleanly; `--output-dir` alias appears in `--help`; `--report-dictionary-misfire test=Test` writes JSONL and exits 0.
+- `./sync`: marketplace.json regeneration clean; both Claude and Codex manifests JSON-valid; Codex MCP wrapper consistent.
+
+---
+
 ## 2026-05-05 - Codex marketplace support graduation
 
 **What changed**: Promoted Codex support from experimental to a maintained path. Added `codex-refresh` to register or upgrade the Codex marketplace, enable all four Codex-compatible `ames-claude` plugins, materialize missing plugin cache entries, and run `codex-doctor`. Tightened `codex-doctor` so local install verification can require enabled plugins, matching cache versions, matching cache content, and live MCP visibility. Removed "experimental Codex support" language from README and project docs, bumped marketplace metadata to `3.6.0`, fixed the stale `ames-standalone-skills` README version, and documented Codex install/cache paths.
