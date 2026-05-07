@@ -162,6 +162,68 @@ def _run_context_interview(name: str) -> dict:
     return context
 
 
+def detect_audio_channel_count(audio_path: Path) -> int:
+    """Use ffprobe to count audio channels. Returns 1 if probe fails."""
+    try:
+        result = subprocess.run(
+            [
+                "ffprobe", "-v", "error", "-select_streams", "a:0",
+                "-show_entries", "stream=channels", "-of", "csv=p=0",
+                str(audio_path),
+            ],
+            capture_output=True, text=True, timeout=10,
+        )
+        return int(result.stdout.strip()) if result.returncode == 0 else 1
+    except Exception:
+        return 1
+
+
+def split_audio_channels(audio_path: Path, run_dir: Path) -> list[tuple[str, Path]]:
+    """Split a multi-channel audio file into one mono file per channel.
+
+    Returns [(channel_label, channel_path), ...] in channel index order. Uses
+    ffmpeg's pan filter to extract each channel deterministically. Files are
+    written into run_dir/channels/ so they're cleaned up alongside the run.
+
+    Returns [("mono", audio_path)] on failure or single-channel input.
+    """
+    channels = detect_audio_channel_count(audio_path)
+    if channels < 2:
+        return [("mono", audio_path)]
+    channels_dir = run_dir / "channels"
+    channels_dir.mkdir(parents=True, exist_ok=True)
+    # Standard channel labels for the common 2-channel case
+    channel_labels = ["L", "R"] if channels == 2 else [f"ch{i}" for i in range(channels)]
+    outputs: list[tuple[str, Path]] = []
+    for idx, label in enumerate(channel_labels):
+        out_path = channels_dir / f"{audio_path.stem}.channel-{label}.m4a"
+        if out_path.exists():
+            outputs.append((label, out_path))
+            continue
+        try:
+            result = subprocess.run(
+                [
+                    "ffmpeg", "-y", "-loglevel", "error",
+                    "-i", str(audio_path),
+                    "-filter_complex", f"[0:a]pan=mono|c0=c{idx}[m]",
+                    "-map", "[m]",
+                    "-c:a", "aac", "-b:a", "96k",
+                    str(out_path),
+                ],
+                capture_output=True, text=True, timeout=300,
+            )
+            if result.returncode == 0 and out_path.exists():
+                outputs.append((label, out_path))
+            else:
+                err = (result.stderr or "")[:160]
+                print(f"⚠️  ffmpeg channel split failed for {label}: {err}", file=sys.stderr)
+        except Exception as exc:
+            print(f"⚠️  ffmpeg channel split errored for {label}: {exc}", file=sys.stderr)
+    if not outputs:
+        return [("mono", audio_path)]
+    return outputs
+
+
 REFERENCE_SIDECAR_SUFFIXES: tuple[str, ...] = (
     ".reference.md",
     ".reference.txt",
@@ -800,11 +862,124 @@ def emit_agent_merge_bundle(
         parts.append("_None_")
 
     parts.extend(["", "## Source Transcript Outputs", ""])
-    for label, text in transcripts.items():
-        parts.extend([f"### {label}", "", text or "_No transcript produced._", ""])
+
+    # If every engine emitted timestamped segments, render the per-engine
+    # transcripts side-by-side per 5-minute window so the merging agent can
+    # compare engines at the same wall-clock position rather than scrolling
+    # full-document. When any engine lacks segments (e.g. Cohere ships without
+    # timestamps), fall back to the original concatenated layout.
+    if engine_results and _all_engines_have_segments(engine_results, transcripts):
+        chunked = _format_time_aligned_chunks(engine_results, transcripts, window_s=300.0)
+        if chunked:
+            parts.extend(chunked)
+        else:
+            for label, text in transcripts.items():
+                parts.extend([f"### {label}", "", text or "_No transcript produced._", ""])
+    else:
+        for label, text in transcripts.items():
+            parts.extend([f"### {label}", "", text or "_No transcript produced._", ""])
 
     bundle_path.write_text("\n".join(parts), encoding="utf-8")
     return bundle_path
+
+
+def _all_engines_have_segments(engine_results: dict[str, dict], transcripts: dict[str, str]) -> bool:
+    """Check whether every successful engine has at least one timestamped segment.
+
+    Time-aligned chunking only makes sense when every contributor has segment
+    timestamps. References (added in #8) are exempt — they don't have engine
+    segments by design and are appended as a single block.
+    """
+    for label in transcripts:
+        result = engine_results.get(label) or {}
+        # External references opt out of the segment requirement
+        meta = result.get("metadata") or {}
+        if meta.get("source") == "external_reference":
+            continue
+        segments = result.get("segments") or []
+        if not any(seg.get("start") is not None for seg in segments):
+            return False
+    return True
+
+
+def _format_time_aligned_chunks(
+    engine_results: dict[str, dict],
+    transcripts: dict[str, str],
+    window_s: float = 300.0,
+) -> list[str]:
+    """Group each engine's segments into 5-minute windows and render side-by-side.
+
+    Returns a list of markdown lines. Empty list signals "fall back to concatenated"
+    (e.g. if no engine produced any timestamped segments at all).
+    """
+    # Find the overall duration from the latest segment end across engines
+    max_end = 0.0
+    has_any_segment = False
+    for label in transcripts:
+        result = engine_results.get(label) or {}
+        for seg in (result.get("segments") or []):
+            end = seg.get("end")
+            if isinstance(end, (int, float)):
+                has_any_segment = True
+                if float(end) > max_end:
+                    max_end = float(end)
+    if not has_any_segment or max_end <= 0:
+        return []
+
+    lines: list[str] = []
+    lines.append(
+        "> Engine outputs are grouped into time-aligned windows so you can compare what each "
+        "engine heard at the same wall-clock position. References (if any) appear at the end "
+        "as full transcripts."
+    )
+    lines.append("")
+
+    num_windows = int(max_end // window_s) + 1
+    engine_labels = [
+        lbl for lbl in transcripts
+        if (engine_results.get(lbl, {}).get("metadata") or {}).get("source") != "external_reference"
+    ]
+    reference_labels = [
+        lbl for lbl in transcripts
+        if (engine_results.get(lbl, {}).get("metadata") or {}).get("source") == "external_reference"
+    ]
+
+    for w in range(num_windows):
+        win_start = w * window_s
+        win_end = (w + 1) * window_s
+        lines.append(f"### Window {w+1}: {_fmt_ts(win_start)}–{_fmt_ts(min(win_end, max_end))}")
+        lines.append("")
+        for label in engine_labels:
+            result = engine_results.get(label) or {}
+            segments = result.get("segments") or []
+            window_text_parts = []
+            for seg in segments:
+                start = seg.get("start")
+                if isinstance(start, (int, float)) and win_start <= float(start) < win_end:
+                    txt = (seg.get("text") or "").strip()
+                    if txt:
+                        window_text_parts.append(txt)
+            block = " ".join(window_text_parts).strip()
+            lines.append(f"**{label}:** {block or '_(no output in this window)_'}")
+            lines.append("")
+        lines.append("")
+
+    if reference_labels:
+        lines.append("### External Reference (full text — not chunked)")
+        lines.append("")
+        for label in reference_labels:
+            lines.append(f"**{label}:**")
+            lines.append("")
+            lines.append(transcripts.get(label) or "_(empty)_")
+            lines.append("")
+
+    return lines
+
+
+def _fmt_ts(seconds: float) -> str:
+    """Format seconds as mm:ss for chunk headings."""
+    s = int(seconds)
+    return f"{s // 60:02d}:{s % 60:02d}"
 
 
 def build_doctor_report(
@@ -2567,6 +2742,17 @@ Examples:
         ),
     )
     parser.add_argument(
+        "--split-channels",
+        action="store_true",
+        help=(
+            "If the audio has 2+ channels (e.g. per-speaker stereo from a phone-call recording), "
+            "split each channel into a mono file via ffmpeg and run each engine separately per "
+            "channel. Per-channel results are labeled in the merge bundle so the merging agent has "
+            "ground-truth speaker attribution. Off by default — explicit opt-in because it doubles "
+            "engine API costs and isn't useful for stereo-mixed recordings."
+        ),
+    )
+    parser.add_argument(
         "--report-dictionary-misfire",
         metavar="OLD=NEW",
         action="append",
@@ -2887,15 +3073,38 @@ Examples:
     local_engine_ids = LOCAL_ENGINE_IDS
     rerun_engine_ids = {resolve_engine(item) or item for item in args.rerun_engine}
 
-    def _run_one_engine(engine_id: str) -> tuple[str, dict]:
+    # Channel splitting: when --split-channels is on AND the audio has 2+ channels,
+    # produce one mono file per channel and run each engine separately per channel.
+    # Otherwise keep the original single-stream path.
+    channel_streams: list[tuple[str, Path]]
+    if args.split_channels:
+        channel_streams = split_audio_channels(upload_path, run_dir)
+        if len(channel_streams) > 1:
+            print(
+                f"🎚  Channel splitting: {len(channel_streams)} channels "
+                f"({', '.join(lbl for lbl, _ in channel_streams)}) — engines will run per channel.",
+                file=sys.stderr,
+            )
+    else:
+        channel_streams = [("mono", upload_path)]
+
+    def _run_one_engine(engine_id: str, channel_label: str = "mono",
+                        channel_path: Path | None = None) -> tuple[str, dict]:
         label, func = ENGINES[engine_id]
-        engine_slug = engine_id
+        target_path = channel_path if channel_path is not None else upload_path
+        # Tag slug + result label by channel when there are multiple channels
+        if channel_label != "mono":
+            engine_slug = f"{engine_id}.channel-{channel_label}"
+            result_label = f"{label} (Channel {channel_label})"
+        else:
+            engine_slug = engine_id
+            result_label = label
         engine_log = run_dir / f"{engine_slug}.log"
         normalized_path = run_dir / f"{engine_slug}.normalized.json"
         raw_response_path = run_dir / f"{engine_slug}.raw.json"
         if args.resume and engine_id not in rerun_engine_ids and normalized_path.exists():
             cached = json.loads(normalized_path.read_text())
-            return label, cached
+            return result_label, cached
 
         python_bin = resolve_engine_python(engine_id, engine_python_overrides, args.use_system_python)
 
@@ -2904,7 +3113,7 @@ Examples:
         def _attempt_once() -> dict:
             if engine_id == "assemblyai-u3-pro":
                 t = transcribe_assemblyai(
-                    str(upload_path),
+                    str(target_path),
                     speaker_labels=use_diarization,
                     context_bias=context_bias,
                     num_speakers=args.num_speakers,
@@ -2913,13 +3122,13 @@ Examples:
                 )
             elif engine_id == "voxtral-small":
                 t = transcribe_mistral(
-                    str(upload_path),
+                    str(target_path),
                     context_bias,
                     python_bin=python_bin,
                     log_path=engine_log,
                 )
             else:
-                t = func(str(upload_path), context_bias, python_bin=python_bin, log_path=engine_log)  # type: ignore[operator]
+                t = func(str(target_path), context_bias, python_bin=python_bin, log_path=engine_log)  # type: ignore[operator]
             if t:
                 return {"status": "complete", "text": t, "error": None}
             err = f"{label} returned no transcript"
@@ -2938,38 +3147,47 @@ Examples:
         text = retry_result.get("text") or ""
         status = retry_result["status"]
         failure_reason: str | None = retry_result.get("error") if not text else None
+        # Per-channel duration matches full duration (channels run in parallel)
         coherence = assess_engine_coherence(text, audio_duration_seconds)
         result = {
             "engine_id": engine_id,
-            "label": label,
+            "label": result_label,
+            "channel": channel_label,
             "status": status,
             "failure_reason": failure_reason,
             "python": python_bin,
             "text": text or "",
             "segments": normalize_segments(extract_basic_segments(text or "", engine_id), engine_id),
-            "metadata": {"source_engine": engine_id},
+            "metadata": {"source_engine": engine_id, "channel": channel_label},
             "raw_response_path": str(raw_response_path),
             "char_count": len(text or ""),
             "quality_concern": coherence,
         }
         if coherence is not None:
             print(
-                f"⚠️  {label}: {coherence['detail']} "
+                f"⚠️  {result_label}: {coherence['detail']} "
                 f"({coherence['chars_per_minute']} chars/min)",
                 file=sys.stderr,
             )
         normalized_path.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         if text:
             raw_response_path.write_text(json.dumps({"text": text}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        return label, result
+        return result_label, result
 
-    # Cloud engines in parallel, local engines sequentially after
+    # Cloud engines in parallel, local engines sequentially after.
+    # When --split-channels is on, each engine runs once per channel.
     cloud_ids = [eid for eid in selected_engine_ids if eid not in local_engine_ids]
     local_ids = [eid for eid in selected_engine_ids if eid in local_engine_ids]
 
-    if cloud_ids:
-        with ThreadPoolExecutor(max_workers=len(cloud_ids)) as executor:
-            futures = {executor.submit(_run_one_engine, eid): eid for eid in cloud_ids}
+    cloud_jobs = [(eid, ch_label, ch_path) for eid in cloud_ids for (ch_label, ch_path) in channel_streams]
+    local_jobs = [(eid, ch_label, ch_path) for eid in local_ids for (ch_label, ch_path) in channel_streams]
+
+    if cloud_jobs:
+        with ThreadPoolExecutor(max_workers=max(1, len(cloud_jobs))) as executor:
+            futures = {
+                executor.submit(_run_one_engine, eid, ch_label, ch_path): (eid, ch_label)
+                for (eid, ch_label, ch_path) in cloud_jobs
+            }
             for future in as_completed(futures):
                 label, result = future.result()
                 engine_results[label] = result
@@ -2984,8 +3202,8 @@ Examples:
                 with run_log_path.open("a", encoding="utf-8") as fh:
                     fh.write(f"{datetime.now().isoformat()} engine={label} status={result.get('status')}\n")
 
-    for eid in local_ids:
-        label, result = _run_one_engine(eid)
+    for (eid, ch_label, ch_path) in local_jobs:
+        label, result = _run_one_engine(eid, ch_label, ch_path)
         engine_results[label] = result
         transcripts[label] = result.get("text")
         write_status(status_path, {

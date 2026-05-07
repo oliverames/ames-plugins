@@ -42,6 +42,7 @@ Use `--merge-mode claude` only when you intentionally want the script to call ne
 | `--transcripts-out FILE` | Path for raw transcripts JSON FILE — only used with `--transcribe-only`. Distinct from `--output`. |
 | `--reference FILE` | Path to a known-good external transcript (Apple Phone-app auto-transcript, Otter export, Riverside export, hand-corrected). Included as a high-trust source in the merge bundle. Sidecar files next to the audio (`<basename>.transcript.md`, `<basename>.transcript.txt`, `<basename>.reference.md`, `<basename>.reference.txt`, `<basename>.txt`) are auto-detected if no `--reference` is passed. |
 | `--report-dictionary-misfire OLD=NEW` | Log a dictionary rule that misfired (e.g. `mont-royal=Mont-Royal` when the speaker actually said "Montreal"). Appends to `~/.config/smart-transcribe/dictionary-misfires.jsonl` for periodic review. May be passed multiple times. Does NOT modify the dictionary — lets you audit before deciding to scope or remove the rule. Can run standalone (no audio required). |
+| `--split-channels` | If the audio has 2+ channels (e.g. per-speaker stereo from a phone-call recording), split each channel into a mono file via ffmpeg and run each engine separately per channel. Per-channel results are labeled in the merge bundle so the merging agent has ground-truth speaker attribution. Off by default — explicit opt-in because it doubles engine API cost and isn't useful for stereo-mixed recordings. |
 
 ### Output flag cheat-sheet
 
