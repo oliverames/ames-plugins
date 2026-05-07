@@ -3,8 +3,11 @@
 Smart Transcribe - Multi-Engine Transcription with Agent Merge
 ==============================================================
 
-Default transcription uses Cohere Transcribe locally plus Mistral Voxtral,
-ElevenLabs Scribe v2, and AssemblyAI Universal-3 Pro. Merge uses headless
+Default transcription runs AssemblyAI Universal-3 Pro, ElevenLabs Scribe v2,
+Mistral Voxtral, and Google Gemini in parallel. Voxtral Mini local is the only
+remaining local option (Cohere Transcribe was removed in 3.11.x as too
+unreliable on meeting/phone-call audio). Merge prefers the current chat agent
+(--merge-mode agent, default for the skill); --merge-mode claude calls headless
 Claude Code first and falls back to headless Codex when Claude is unavailable
 or rate-limited.
 """
@@ -16,6 +19,7 @@ import json
 import math
 import argparse
 import copy
+import hashlib
 import shutil
 import subprocess
 import tempfile
@@ -30,7 +34,7 @@ from common import (
     resolve_key, load_dictionary, get_context_terms,
     get_dictionary_paths, flatten_entities, merge_dicts,
     compress_audio, convert_16khz_mono, chunk_audio, get_audio_duration,
-    flatten_corrections,
+    flatten_corrections, apply_dictionary_corrections,
     run_engine_text, retry_engine,
     print_runtime_banner, resolve_engine_python, require_supported_python,
     supported_python_string, python_version_supported, resolve_key_status, check_ffmpeg_tools,
@@ -39,7 +43,7 @@ from common import (
 
 DEFAULT_ENGINES = ["assemblyai-u3-pro", "scribe-v2", "voxtral-small", "gemini-3-pro"]
 DEFAULT_FALLBACK_ENGINE = "gpt4o-mini-transcribe"
-LOCAL_ENGINE_IDS = {"voxtral-mini-local", "cohere-transcribe"}
+LOCAL_ENGINE_IDS = {"voxtral-mini-local"}
 
 # Sentinel used in engine_results[label]["metadata"]["source"] to mark a row that
 # came from --reference / sidecar auto-detection rather than a transcription engine.
@@ -52,7 +56,6 @@ ENGINE_TIMEOUTS = {
     "gpt4o-transcribe": 3600,
     "gpt4o-mini-transcribe": 3600,
     "voxtral-mini-local": 900,
-    "cohere-transcribe": 900,
 }
 CANONICAL_SPEAKER_RE = re.compile(r"Speaker\s+([A-Za-z0-9_-]+)", re.IGNORECASE)
 MERGE_RATE_LIMIT_PATTERNS = (
@@ -70,7 +73,11 @@ MERGE_OUTPUT_SCHEMA = {
     "properties": {
         "metadata": {
             "type": "object",
-            "additionalProperties": True,
+            # OpenAI/Codex structured-output (response_format json_schema) requires
+            # additionalProperties:false on every nested object. Set false here so
+            # the schema is accepted by both Claude (--json-schema) and Codex
+            # (--output-schema). Required fields are listed exhaustively below.
+            "additionalProperties": False,
             "properties": {
                 "title": {"type": "string"},
                 "speakers": {"type": "array", "items": {"type": "string"}},
@@ -229,6 +236,71 @@ def split_audio_channels(audio_path: Path, run_dir: Path) -> list[tuple[str, Pat
     return outputs
 
 
+def chunk_audio_by_minutes(
+    audio_path: Path,
+    run_dir: Path,
+    minutes: float,
+    overlap_seconds: float = 5.0,
+) -> list[tuple[str, Path]]:
+    """Split a long audio file into N-minute chunks (with small overlap).
+
+    Returns [(chunk_label, chunk_path), ...] in chunk order. Chunks live in
+    `run_dir/chunks/` so they're cleaned up alongside the run. Each chunk
+    after the first carries a small overlap with the previous chunk so the
+    merge agent can stitch content across boundaries without losing words at
+    the seam.
+
+    Returns [("single", audio_path)] when the input is shorter than the chunk
+    size, so the caller can use the same code path for both flows.
+
+    Tries `ffmpeg -c copy` first (fast, no re-encode); falls back to a re-
+    encode when the codec doesn't support keyframe-aligned cuts at arbitrary
+    timestamps (common for Voice Memos AAC).
+    """
+    try:
+        duration_s = float(get_audio_duration(audio_path))
+    except Exception:
+        duration_s = 0.0
+    chunk_s = max(60.0, minutes * 60.0)
+    if duration_s <= chunk_s or duration_s <= 0:
+        return [("single", audio_path)]
+    chunks_dir = run_dir / "chunks"
+    chunks_dir.mkdir(parents=True, exist_ok=True)
+    n_chunks = math.ceil(duration_s / chunk_s)
+    chunks: list[tuple[str, Path]] = []
+    for i in range(n_chunks):
+        start = max(0.0, i * chunk_s - (overlap_seconds if i > 0 else 0.0))
+        length = chunk_s + (overlap_seconds if i > 0 else 0.0)
+        chunk_label = f"chunk-{i+1:03d}"
+        chunk_path = chunks_dir / f"{chunk_label}{audio_path.suffix}"
+        if chunk_path.exists() and chunk_path.stat().st_size > 0:
+            chunks.append((chunk_label, chunk_path))
+            continue
+        copy_cmd = [
+            "ffmpeg", "-y", "-i", str(audio_path),
+            "-ss", f"{start:.3f}", "-t", f"{length:.3f}",
+            "-c", "copy", str(chunk_path),
+        ]
+        result = subprocess.run(copy_cmd, capture_output=True, text=True, timeout=120)
+        if result.returncode != 0 or not chunk_path.exists() or chunk_path.stat().st_size == 0:
+            # Re-encode fallback for codecs that can't be cleanly stream-copied
+            # at arbitrary offsets (most Voice Memos AAC files end up here).
+            reencode_cmd = [
+                "ffmpeg", "-y", "-i", str(audio_path),
+                "-ss", f"{start:.3f}", "-t", f"{length:.3f}",
+                str(chunk_path),
+            ]
+            result = subprocess.run(reencode_cmd, capture_output=True, text=True, timeout=300)
+        if result.returncode == 0 and chunk_path.exists() and chunk_path.stat().st_size > 0:
+            chunks.append((chunk_label, chunk_path))
+        else:
+            err = (result.stderr or "")[:160]
+            print(f"⚠️  ffmpeg chunk extract failed for {chunk_label}: {err}", file=sys.stderr)
+    if not chunks:
+        return [("single", audio_path)]
+    return chunks
+
+
 REFERENCE_SIDECAR_SUFFIXES: tuple[str, ...] = (
     ".reference.md",
     ".reference.txt",
@@ -262,6 +334,87 @@ def resolve_reference_source(audio_path: Path, explicit: str | None) -> Path | N
         if candidate.exists() and candidate.resolve() != audio_path.resolve():
             return candidate
     return None
+
+
+def audio_content_hash(audio_path: Path) -> str:
+    """Return the first 8 hex chars of SHA-256 over the audio file bytes.
+
+    Stable, cheap content fingerprint. Used to suffix the run-directory so two
+    different recordings sharing a filename (e.g. user re-records `Voice Memo
+    1.m4a`) don't silently reuse a stale run dir on --resume. Reads in 1 MiB
+    chunks so a 200 MB file doesn't balloon RSS.
+    """
+    h = hashlib.sha256()
+    with audio_path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()[:8]
+
+
+# Container creation_time strings come back in a few flavours depending on the
+# muxer. Try the strict ISO-8601 form first (M4A/MP4 from iOS Voice Memos and
+# the macOS Voice Memos export-to-.qta path both use this), then a couple of
+# fallbacks that show up on older recordings.
+_FFPROBE_DATE_FORMATS = (
+    "%Y-%m-%dT%H:%M:%S.%fZ",
+    "%Y-%m-%dT%H:%M:%SZ",
+    "%Y-%m-%d %H:%M:%S",
+    "%Y-%m-%dT%H:%M:%S",
+)
+
+
+def _ffprobe_creation_time(audio_path: Path) -> datetime | None:
+    """Read the container's creation_time tag via ffprobe. Returns None on miss."""
+    try:
+        result = subprocess.run(
+            [
+                "ffprobe", "-v", "error",
+                "-show_entries", "format_tags=creation_time",
+                "-of", "default=nw=1:nk=1",
+                str(audio_path),
+            ],
+            capture_output=True, text=True, timeout=10,
+        )
+    except Exception:
+        return None
+    if result.returncode != 0:
+        return None
+    raw = (result.stdout or "").strip()
+    if not raw:
+        return None
+    for fmt in _FFPROBE_DATE_FORMATS:
+        try:
+            return datetime.strptime(raw, fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def resolve_recording_date(audio_path: Path, llm_extracted: str | None) -> str:
+    """Pick the best YYYY-MM-DD for the recording, in priority order.
+
+    1. LLM-extracted `date_mentioned` from the merged metadata if it parses.
+       (Usually the most accurate when the speakers said the date out loud.)
+    2. Container `creation_time` tag via ffprobe — the actual recording wall
+       clock for iOS Voice Memos / .qta / .m4a, unaffected by transfer date.
+    3. File mtime — at least reflects when the file was last written, often
+       still close to the recording date.
+    4. Today, as the absolute floor. Worse than the others; was the previous
+       silent default.
+    """
+    if llm_extracted:
+        try:
+            return datetime.strptime(llm_extracted, "%Y-%m-%d").strftime("%Y-%m-%d")
+        except ValueError:
+            pass  # LLM emitted a free-form string — fall through to ffprobe.
+    container = _ffprobe_creation_time(audio_path)
+    if container is not None:
+        return container.strftime("%Y-%m-%d")
+    try:
+        mtime = audio_path.stat().st_mtime
+        return datetime.fromtimestamp(mtime).strftime("%Y-%m-%d")
+    except Exception:
+        return datetime.now().strftime("%Y-%m-%d")
 
 
 def log_dictionary_misfire(entry: str) -> None:
@@ -624,7 +777,7 @@ def extract_basic_segments(text: str, source_engine: str) -> list[dict]:
 
 
 def choose_recommended_base(engine_results: dict[str, dict]) -> str | None:
-    preferred = ["AssemblyAI Universal-3 Pro", "ElevenLabs Scribe v2", "Cohere Transcribe (local)", "Mistral Voxtral Small"]
+    preferred = ["AssemblyAI Universal-3 Pro", "ElevenLabs Scribe v2", "Mistral Voxtral Small"]
     for label in preferred:
         result = engine_results.get(label)
         if result and result.get("status") == "complete" and result.get("text"):
@@ -663,8 +816,8 @@ def _format_engine_status_block(engine_results: dict[str, dict] | None) -> list[
 
     Surfaces success/failure/quality concerns at the top so the merging agent
     knows up-front which transcripts to trust, rather than having to dig through
-    a separate run.log to learn that (e.g.) Scribe v2 was quota-blocked or
-    Cohere produced suspiciously sparse output.
+    a separate run.log to learn that (e.g.) Scribe v2 was quota-blocked or an
+    engine produced suspiciously sparse output.
     """
     if not engine_results:
         return []
@@ -848,8 +1001,7 @@ def emit_agent_merge_bundle(
 
     # If every engine emitted timestamped segments, render the per-engine
     # transcripts side-by-side per 5-minute window. When any engine lacks
-    # segments (e.g. Cohere ships without timestamps), fall back to the
-    # concatenated layout.
+    # segments, fall back to the concatenated layout.
     chunked: list[str] = []
     if engine_results and _all_engines_have_segments(engine_results, transcripts):
         chunked = _format_time_aligned_chunks(engine_results, transcripts, window_s=300.0)
@@ -962,6 +1114,55 @@ def _fmt_ts(seconds: float) -> str:
     return f"{s // 60:02d}:{s % 60:02d}"
 
 
+def _build_quota_report(keys: dict[str, dict]) -> dict:
+    """Per-engine remaining-quota snapshot, surfaced in --doctor output.
+
+    Only ElevenLabs exposes a usable remaining-credits endpoint (TTS character
+    pool, plus a parsed cache from the last quota_exceeded error for STT).
+    AssemblyAI / Mistral / Gemini / OpenAI don't publish a remaining-credits
+    API; we report `available: false` with a clear reason so the user isn't
+    left wondering whether they missed a flag.
+    """
+    quota: dict[str, dict] = {}
+
+    # ElevenLabs — live TTS character pool + cached STT credits
+    if keys.get("ELEVENLABS_API_KEY", {}).get("resolved"):
+        try:
+            key = resolve_key("ELEVENLABS_API_KEY") or ""
+            ok, msg = _check_elevenlabs_quota(key, "/dev/null", audio_duration_s=0.0)
+            cache = _load_elevenlabs_credits_cache() or {}
+            quota["elevenlabs"] = {
+                "available": True,
+                "sufficient_for_zero_length_probe": ok,
+                "message": msg,
+                "cached_stt_credits_remaining": cache.get("credits_remaining"),
+                "cached_recorded_at": cache.get("recorded_at"),
+            }
+        except Exception as exc:
+            quota["elevenlabs"] = {"available": False, "error": str(exc)}
+    else:
+        quota["elevenlabs"] = {"available": False, "reason": "ELEVENLABS_API_KEY not resolved"}
+
+    # The other cloud providers — flag the gap explicitly.
+    quota["assemblyai"] = {
+        "available": False,
+        "reason": "AssemblyAI does not expose a remaining-credits endpoint; failures surface only mid-call",
+    }
+    quota["mistral"] = {
+        "available": False,
+        "reason": "Mistral API does not expose a remaining-quota endpoint",
+    }
+    quota["google_gemini"] = {
+        "available": False,
+        "reason": "Gemini API does not expose remaining quota; rate-limit errors surface only mid-call",
+    }
+    quota["openai"] = {
+        "available": False,
+        "reason": "OpenAI does not expose a remaining-credits endpoint via the SDK",
+    }
+    return quota
+
+
 def build_doctor_report(
     selected_engine_ids: list[str],
     engine_python_overrides: dict[str, str] | None = None,
@@ -979,7 +1180,6 @@ def build_doctor_report(
             "ELEVENLABS_API_KEY",
             "MISTRAL_API_KEY",
             "GOOGLE_API_KEY",
-            "HF_TOKEN",
             "ANTHROPIC_API_KEY",
         ]
     }
@@ -999,12 +1199,7 @@ def build_doctor_report(
         "ffmpeg": ffmpeg,
         "engines": selected_engine_ids,
         "engine_checks": engine_checks,
-        "huggingface": {
-            "token_resolved": keys["HF_TOKEN"]["resolved"],
-            "cohere_model_mlx": "mlx-community/cohere-transcribe-03-2026-mlx-8bit",
-            "cohere_model_pytorch": "CohereLabs/cohere-transcribe-03-2026",
-            "note": "MLX path tried first (Apple Silicon); falls back to PyTorch if unavailable. Auth assumed when HF_TOKEN resolves.",
-        },
+        "quota": _build_quota_report(keys),
         "merge_runners": {
             "primary": {
                 "runner": "claude",
@@ -1024,10 +1219,10 @@ def build_doctor_report(
 
 # Conversational speech is typically 800-1500 chars/min. Below this threshold
 # the engine output is suspect — likely truncation, VAD-less hallucination on
-# silence, or a transient API error that returned a partial response. Cohere
-# Transcribe in particular has no built-in voice-activity detection and has
-# been observed producing 4,674 chars on a 58-minute file (≈80 chars/min) by
-# hallucinating word salad through stretches of audio.
+# silence, or a transient API error that returned a partial response. Engines
+# without built-in voice-activity detection were observed producing ~80
+# chars/min on long recordings by hallucinating through silence; the threshold
+# below catches that pattern across any current or future engine.
 COHERENCE_MIN_CHARS_PER_MINUTE = 100.0
 
 
@@ -1065,7 +1260,6 @@ ENGINE_SDK_PROBES: dict[str, str] = {
     "scribe-v2": "import elevenlabs; print(getattr(elevenlabs, '__version__', 'unknown'))",
     "voxtral-small": "import mistralai; print(getattr(mistralai, '__version__', 'unknown'))",
     "voxtral-mini-local": "import mlx_audio; print(getattr(mlx_audio, '__version__', 'unknown'))",
-    "cohere-transcribe": "import transformers; print(getattr(transformers, '__version__', 'unknown'))",
     "gemini-3-pro": "from google import genai; print(getattr(genai, '__version__', 'unknown'))",
     "gpt4o-transcribe": "import openai; print(getattr(openai, '__version__', 'unknown'))",
     "gpt4o-mini-transcribe": "import openai; print(getattr(openai, '__version__', 'unknown'))",
@@ -1218,26 +1412,6 @@ try:
     print(json.dumps({"ok": True, "runtime": "openai"}))
 except Exception as exc:
     print(json.dumps({"ok": False, "error": str(exc)}))
-""",
-        "cohere-transcribe": r"""
-import json
-result = {"ok": False, "runtime": "cohere-local"}
-errors = {}
-try:
-    import mlx_audio  # noqa: F401
-    result["mlx_audio"] = True
-except Exception as exc:
-    errors["mlx_audio"] = str(exc)
-try:
-    import torch  # noqa: F401
-    import transformers  # noqa: F401
-    result["torch_transformers"] = True
-except Exception as exc:
-    errors["torch_transformers"] = str(exc)
-result["ok"] = bool(result.get("mlx_audio") or result.get("torch_transformers"))
-if errors:
-    result["errors"] = errors
-print(json.dumps(result))
 """,
     }
     script = check_scripts.get(engine_id)
@@ -2005,94 +2179,12 @@ except Exception as e:
                            python_bin=python_bin, log_path=log_path)
 
 
-# Engine: Cohere Transcribe (local, PyTorch + MPS / MLX)
-def transcribe_cohere(audio_path: str, context_bias: list | None = None,
-                      python_bin: str | None = None, log_path: Path | None = None) -> str | None:
-    wav_path = convert_16khz_mono(audio_path)
-    script = '''
-import json, os, sys
-os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
-try:
-    # Try MLX community version first (faster on Apple Silicon)
-    try:
-        from mlx_audio.stt.utils import load
-        model = load("mlx-community/cohere-transcribe-03-2026-mlx-8bit")
-        result = model.generate(os.environ["ST_AUDIO_PATH"], verbose=False)
-        text = result.text if hasattr(result, "text") else str(result)
-        print(json.dumps({"text": text}))
-        sys.exit(0)
-    except Exception:
-        pass
-    import torch, soundfile as sf
-    from transformers import AutoProcessor, CohereAsrForConditionalGeneration
-    # Patch parakeet subsampling shape bug present in transformers <= 5.5.x:
-    # transpose(1,2) + shape[2] reads the post-transpose dims, putting time at dim 3.
-    # permute(0,3,1,2) correctly brings time to dim 1 before flattening channels*height.
-    try:
-        import torch.nn as nn
-        from transformers.models.parakeet import modeling_parakeet as _pm
-        def _fixed_subsampling_forward(self, input_features, attention_mask=None):
-            hs = input_features.unsqueeze(1)
-            current_lengths = attention_mask.sum(-1) if attention_mask is not None else None
-            for layer in self.layers:
-                hs = layer(hs)
-                if isinstance(layer, nn.Conv2d) and attention_mask is not None:
-                    current_lengths = self._get_output_length(current_lengths, layer)
-                    seq_len = hs.shape[2]
-                    mask = torch.arange(seq_len, device=attention_mask.device) < current_lengths[:, None]
-                    hs *= mask[:, None, :, None]
-            b, c, h, t = hs.shape
-            hs = hs.permute(0, 3, 1, 2).reshape(b, t, -1)
-            return self.linear(hs)
-        _pm.ParakeetEncoderSubsamplingConv2D.forward = _fixed_subsampling_forward
-    except Exception:
-        pass  # if transformers fixes the bug, this no-ops gracefully
-    model_id = "CohereLabs/cohere-transcribe-03-2026"
-    processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
-    model = CohereAsrForConditionalGeneration.from_pretrained(
-        model_id, trust_remote_code=True, device_map="auto",
-        torch_dtype=torch.float32,  # bfloat16 default crashes on MPS
-    )
-    audio, sr = sf.read(os.environ["ST_AUDIO_PATH"])
-    # config.max_position_embeddings=5000 limits encoder output to ~400s at 12.5fps.
-    # Split into 5-minute chunks so each stays safely under the limit.
-    CHUNK_S = 300
-    chunk_size = CHUNK_S * sr
-    audio_chunks = [audio[i:i + chunk_size] for i in range(0, len(audio), chunk_size)]
-    texts = []
-    for chunk in audio_chunks:
-        chunk_duration_s = len(chunk) / sr
-        # Scale token budget: ~150wpm * 1.3 tok/word, min 512, max 8192
-        max_tokens = max(512, min(8192, int(chunk_duration_s / 60 * 150 * 1.3) + 256))
-        inputs = processor(audio=chunk, sampling_rate=sr, return_tensors="pt", language="en")
-        audio_chunk_index = inputs.get("audio_chunk_index")  # keep in inputs for generate()
-        inputs.pop("length", None)  # not a generate() kwarg (added in transformers 5.5)
-        inputs.to(model.device)
-        outputs = model.generate(**inputs, max_new_tokens=max_tokens,
-                                  repetition_penalty=1.2)  # prevent stuck loops on hard audio
-        result = processor.decode(outputs, skip_special_tokens=True,
-                                  audio_chunk_index=audio_chunk_index, language="en")
-        chunk_text = result[0] if isinstance(result, list) else result
-        texts.append(chunk_text.strip())
-    text = " ".join(t for t in texts if t)
-    print(json.dumps({"text": text}))
-except Exception as e:
-    print(json.dumps({"error": str(e)}))
-    sys.exit(1)
-'''
-    hf_token = resolve_key("HF_TOKEN") or ""
-    env = {**os.environ, "ST_AUDIO_PATH": wav_path,
-           "PYTORCH_ENABLE_MPS_FALLBACK": "1",
-           "HF_TOKEN": hf_token,
-           "HUGGING_FACE_HUB_TOKEN": hf_token,
-           "HUGGINGFACE_TOKEN": hf_token}
-    return run_engine_text(script, env, "Cohere Transcribe (local)", timeout=ENGINE_TIMEOUTS["cohere-transcribe"],
-                           python_bin=python_bin, log_path=log_path)
-
-
-# Engine dispatch table — keys match ensemble.py MODELS dict for consistency
+# Engine dispatch table — keys match ensemble.py MODELS dict for consistency.
+# Cohere Transcribe (local) was removed in 3.11.x: too unreliable on this user's
+# meeting/phone-call audio (eager-VAD hallucinations on silence) and too costly
+# in disk + RAM (~9 GB across the PyTorch + MLX checkpoints) to keep around as
+# an opt-in. voxtral-mini-local remains as the local option.
 ENGINES: dict[str, tuple[str, object]] = {
-    "cohere-transcribe":    ("Cohere Transcribe (local)",  transcribe_cohere),
     "voxtral-small":        ("Mistral Voxtral Small",      transcribe_mistral),
     "scribe-v2":            ("ElevenLabs Scribe v2",       transcribe_elevenlabs),
     "assemblyai-u3-pro":    ("AssemblyAI Universal-3 Pro", transcribe_assemblyai),
@@ -2113,7 +2205,6 @@ ENGINE_ALIASES = {
     "gpt4o": "gpt4o-transcribe",
     "gpt4o-mini": "gpt4o-mini-transcribe",
     "voxtral-local": "voxtral-mini-local",
-    "cohere": "cohere-transcribe",
 }
 
 def resolve_engine(name: str) -> str | None:
@@ -2262,13 +2353,6 @@ You are reviewing a single existing transcript against the correction dictionary
                     "technical vocabulary. Trust word choices from this engine when they disagree "
                     "with others. Diarizes but less reliable for speaker turn order."
                 )
-            elif "cohere" in key:
-                engine_profiles.append(
-                    f"- **{engine_name}** (Cohere Transcribe, 5.42% HF-WER — #1 open-source): "
-                    "Runs locally; no keyterm biasing. Fastest engine (524x real-time). "
-                    "Use as a tiebreaker between cloud engines. May stumble on rare proper nouns "
-                    "not in training data. Good overall accuracy on common vocabulary."
-                )
             elif "voxtral" in key or "mistral" in key:
                 engine_profiles.append(
                     f"- **{engine_name}** (Mistral Voxtral, 2.9% AA-WER): "
@@ -2294,7 +2378,6 @@ You are reviewing a single existing transcript against the correction dictionary
 ### Merge Strategy:
 - Use **AssemblyAI** speaker labels and paragraph structure as the structural scaffold.
 - Use **ElevenLabs Scribe** word choices as the primary word-accuracy reference.
-- Use **Cohere** (if present) as a tiebreaker when the cloud engines disagree.
 - When all engines agree on a word, it is almost certainly correct.
 - When engines disagree, prefer the engine profile above that specializes in that dimension."""
 
@@ -2312,14 +2395,17 @@ You have {len(engine_names)} transcript(s) of the same audio from different engi
 {engine_reliability}
 """
 
+    # Prompt is ordered intentionally: all meta-instructions (engine guidance,
+    # correction policy, output contract) sit ABOVE the transcripts, fenced as
+    # background. The transcripts themselves are wrapped in BEGIN/END markers
+    # so the LLM can't confuse instruction prose with content. The earlier
+    # layout interleaved engine_profiles with the transcripts, which leaked
+    # lines like "Cohere Transcribe (local) (ElevenLabs Scribe v2, 2.3% AA-WER
+    # — #1 cloud accuracy)" into the merged output during the BCBS run.
     prompt = f"""You are an expert transcription editor.
-Do not use external tools. Work only from the transcript and dictionary content provided below.
+Do not use external tools. Work only from the transcripts in the BEGIN TRANSCRIPTS / END TRANSCRIPTS section below, plus the correction dictionary and speaker context. Do NOT echo any of the meta-instructions in this prompt into the output transcript.
 
-## Source Transcript(s)
-
-{chr(10).join(transcript_sections)}
-{dict_context}
-{speaker_context}
+[BEGIN BACKGROUND — for your reasoning only, never reproduce in the output]
 
 {task_instructions}
 
@@ -2350,6 +2436,18 @@ If structured JSON output is not available, output EXACTLY four sections separat
 4. Dictionary suggestions, one per line
 
 Omit corrections already in the Known Corrections list.
+
+[END BACKGROUND]
+{dict_context}
+{speaker_context}
+
+<<<BEGIN TRANSCRIPTS — this is the only source material; reconstruct the output from these>>>
+
+{chr(10).join(transcript_sections)}
+
+<<<END TRANSCRIPTS>>>
+
+Critical reminder before you write the output: the `transcript` field of your response must contain ONLY content reconstructed from what speakers actually said inside the BEGIN/END TRANSCRIPTS block. Do NOT echo engine names, engine profile prose, merge strategy notes, the output contract, or any other instruction text from this prompt into the transcript body.
 """
 
     # Write prompt to temp file (avoids shell escaping issues with long text)
@@ -2533,8 +2631,11 @@ print(response.text.strip())
     finally:
         if prompt_file:
             Path(prompt_file).unlink(missing_ok=True)
-        
-    return "Transcript"
+
+    # Empty fallback so the caller's `or audio_path.stem` chain wins. Returning
+    # the literal "Transcript" here used to bury the source filename in a 6-file
+    # batch where every output folder ended up named "<date> Transcript".
+    return ""
 
 
 # =============================================================================
@@ -2665,7 +2766,7 @@ def main():
     
     Pipeline stages:
     1. Load dictionary
-    2. Run default engines: Cohere local, Mistral Voxtral, ElevenLabs Scribe v2, AssemblyAI Universal-3 Pro
+    2. Run default engines: AssemblyAI Universal-3 Pro, ElevenLabs Scribe v2, Mistral Voxtral, Google Gemini
     3. Merge transcripts with headless Claude (Codex fallback on rate limits)
     5. Save suggestions for dictionary learning
     6. Generate title if not provided
@@ -2718,7 +2819,7 @@ Examples:
         metavar="E1,E2,...",
         default=",".join(DEFAULT_ENGINES),
         help=(
-            "Comma-separated engine IDs (default: cohere-transcribe,voxtral-small,scribe-v2,assemblyai-u3-pro). "
+            "Comma-separated engine IDs (default: assemblyai-u3-pro,scribe-v2,voxtral-small,gemini-3-pro). "
             f"Available: {', '.join(ENGINES)}"
         ),
     )
@@ -2747,8 +2848,6 @@ Examples:
     parser.add_argument("--use-system-python", action="store_true",
                         help="Use a supported system Python instead of the dedicated engine venvs")
     parser.add_argument("--engine-python", help="Comma-separated per-engine overrides: scribe-v2=/path/to/python")
-    parser.add_argument("--warm-cohere", action="store_true",
-                        help="Warm Cohere model availability and print expected resource costs before running")
     parser.add_argument(
         "--review",
         action="store_true",
@@ -2774,6 +2873,19 @@ Examples:
             "channel. Per-channel results are labeled in the merge bundle so the merging agent has "
             "ground-truth speaker attribution. Off by default — explicit opt-in because it doubles "
             "engine API costs and isn't useful for stereo-mixed recordings."
+        ),
+    )
+    parser.add_argument(
+        "--chunk-minutes",
+        type=float,
+        default=0.0,
+        metavar="N",
+        help=(
+            "Split audio into N-minute chunks (with 5s overlap) before transcribing — useful for "
+            "long recordings that would otherwise blow past the merge bundle's 25K-token budget. "
+            "Each engine runs once per chunk; per-engine transcripts are concatenated with chunk "
+            "markers before merge. Default 0 (off). When enabled with --split-channels, chunking "
+            "wins."
         ),
     )
     parser.add_argument(
@@ -2811,11 +2923,11 @@ Examples:
     if args.report_dictionary_misfire:
         for entry in args.report_dictionary_misfire:
             log_dictionary_misfire(entry)
-        if not any([args.audio_file, args.fix_transcript, args.doctor, args.check_engine, args.warm_cohere]):
+        if not any([args.audio_file, args.fix_transcript, args.doctor, args.check_engine]):
             return 0  # Standalone misfire logging — done
 
     # Require at least one input unless running a maintenance command
-    if not any([args.audio_file, args.fix_transcript, args.doctor, args.check_engine, args.warm_cohere]):
+    if not any([args.audio_file, args.fix_transcript, args.doctor, args.check_engine]):
         parser.error("Provide an audio file or --fix-transcript FILE.")
 
     print_runtime_banner()
@@ -2872,13 +2984,6 @@ Examples:
             "supported_runtime": supported_python_string(),
             "self_test": check_engine_runtime(engine_id, python_bin),
         }, indent=2))
-        return 0
-
-    if args.warm_cohere:
-        print("Cohere local runtime warmup", file=sys.stderr)
-        print("Expected costs: first download can take multiple GB of disk, several GB RAM, and a few minutes.", file=sys.stderr)
-        cohere_python = resolve_engine_python("cohere-transcribe", engine_python_overrides, args.use_system_python)
-        transcribe_cohere("/dev/null", python_bin=cohere_python)  # warm import path; will fail transcript, but primes dependencies
         return 0
 
     # Parse speakers list if provided
@@ -3054,7 +3159,21 @@ Examples:
         sys.exit(1)
 
     output_root = Path(args.output).expanduser().resolve() if args.output else audio_path.parent
-    run_dir = output_root / f".smart-transcribe-runs" / audio_path.stem
+    # Suffix the run-dir with a content hash so two recordings sharing the same
+    # filename (e.g. user re-records "Voice Memo 1.m4a") don't silently reuse a
+    # stale run dir and trick --resume into mixing engine outputs across files.
+    audio_hash = audio_content_hash(audio_path)
+    run_dir = output_root / ".smart-transcribe-runs" / f"{audio_path.stem}-{audio_hash}"
+    legacy_run_dir = output_root / ".smart-transcribe-runs" / audio_path.stem
+    if args.resume and legacy_run_dir.exists() and not run_dir.exists():
+        # Backwards compat: pre-hash runs lived at .smart-transcribe-runs/<stem>/.
+        # When the user resumes one of those, honour the original path instead of
+        # forcing them to re-transcribe just for a directory rename.
+        print(
+            f"📂 Resuming legacy (pre-hash) run directory: {legacy_run_dir.name}",
+            file=sys.stderr,
+        )
+        run_dir = legacy_run_dir
     run_dir.mkdir(parents=True, exist_ok=True)
     # Audio duration is needed for the coherence sanity check (chars/minute) and
     # for ElevenLabs credit estimation. Compute once via ffprobe; harmless if 0.
@@ -3062,6 +3181,28 @@ Examples:
         audio_duration_seconds = float(get_audio_duration(audio_path))
     except Exception:
         audio_duration_seconds = 0.0
+
+    # Pre-flight quota banner — surface ElevenLabs balance up front when Scribe
+    # v2 is in the engine list, so the user sees insufficient-credit failures
+    # before AssemblyAI/Mistral/Gemini have already spent API calls in parallel.
+    # ElevenLabs is the only engine in the lineup that exposes a real remaining-
+    # credits signal; the others fail mid-call and there's nothing to probe.
+    if "scribe-v2" in selected_engine_ids and resolve_key("ELEVENLABS_API_KEY"):
+        try:
+            scribe_python = resolve_engine_python(
+                "scribe-v2", engine_python_overrides, args.use_system_python
+            )
+            quota_ok, quota_msg = _check_elevenlabs_quota(
+                resolve_key("ELEVENLABS_API_KEY") or "",
+                str(audio_path),
+                python_bin=scribe_python,
+                audio_duration_s=audio_duration_seconds,
+            )
+            icon = "✅" if quota_ok else "⚠️ "
+            print(f"{icon} ElevenLabs Scribe v2 quota: {quota_msg}", file=sys.stderr)
+        except Exception as exc:
+            print(f"  ElevenLabs quota check skipped: {exc}", file=sys.stderr)
+
     status_path = run_dir / STATUS_FILE_NAME
     run_log_path = run_dir / RUN_LOG_NAME
     if not run_log_path.exists():
@@ -3100,11 +3241,27 @@ Examples:
     local_engine_ids = LOCAL_ENGINE_IDS
     rerun_engine_ids = {resolve_engine(item) or item for item in args.rerun_engine}
 
-    # Channel splitting: when --split-channels is on AND the audio has 2+ channels,
-    # produce one mono file per channel and run each engine separately per channel.
-    # Otherwise keep the original single-stream path.
+    # Stream selection — chunking and channel-splitting both reuse the existing
+    # `channel_streams` machinery (engine_loop runs once per stream). When both
+    # are requested, chunking wins because long-recording bundle bloat is the
+    # bigger user pain than the channel-attribution nicety.
+    chunking_active = bool(args.chunk_minutes and args.chunk_minutes > 0
+                           and audio_duration_seconds > args.chunk_minutes * 60)
     channel_streams: list[tuple[str, Path]]
-    if args.split_channels:
+    if chunking_active:
+        if args.split_channels:
+            print("⚠️  --chunk-minutes overrides --split-channels for this run", file=sys.stderr)
+        channel_streams = chunk_audio_by_minutes(upload_path, run_dir, args.chunk_minutes)
+        if len(channel_streams) > 1:
+            print(
+                f"📐 Chunking: {len(channel_streams)} chunks of ~{args.chunk_minutes:g} min each "
+                f"(audio is ~{audio_duration_seconds/60:.1f} min). Engines run per chunk and the "
+                f"results are concatenated before merge.",
+                file=sys.stderr,
+            )
+        else:
+            chunking_active = False  # Audio shorter than chunk; nothing to do
+    elif args.split_channels:
         channel_streams = split_audio_channels(upload_path, run_dir)
         if len(channel_streams) > 1:
             print(
@@ -3119,13 +3276,18 @@ Examples:
                         channel_path: Path | None = None) -> tuple[str, dict]:
         label, func = ENGINES[engine_id]
         target_path = channel_path if channel_path is not None else upload_path
-        # Tag slug + result label by channel when there are multiple channels
-        if channel_label != "mono":
-            engine_slug = f"{engine_id}.channel-{channel_label}"
-            result_label = f"{label} (Channel {channel_label})"
-        else:
+        # Tag slug + result label by stream type. Chunks and channels both
+        # multiplex through this path; chunk labels read cleaner without the
+        # "Channel" prefix that only makes sense for stereo splits.
+        if channel_label in ("mono", "single"):
             engine_slug = engine_id
             result_label = label
+        elif channel_label.startswith("chunk-"):
+            engine_slug = f"{engine_id}.{channel_label}"
+            result_label = f"{label} ({channel_label})"
+        else:
+            engine_slug = f"{engine_id}.channel-{channel_label}"
+            result_label = f"{label} (Channel {channel_label})"
         engine_log = run_dir / f"{engine_slug}.log"
         normalized_path = run_dir / f"{engine_slug}.normalized.json"
         raw_response_path = run_dir / f"{engine_slug}.raw.json"
@@ -3182,8 +3344,14 @@ Examples:
         text = retry_result.get("text") or ""
         status = retry_result["status"]
         failure_reason: str | None = retry_result.get("error") if not text else None
-        # Per-channel duration matches full duration (channels run in parallel)
-        coherence = assess_engine_coherence(text, audio_duration_seconds)
+        # Per-channel duration matches full duration (channels run in parallel).
+        # Chunked runs use a fraction of the audio so applying the full duration
+        # produces false-positive low-density warnings; skip the check there
+        # (consolidation rolls up per-chunk concerns instead).
+        if channel_label.startswith("chunk-"):
+            coherence = None
+        else:
+            coherence = assess_engine_coherence(text, audio_duration_seconds)
         result = {
             "engine_id": engine_id,
             "label": result_label,
@@ -3256,6 +3424,73 @@ Examples:
         })
         with run_log_path.open("a", encoding="utf-8") as fh:
             fh.write(f"{datetime.now().isoformat()} engine={label} status={result.get('status')}\n")
+
+    if chunking_active:
+        # Collapse per-engine × per-chunk results back into one entry per engine
+        # so the merge stage sees a normal multi-engine input. Per-chunk text is
+        # joined with explicit boundary markers — the merge agent uses them to
+        # avoid double-counting the 5s overlap window between adjacent chunks.
+        consolidated_results: dict[str, dict] = {}
+        consolidated_transcripts: dict[str, str] = {}
+        by_engine_id: dict[str, list[tuple[str, dict]]] = {}
+        for label, result in engine_results.items():
+            eid = result.get("engine_id")
+            if not eid or not str(result.get("channel", "")).startswith("chunk-"):
+                # Non-chunked entries (e.g. external reference) pass through.
+                consolidated_results[label] = result
+                consolidated_transcripts[label] = result.get("text", "") or ""
+                continue
+            by_engine_id.setdefault(eid, []).append((label, result))
+        for eid, entries in by_engine_id.items():
+            entries.sort(key=lambda kv: kv[1].get("channel", ""))
+            canonical_label = ENGINES.get(eid, (eid, None))[0]
+            text_parts: list[str] = []
+            any_failed = False
+            any_concern = False
+            for _, chunk_result in entries:
+                chunk_label = chunk_result.get("channel", "?")
+                chunk_text = chunk_result.get("text", "") or ""
+                if chunk_text:
+                    text_parts.append(f"\n\n--- {chunk_label} ---\n\n{chunk_text}")
+                if chunk_result.get("status") != "complete":
+                    any_failed = True
+                if chunk_result.get("quality_concern"):
+                    any_concern = True
+            full_text = "".join(text_parts).strip()
+            if any_failed and not full_text:
+                consolidated_status = "failed"
+                consolidated_reason: str | None = "all chunks failed"
+            elif any_failed:
+                consolidated_status = "complete"
+                consolidated_reason = "some chunks failed"
+            else:
+                consolidated_status = "complete"
+                consolidated_reason = None
+            consolidated_results[canonical_label] = {
+                "engine_id": eid,
+                "label": canonical_label,
+                "channel": "chunked",
+                "status": consolidated_status,
+                "failure_reason": consolidated_reason,
+                "python": entries[0][1].get("python"),
+                "text": full_text,
+                "segments": [],  # Per-chunk segments don't share a timebase
+                "metadata": {
+                    "source_engine": eid,
+                    "channel": "chunked",
+                    "chunks": [c[1].get("channel") for c in entries],
+                },
+                "raw_response_path": None,
+                "char_count": len(full_text),
+                "quality_concern": (
+                    {"flag": "chunk_concern", "detail": "one or more chunks had a quality concern"}
+                    if any_concern else None
+                ),
+            }
+            if full_text:
+                consolidated_transcripts[canonical_label] = full_text
+        engine_results = consolidated_results
+        transcripts = consolidated_transcripts
 
     successful = {k: v for k, v in transcripts.items() if v}
 
@@ -3366,6 +3601,12 @@ Examples:
     # ==========================================================================
     # STAGE 4: LLM Merge
     # ==========================================================================
+    # Bind these here so STAGE 6/7 can branch on them regardless of which merge
+    # mode ran. `merge_degraded` is only ever set True by the LLM-merge fallback
+    # path; --merge-mode manual is an intentional choice, not degradation.
+    merge_degraded = False
+    merge_degraded_reason: str | None = None
+    merge_degraded_base_label: str | None = None
     if args.merge_mode == "manual":
         final_text = successful.get(choose_recommended_base(engine_results) or "", "") or list(successful.values())[0]
         suggestions = []
@@ -3385,11 +3626,26 @@ Examples:
         )
 
         if not final_text:
-            print("⚠️  Merge failed, using recommended base transcript")
-            final_text = successful.get(choose_recommended_base(engine_results) or "", "") or list(successful.values())[0]
+            base_label = choose_recommended_base(engine_results) or next(iter(successful), "")
+            base_text = successful.get(base_label, "") if base_label else ""
+            print(
+                f"⚠️  Merge failed; falling back to single-engine transcript: {base_label or '<none>'}",
+                file=sys.stderr,
+            )
+            # Best-effort: at least apply learned dictionary substitutions so the
+            # fallback isn't completely raw. This is NOT a substitute for cross-
+            # engine merge — see banner injected into the .md output below.
+            final_text = apply_dictionary_corrections(base_text, dictionary) if base_text else ""
             metadata = {}
             transparency_report = ""
-            merge_info = {"runner": "fallback transcript", "fallback_reason": merge_info.get("fallback_reason")}
+            merge_degraded = True
+            merge_degraded_reason = merge_info.get("fallback_reason") or "both runners returned empty / errored"
+            merge_degraded_base_label = base_label
+            merge_info = {
+                "runner": "fallback transcript",
+                "fallback_reason": merge_info.get("fallback_reason"),
+                "fallback_base_engine": base_label,
+            }
 
     # ==========================================================================
     # STAGE 5: Save Dictionary Suggestions
@@ -3407,24 +3663,32 @@ Examples:
     # STAGE 6: Generate Title and Extract Metadata
     # ==========================================================================
     title = metadata.get("title") if metadata else None
-    description = args.description or title or generate_title(final_text)
+    if merge_degraded:
+        # Don't burn a Gemini call synthesising a title from a degraded transcript;
+        # use the source audio stem so the output folder traces back cleanly.
+        description = args.description or audio_path.stem
+    else:
+        description = args.description or title or generate_title(final_text) or audio_path.stem
 
     speakers_meta: list = metadata.get("speakers", []) if metadata else []
     summary = metadata.get("summary", "") if metadata else ""
     date_mentioned = metadata.get("date_mentioned") if metadata else None
 
-    file_date = datetime.now().strftime("%Y-%m-%d")
-    if date_mentioned:
-        try:
-            file_date = datetime.strptime(date_mentioned, "%Y-%m-%d").strftime("%Y-%m-%d")
-        except ValueError:
-            pass
+    file_date = resolve_recording_date(audio_path, date_mentioned)
 
     # ==========================================================================
     # STAGE 7: Create Output
     # ==========================================================================
     clean_description = re.sub(r'[\\/*?:"<>|]', "", description)[:50]
-    folder_name = f"{file_date} {clean_description}"
+    clean_stem = re.sub(r'[\\/*?:"<>|]', "", audio_path.stem)[:50] or "audio"
+    # Folder name always carries the audio stem so the output is greppable back
+    # to the original recording even when several files in a batch get similar
+    # LLM titles. Dedup if stem == description so we don't get the stem twice
+    # in the path.
+    if clean_description and clean_description.lower() != clean_stem.lower():
+        folder_name = f"{file_date} – {clean_stem} – {clean_description}"
+    else:
+        folder_name = f"{file_date} – {clean_stem}"
     base_dir = output_root
     output_dir = base_dir / folder_name
     counter = 2
@@ -3434,10 +3698,10 @@ Examples:
     output_dir.mkdir(parents=True, exist_ok=True)
     print(f"\n📂 Output: {output_dir.name}")
 
-    audio_filename = f"{file_date} {clean_description} \u2013 Audio{audio_path.suffix}"
+    audio_filename = f"{folder_name} \u2013 Audio{audio_path.suffix}"
     shutil.copy2(audio_path, output_dir / audio_filename)
 
-    transcript_filename = f"{file_date} {clean_description}.md"
+    transcript_filename = f"{folder_name}.md"
     final_path = output_dir / transcript_filename
 
     speakers_str = ", ".join(speakers_meta) if speakers_meta else "Unknown"
@@ -3453,7 +3717,9 @@ Examples:
         "merge_mode": args.merge_mode,
         "merge_runner": merge_info.get("runner"),
         "merge_fallback_reason": merge_info.get("fallback_reason"),
-        "degraded": len(successful) < len(selected_engine_ids),
+        "merge_fallback_base_engine": merge_info.get("fallback_base_engine"),
+        "merge_degraded": merge_degraded,
+        "engines_degraded": len(successful) < len(selected_engine_ids),
     }
 
     merge_runner_label = (
@@ -3462,8 +3728,26 @@ Examples:
         else _merge_runner_label(merge_info.get("runner")) if merge_info.get("runner") else "Fallback transcript"
     )
 
-    md_content = f"""# {description}
+    # Loud banner when the cross-engine merge failed and we shipped a single-
+    # engine fallback. Sits right under the title so a degraded transcript
+    # never reads as "merged" the way it used to during the BCBS stress test.
+    if merge_degraded:
+        degraded_banner = (
+            "\n> ⚠️ **MERGE DEGRADED — single-engine fallback transcript**\n"
+            ">\n"
+            f"> Cross-engine merge did **not** run. Reason: `{merge_degraded_reason}`.\n"
+            f"> Text below is raw output from **{merge_degraded_base_label or '<unknown engine>'}** "
+            "with dictionary substitutions applied; per-engine\n"
+            "> errors (proper nouns, partial words, mistimed speaker turns) have NOT been reconciled\n"
+            "> across the other engines. Quality is degraded vs. a successful merged run. Treat as a\n"
+            "> starting point and consider a manual merge from `agent-merge-bundle.md` in the run\n"
+            f"> directory at `{run_dir}`.\n"
+        )
+    else:
+        degraded_banner = ""
 
+    md_content = f"""# {description}
+{degraded_banner}
 ```json
 {json.dumps(metadata_header, indent=2, ensure_ascii=False)}
 ```
@@ -3497,7 +3781,7 @@ Examples:
         "summary": summary,
         "transcript_path": str(final_path),
     }
-    sidecar_path = output_dir / f"{file_date} {clean_description}.json"
+    sidecar_path = output_dir / f"{folder_name}.json"
     sidecar_path.write_text(json.dumps(sidecar, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     if args.merge_mode == "manual":

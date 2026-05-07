@@ -55,7 +55,6 @@ SUPPORTED_PYTHON_MAX = (99, 99)  # no upper bound — use latest available
 DEFAULT_ENGINE_PYTHONS = {
     "scribe-v2": "python3",
     "assemblyai-u3-pro": "python3",
-    "cohere-transcribe": "python3",
     "voxtral-small": "python3",
     "gemini-3-pro": "python3",
     "gpt4o-transcribe": "python3",
@@ -229,7 +228,6 @@ _OP_ITEMS: dict[str, tuple[str, str]] = {
     "OPENAI_API_KEY":     ("Development", "OpenAI API Key"),
     "ANTHROPIC_API_KEY":  ("Development", "Anthropic API Key"),
     "GOOGLE_API_KEY":     ("Development", "Google API Key"),
-    "HF_TOKEN":           ("Development", "Hugging Face API Key"),
 }
 
 
@@ -555,7 +553,7 @@ def compress_audio(audio_path: Path) -> Path:
 
 
 def convert_16khz_mono(audio_path: str) -> str:
-    """Convert to 16kHz mono WAV for local models (Cohere, Voxtral-local)."""
+    """Convert to 16kHz mono WAV for local models (Voxtral-local)."""
     tmp = Path(tempfile.gettempdir()) / f"st-16k-{Path(audio_path).stem}.wav"
     src = Path(audio_path)
     if tmp.exists() and tmp.stat().st_mtime >= src.stat().st_mtime:

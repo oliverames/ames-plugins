@@ -34,21 +34,21 @@
     {
       "id": 3,
       "prompt": "I just installed smart-transcribe. Walk me through getting it configured and running a quick sanity check to make sure everything is working.",
-      "expected_output": "Step-by-step setup guide covering: running setup.sh, configuring API keys (AssemblyAI, ElevenLabs, HF_TOKEN), and running --doctor to verify. With skill: should reference specific scripts and flags from the SKILL.md.",
+      "expected_output": "Step-by-step setup guide covering: running setup.sh, configuring API keys (AssemblyAI, ElevenLabs, Mistral, Google), and running --doctor to verify. With skill: should reference specific scripts and flags from the SKILL.md.",
       "files": [],
       "expectations": [
         "setup.sh is mentioned as the first step to create Python venvs",
         "The --doctor flag is mentioned for verifying the installation",
         "AssemblyAI API key requirement is mentioned",
         "ElevenLabs API key requirement is mentioned",
-        "HF_TOKEN requirement for Cohere Transcribe is mentioned",
+        "Mistral and Google API key requirements are mentioned for the default 4-engine set",
         "The response gives actionable, ordered steps rather than vague advice"
       ]
     },
     {
       "id": 4,
       "prompt": "Transcribe /Users/oliverames/Desktop/Granger Rd.m4a",
-      "expected_output": "Actual transcription of the 7.7-minute audio file using the smart-transcribe pipeline. With skill: runs the default 4-engine pipeline (Cohere local + Mistral Voxtral + Scribe v2 + AssemblyAI U3). Produces an agent merge bundle or transcript markdown file. If engines fail, reports clearly with --doctor output.",
+      "expected_output": "Actual transcription of the 7.7-minute audio file using the smart-transcribe pipeline. With skill: runs the default 4-engine pipeline (AssemblyAI U3 + Scribe v2 + Mistral Voxtral + Google Gemini). Produces an agent merge bundle or transcript markdown file. If engines fail, reports clearly with --doctor output.",
       "files": ["/Users/oliverames/Desktop/Granger Rd.m4a"],
       "expectations": [
         "The smart-transcribe.py script is invoked (or --doctor is run to diagnose setup)",

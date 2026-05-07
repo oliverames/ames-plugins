@@ -7,13 +7,10 @@ anthropic
 openai
 httpx
 
-# Local model runtimes
+# Local model runtime — voxtral-mini-local only (Cohere Transcribe was removed
+# in 3.11.x, which dropped its torch/transformers/accelerate/librosa deps).
 mlx-audio
-transformers>=5.4.0
-torch
-accelerate
 soundfile
-librosa
 sentencepiece
 protobuf
 

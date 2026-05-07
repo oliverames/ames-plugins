@@ -31,9 +31,9 @@ class SmartTranscribeTests(unittest.TestCase):
         self.assertFalse(common.python_version_supported((3, 12, 9)))
 
     def test_parse_engine_python_overrides(self):
-        overrides = smart_transcribe.parse_engine_python_overrides("scribe-v2=/tmp/py,cohere-transcribe=/usr/bin/python3.13")
+        overrides = smart_transcribe.parse_engine_python_overrides("scribe-v2=/tmp/py,voxtral-mini-local=/usr/bin/python3.13")
         self.assertEqual(overrides["scribe-v2"], "/tmp/py")
-        self.assertEqual(overrides["cohere-transcribe"], "/usr/bin/python3.13")
+        self.assertEqual(overrides["voxtral-mini-local"], "/usr/bin/python3.13")
 
     def test_normalize_segments(self):
         normalized = smart_transcribe.normalize_segments(
@@ -59,15 +59,15 @@ class SmartTranscribeTests(unittest.TestCase):
             output_dir = Path(tmp)
             bundle = smart_transcribe.emit_agent_merge_bundle(
                 output_dir,
-                {"Cohere Transcribe (local)": "hello", "Mistral Voxtral Small": "hallo"},
-                {"corrections": {"hallo": "hello"}, "entities": ["Cohere"], "notes": ["test note"]},
+                {"AssemblyAI Universal-3 Pro": "hello", "Mistral Voxtral Small": "hallo"},
+                {"corrections": {"hallo": "hello"}, "entities": ["AssemblyAI"], "notes": ["test note"]},
                 source_file="/tmp/audio.m4a",
                 mode="merge",
             )
             text = bundle.read_text()
             self.assertIn("Agent Merge Bundle", text)
             self.assertIn("hallo -> hello", text)
-            self.assertIn("Cohere Transcribe (local)", text)
+            self.assertIn("AssemblyAI Universal-3 Pro", text)
 
     def test_rate_limit_detection(self):
         self.assertTrue(smart_transcribe._is_rate_limited_merge_error("429 rate limit exceeded"))

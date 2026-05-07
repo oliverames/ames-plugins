@@ -125,14 +125,6 @@ MODELS = {
         "accuracy": "4B params, 4-bit",
         "order": 7,
     },
-    "cohere-transcribe": {
-        "name": "Cohere Transcribe",
-        "type": "local",
-        "runtime": "pytorch-mps",
-        "cost_per_hour": "Free (local)",
-        "accuracy": "2B params, Conformer",
-        "order": 8,
-    },
 }
 
 PRESETS = {
@@ -147,7 +139,7 @@ PRESETS = {
         "description": "Good ensemble, low cost",
     },
     "full": {
-        "name": "Full (all 8)",
+        "name": "Full (all 7)",
         "models": list(MODELS.keys()),
         "description": "Maximum accuracy, all models",
     },
@@ -170,13 +162,6 @@ DEFAULT_CONFIG = {
             "enabled": True,
             "model_id": "mlx-community/Voxtral-Mini-4B-Realtime-2602-4bit",
             "runtime": "mlx-audio",
-        },
-        "cohere_transcribe": {
-            "enabled": True,
-            "model_id": "CohereLabs/cohere-transcribe-03-2026",
-            "runtime": "pytorch-mps",
-            "fallback_to_cpu": True,
-            "check_for_mlx": True,
         },
     },
     "transcription_dictionary_path": "",
@@ -676,60 +661,6 @@ except Exception as e:
 
 
 # ===========================================================================
-# ENGINE 8: Cohere Transcribe (local, PyTorch + MPS)
-# ===========================================================================
-
-def transcribe_cohere_local(audio_path, context_terms, **kwargs):
-    # Convert to 16kHz mono as required by Cohere
-    wav_path = convert_16khz_mono(audio_path)
-
-    script = '''
-import json, os, sys
-os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
-try:
-    import torch
-    import soundfile as sf
-    from transformers import AutoProcessor, AutoModelForSpeechSeq2Seq
-
-    model_id = "CohereLabs/cohere-transcribe-03-2026"
-
-    # Check for MLX community conversion first
-    try:
-        from mlx_audio.stt.utils import load
-        model = load("mlx-community/cohere-transcribe-03-2026-4bit")
-        result = model.generate(os.environ["ST_AUDIO_PATH"], verbose=False)
-        text = result.text if hasattr(result, "text") else str(result)
-        print(json.dumps({"text": text, "segments": [], "diarization": False}))
-        sys.exit(0)
-    except Exception:
-        pass  # MLX version not available, use PyTorch
-
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
-    processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
-    model = AutoModelForSpeechSeq2Seq.from_pretrained(model_id, trust_remote_code=True).to(device)
-
-    audio, sr = sf.read(os.environ["ST_AUDIO_PATH"])
-
-    # Resample if not 16kHz
-    if sr != 16000:
-        import librosa
-        audio = librosa.resample(audio, orig_sr=sr, target_sr=16000)
-        sr = 16000
-
-    inputs = processor(audio, sampling_rate=sr, return_tensors="pt").to(device)
-    with torch.no_grad():
-        ids = model.generate(**inputs, max_new_tokens=4096)
-    text = processor.batch_decode(ids, skip_special_tokens=True)[0]
-    print(json.dumps({"text": text, "segments": [], "diarization": False}))
-except Exception as e:
-    print(json.dumps({"error": str(e)}))
-    sys.exit(1)
-'''
-    env = {**os.environ, "ST_AUDIO_PATH": wav_path, "PYTORCH_ENABLE_MPS_FALLBACK": "1"}
-    return _run_engine("cohere-transcribe", script, env, timeout=600)
-
-
-# ===========================================================================
 # ENGINE DISPATCH
 # ===========================================================================
 
@@ -741,7 +672,6 @@ ENGINE_FUNCS = {
     "gpt4o-transcribe": transcribe_gpt4o,
     "gpt4o-mini-transcribe": transcribe_gpt4o_mini,
     "voxtral-mini-local": transcribe_voxtral_mini_local,
-    "cohere-transcribe": transcribe_cohere_local,
 }
 
 
