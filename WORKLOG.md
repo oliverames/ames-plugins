@@ -1,5 +1,47 @@
 # Worklog
 
+## 2026-05-07 — marketplace audit + skill description refactor (commits 872fe57, 4d5f691)
+
+**What changed**: End-to-end audit of both marketplace manifests followed by a batch refactor that brought the schema in line with current Claude Code skill-authoring best practices.
+
+- Fixed stale "32 skills" → "33 skills" in `ames-standalone-skills` plugin.json (Claude + Codex sides). Disk was at 33 since `bcbs-reviewer` was added on 2026-05-01; descriptions had not caught up.
+- Added `"strict": true` emission to `./sync` Pass 2 so every Claude marketplace entry locks `plugin.json` as the metadata authority. Codex side correctly excluded — `strict` is a Claude-only field.
+- Added `disable-model-invocation: true` to 4 explicit-trigger workflows: `go`, `wrap-up`, `bcbs-wrap-up`, `dispatch-remote-control`. These have side effects (commits, deployments, session spawns) and should never auto-invoke from prose match. Excluded `testflight-deployment` because its description explicitly asks for proactive invocation.
+- Added `paths:` glob filters to 3 BCBS skills: `bcbs-meeting-notes`, `bcbs-imagerelay-sync`, `bcbs-reviewer`. Globs `**/BCBS/**`, `**/bcbs-*/**`, `**/Documents/BCBS/**` (plus `**/imagerelay-download-*/**` and `**/*transcript*.md` where relevant).
+- Refactored 31 SKILL.md descriptions to split into `description` (what-it-does, front-loaded) + `when_to_use` (trigger phrases). The combined-listing budget is 1,536 chars per skill; front-loading preserves the most important text under truncation.
+- `bump-and-sync ames-standalone-skills` patch-bumped 3.10.0 → 3.10.1 to push the parallel-session bcbs-reviewer 1.1.0 update out to caches.
+
+**Decisions made**:
+- **Skipped** `claude-code-headless` rename. Anthropic's API best-practices doc bans `claude` and `anthropic` as skill-name reserved words, but the Claude Code skills doc doesn't repeat the rule and no validator currently enforces it. Skill loads and works. Renaming would orphan continuity references in 21 jsonl session transcripts under `~/.claude/projects/`. Deferring until enforcement signal appears.
+- Used a Python refactor script for the description split — it had two bugs (ate the closing `---` fence; ingested adjacent YAML fields when `description` used `|` literal block scalar). Reverted via `git checkout` and redid all 31 by hand with surgical Edit calls. Lesson: regex-based YAML frontmatter editing is fragile when block scalars are involved; use a real YAML parser or stick to manual.
+- Three commits pushed in a single session, with a parallel-session commit (`a0eba05`, bcbs-reviewer cadence checklist) interleaved cleanly between mine. Worked because the parallel session used Edit (diff-based) on a single file rather than Write — changes layered rather than overwrote.
+
+**Verification ladder run before commit**:
+- PyYAML parse + type checks across all 51 SKILL.md files — PASS
+- Required fields (name, description) present — PASS
+- Length limits (description ≤1024, combined ≤1536) — PASS
+- Duplicate-key check — PASS
+- Paths-glob plausibility (no unbalanced quotes) — PASS
+- `./sync` idempotency (no drift on second run) — PASS
+- `./codex-doctor` — 0 warnings, 14/14 live MCPs visible
+- Content-loss diff vs git HEAD — every "lost" token was a verb-form normalization (verify→verifies) or intentional synonym collapse
+- ames-standalone-skills cache refreshed to 3.10.1 via `./codex-refresh`
+
+**Documentation drift addressed**:
+- `CLAUDE.md` Plugin conventions: added note about sync emitting `"strict": true`
+- `CLAUDE.md` Skill conventions: documented the front-loaded description / `when_to_use` / `disable-model-invocation` / `paths` idiom
+- `AGENTS.md` Skill conventions: same idiom note for the Codex-facing reference
+- `README.md`: already correct at "33 skills"
+
+**Left off at**: All work commits in `origin/main` (`872fe57`, `4d5f691`, plus the parallel session's `a0eba05`). The wrap-up's CLAUDE.md, AGENTS.md, and WORKLOG.md edits are uncommitted as of this writing.
+
+**Open questions**:
+- (NEW) `wrap-up-preflight.py` host-inference returned "codex" with medium confidence when running inside a Cowork sandbox path, despite all three Claude markers being true. The `local-agent-mode-sessions/...` path token mis-fires as a Codex marker. Worth tightening.
+- (NEW, deferred) `claude-code-headless` rename — pending an enforcement signal from Anthropic. If the validator tightens, the rename costs three file edits (SKILL.md, README.md, data/filesystem-map.md) plus a directory rename.
+- (Still open from prior session) smart-transcribe dictionary v3.4 audit work in marketplace clone working tree — port plan still unresolved, see entry below.
+
+---
+
 ## 2026-05-07 — smart-transcribe dictionary empirical-quality audit (parallel session, NOT MERGED)
 
 **Status**: Edits live in the marketplace clone (`~/.claude/plugins/marketplaces/ames-claude/...`) as uncommitted working-tree changes. They were authored against the **3.9.7 baseline before the v4.0 partition landed in canonical**. Not yet ported to the new `data/transcription-dictionary.json` (universal) + `data/contexts/bcbs-vt.json` (overlay) architecture. **Do not run `./sync` until the port is complete** — sync would overwrite the marketplace clone's working tree and lose the work.

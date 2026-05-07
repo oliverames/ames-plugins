@@ -72,6 +72,7 @@ Codex work must be additive. Do not change Claude Code's `.claude-plugin/marketp
 - **`name` MUST be kebab-case matching the directory name** (e.g. `name: apple-notes-formatting` for `skills/apple-notes-formatting/`). Display-name style values like `"Apple Notes Formatting"` cause Cowork's marketplace validator to reject the entire plugin with a generic "Failed to update marketplace" error; see memory `ref_claude_skill_md_schema.md`.
 - `./sync` regenerates `marketplace.json` from plugin.json files. Skills are auto-discovered by the host at install time from the `skills/` directory — do NOT list them explicitly in marketplace.json (causes path resolution issues).
 - Every subdirectory of `skills/` MUST contain a `SKILL.md`. Dev workspaces without a SKILL.md belong elsewhere (Cowork's validator trips on them).
+- **Frontmatter idiom for ames skills (established 2026-05-07):** front-load `description` with what-the-skill-does, move trigger phrases into `when_to_use`. The host listing truncates combined `description + when_to_use` at 1,536 chars; front-loading preserves the most important text under truncation. Use `disable-model-invocation: true` for explicit-trigger workflows with side effects. Use `paths:` glob list to scope auto-loading for context-bound skills.
 
 ## Version bumping
 

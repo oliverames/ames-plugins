@@ -65,6 +65,7 @@ Codex work must be additive. Do not change Claude Code's `.claude-plugin/marketp
 - Use `${ENV_VAR}` in `.mcp.json` for secrets — resolved from the host's local runtime configuration
 - Skills go in `skills/<name>/SKILL.md` within the plugin directory
 - Commands go in `commands/<name>.md` with frontmatter (`name`, `description`, `allowed-tools`)
+- `./sync` emits `"strict": true` on every Claude marketplace entry. Do not set `strict` in `plugin.json` — it is a marketplace-entry field, not a plugin-manifest field. Strict locks `plugin.json` as the metadata authority.
 
 ## Skill conventions
 
@@ -73,6 +74,7 @@ Codex work must be additive. Do not change Claude Code's `.claude-plugin/marketp
 - **`name` MUST be kebab-case matching the directory name** (e.g. `name: apple-notes-formatting` for `skills/apple-notes-formatting/`). Display-name style values like `"Apple Notes Formatting"` cause Cowork's marketplace validator to reject the entire plugin with a generic "Failed to update marketplace" error; see memory `ref_claude_skill_md_schema.md`.
 - `./sync` regenerates `marketplace.json` from plugin.json files. Skills are auto-discovered by Claude Code at install time from the `skills/` directory — do NOT list them explicitly in marketplace.json (causes path resolution issues).
 - Every subdirectory of `skills/` MUST contain a `SKILL.md`. Dev workspaces, workspace/state directories (like `.a5c/`, `.remember/`, and similar runtime caches), and any other dot-dirs without a `SKILL.md` belong at the plugin root, not inside `skills/` — Cowork's validator rejects the entire plugin if any non-skill directory appears there.
+- **Frontmatter idiom for ames skills (established 2026-05-07):** front-load `description` with what-the-skill-does, move trigger phrases into `when_to_use`. The skill listing truncates the combined `description + when_to_use` at 1,536 chars; front-loading preserves the most important text under truncation. Use `disable-model-invocation: true` for explicit-trigger workflows with side effects (e.g. `go`, `wrap-up`). Use `paths:` glob list to scope auto-loading for context-bound skills (e.g. BCBS skills scoped to `**/BCBS/**`).
 
 ## Version bumping
 
