@@ -101,7 +101,7 @@ Custom first-party MCP connectors moved to [ames-connectors](https://github.com/
 
 | Plugin | Hosts | Version | Summary |
 |--------|-------|---------|---------|
-| [`ames-standalone-skills`](plugins/ames-standalone-skills/) | Claude + Codex | 3.9.7 | Oliver's original skill pack (33 skills) |
+| [`ames-standalone-skills`](plugins/ames-standalone-skills/) | Claude + Codex | 3.10.0 | Oliver's original skill pack (33 skills) |
 | [`ames-dev-mcps`](plugins/ames-dev-mcps/) | Claude + Codex | 1.0.1 | 6 development-focused MCP servers for iOS/macOS workflows |
 | [`ames-general-mcps`](plugins/ames-general-mcps/) | Claude + Codex | 3.1.0 | 8 day-to-day general-purpose MCP servers |
 | [`ames-community-skills`](plugins/ames-community-skills/) | Claude + Codex | 2.0.1 | Third-party skills without upstream marketplaces |
