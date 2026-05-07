@@ -1,6 +1,8 @@
 ---
 name: go
-description: Use when the user ends a prompt with "/go" or says "go" as a shorthand for "ship it". Runs the full end-to-end verification-and-ship pipeline before declaring a task done. Triggers on "/go", "ship this", "take it home", "finish it up", or appended "/go" at the end of any implementation request.
+description: Runs Oliver's end-to-end verification-and-ship pipeline (verify, simplify, commit, push) before declaring a task done.
+when_to_use: User ends a prompt with "/go", says "ship it", "take it home", "finish it up", or appends "/go" to any implementation request. Do NOT invoke on read-only / research / question-style prompts.
+disable-model-invocation: true
 ---
 
 # /go — Verify, Simplify, Ship

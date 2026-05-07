@@ -1,11 +1,15 @@
 ---
 name: resume-style
 description: >-
-  Ames-inspired resume typography and layout guide. Use when creating, reviewing,
-  or formatting resumes and CVs. Triggers for "write a resume", "format my resume",
-  "resume template", "resume design", "update my CV", "resume style guide",
-  "ATS-friendly resume", or when the user asks for help with professional documents
-  that follow the Ames industrial typography aesthetic.
+  Ames-inspired resume typography and layout guide. Industrial-strength
+  typography based on the Ames Shovel Company's 225-year design tradition:
+  bold Gothic headers, traditional serifs, strategic color.
+when_to_use: >-
+  Creating, reviewing, or formatting resumes and CVs. Triggers for "write
+  a resume", "format my resume", "resume template", "resume design",
+  "update my CV", "resume style guide", "ATS-friendly resume", or when
+  the user asks for help with professional documents that follow the
+  Ames industrial typography aesthetic.
 ---
 
 # Ames-Inspired Resume Style Guide

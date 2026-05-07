@@ -1,6 +1,14 @@
 ---
 name: window-management
-description: Customize macOS 15+ SwiftUI windows and scene behavior using Window, WindowGroup, and macOS window modifiers. Use when styling or hiding window toolbars and titles, extending drag regions with WindowDragGesture, replacing window backgrounds with materials, disabling minimize or restoration for utility windows, setting default or ideal window placement from content/display size, creating borderless windows, or tuning default launch behavior.
+description: >-
+  Customize macOS 15+ SwiftUI windows and scene behavior using Window,
+  WindowGroup, and macOS window modifiers.
+when_to_use: >-
+  Styling or hiding window toolbars and titles, extending drag regions
+  with WindowDragGesture, replacing window backgrounds with materials,
+  disabling minimize or restoration for utility windows, setting default
+  or ideal window placement from content/display size, creating
+  borderless windows, or tuning default launch behavior.
 ---
 
 # Window Management

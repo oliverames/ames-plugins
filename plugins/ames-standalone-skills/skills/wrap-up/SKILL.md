@@ -2,11 +2,14 @@
 name: wrap-up
 version: 4.4.0
 description: >
-  Use when Oliver says "wrap up", "close session", "end session", "wrap
-  things up", "close out this task", "done for the day", "session complete",
-  or invokes /wrap-up. Runs a host-aware end-of-session closeout for Claude
-  Code and Codex: verification, commits, worklogs, memory or notes follow-up,
-  config drift checks, backups, and a concise final report.
+  Runs a host-aware end-of-session closeout for Claude Code and Codex:
+  verification, commits, worklogs, memory or notes follow-up, config drift
+  checks, backups, and a concise final report.
+when_to_use: >
+  Oliver says "wrap up", "close session", "end session", "wrap things up",
+  "close out this task", "done for the day", "session complete", or invokes
+  /wrap-up.
+disable-model-invocation: true
 ---
 
 # Session Wrap-Up

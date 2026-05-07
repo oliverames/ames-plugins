@@ -1,15 +1,19 @@
 ---
 name: testflight-deployment
 description: >-
-  Use when deploying an iOS app to TestFlight, setting up an iOS CI/CD pipeline,
-  distributing a build to beta testers, automating iOS app releases via GitHub
-  Actions, or troubleshooting App Store Connect uploads and code signing errors.
-  Also triggers for "deploy my app", "upload to TestFlight", "set up TestFlight
-  CI/CD", "configure code signing for GitHub Actions", "write ExportOptions.plist",
-  "base64 encode a certificate", "add a manual approval gate", "provisioning
-  profile error", "App Store Connect upload failed", or any task involving
-  automating the iOS build-sign-upload workflow. Use this skill proactively any
-  time an iOS project needs a deployment pipeline.
+  Automates iOS app deployment to TestFlight with GitHub Actions, manual
+  approval gates, and environment protection. Use proactively any time an
+  iOS project needs a deployment pipeline.
+when_to_use: >-
+  Deploying an iOS app to TestFlight, setting up an iOS CI/CD pipeline,
+  distributing a build to beta testers, automating iOS app releases via
+  GitHub Actions, or troubleshooting App Store Connect uploads and code
+  signing errors. Also triggers for "deploy my app", "upload to
+  TestFlight", "set up TestFlight CI/CD", "configure code signing for
+  GitHub Actions", "write ExportOptions.plist", "base64 encode a
+  certificate", "add a manual approval gate", "provisioning profile
+  error", "App Store Connect upload failed", or any task involving
+  automating the iOS build-sign-upload workflow.
 ---
 
 # TestFlight Deployment via GitHub Actions

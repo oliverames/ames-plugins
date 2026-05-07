@@ -1,15 +1,18 @@
 ---
 name: brand-asset-finder
 description: >-
-  Find the highest-resolution logo, badge, seal, award mark, media kit asset,
-  or brand image. Use whenever the user asks to "find the logo", "get the badge",
-  "download the seal", "find this award mark", "get the media kit asset", "find
-  the brand image", "highest-res logo", "official logo", "get the official badge",
-  or any request to locate a visual brand or recognition asset online. Also triggers
-  for "find that award graphic", "download the trust badge", "get the accreditation
-  seal", or "where can I get the [organization] logo". Inspects CMS/CDN transform
-  URLs to recover original uploaded files; prefers SVG or transparent PNG over JPEG;
-  separates official sources from recipient-posted copies; flags licensing uncertainty.
+  Finds the highest-resolution logo, badge, seal, award mark, media kit
+  asset, or brand image. Inspects CMS/CDN transform URLs to recover original
+  uploaded files; prefers SVG or transparent PNG over JPEG; separates
+  official sources from recipient-posted copies; flags licensing
+  uncertainty.
+when_to_use: >-
+  User asks to "find the logo", "get the badge", "download the seal", "find
+  this award mark", "get the media kit asset", "find the brand image",
+  "highest-res logo", "official logo", "get the official badge", or any
+  request to locate a visual brand or recognition asset online. Also
+  triggers for "find that award graphic", "download the trust badge", "get
+  the accreditation seal", or "where can I get the [organization] logo".
 ---
 
 # Brand Asset Finder

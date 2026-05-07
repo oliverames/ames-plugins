@@ -1,14 +1,19 @@
 ---
 name: bcbs-imagerelay-sync
 description: >
-  Sync a folder of downloaded ImageRelay files into the BCBS directory,
+  Syncs a folder of downloaded ImageRelay files into the BCBS directory,
   mapping each file to its correct local counterpart and handling 1:1
   replacements, one-to-many splits (compilation → per-event files), and
   many-to-one consolidations (single guide → audience-specific variants).
+when_to_use: >
   Triggers on: "sync imagerelay download", "update BCBS files from imagerelay",
   "I downloaded from imagerelay", "these are the final files from imagerelay",
-  "imagerelay download", "update files from the download folder", or when Oliver
-  hands over a Desktop folder named imagerelay-download-YYYY-MM-DD.
+  "imagerelay download", "update files from the download folder", or when
+  Oliver hands over a Desktop folder named imagerelay-download-YYYY-MM-DD.
+paths:
+  - "**/BCBS/**"
+  - "**/Documents/BCBS/**"
+  - "**/imagerelay-download-*/**"
 version: 1.0.0
 ---
 

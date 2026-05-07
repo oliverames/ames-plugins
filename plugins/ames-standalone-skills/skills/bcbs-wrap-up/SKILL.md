@@ -7,10 +7,12 @@ description: >
   action items are tracked in Jira (the canonical task system for BCBS),
   migrates any legacy Asana or Apple Reminders references into Jira, audits
   naming conventions, ensures directory organization is clean, then commits,
-  writes a worklog, persists memory, and backs up. Use when Oliver says
-  "BCBS wrap up", "wrap up BCBS", "close out BCBS", "BCBS session done",
-  "done with BCBS", "BCBS end of day", or invokes /bcbs-wrap-up. Run at
-  the end of any BCBS working session.
+  writes a worklog, persists memory, and backs up.
+when_to_use: >
+  Oliver says "BCBS wrap up", "wrap up BCBS", "close out BCBS", "BCBS session
+  done", "done with BCBS", "BCBS end of day", or invokes /bcbs-wrap-up. Run
+  at the end of any BCBS working session.
+disable-model-invocation: true
 ---
 
 # BCBS Session Wrap-Up

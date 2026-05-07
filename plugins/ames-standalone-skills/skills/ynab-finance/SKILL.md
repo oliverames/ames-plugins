@@ -1,6 +1,17 @@
 ---
 name: ynab-finance
-description: Household finance management powered by YNAB. Use when doing a monthly spending review, reconciling accounts, creating income/expense summaries, generating net worth statements, analyzing budget variances, preparing financial snapshots, planning for the next month, checking savings rate, reviewing cash flow, doing a month-end close, comparing budget vs actual spending, or any YNAB-related financial task. Also trigger for "how much did I spend", "am I on budget", "financial health check", or "what's my net worth".
+description: >-
+  Household finance management powered by YNAB. Covers monthly reviews,
+  reconciliation, income/expense reporting, net worth tracking, savings
+  rate, cash flow, and budget variance analysis.
+when_to_use: >-
+  Doing a monthly spending review, reconciling accounts, creating
+  income/expense summaries, generating net worth statements, analyzing
+  budget variances, preparing financial snapshots, planning for the next
+  month, checking savings rate, reviewing cash flow, doing a month-end
+  close, comparing budget vs actual spending, or any YNAB-related
+  financial task. Also trigger for "how much did I spend", "am I on
+  budget", "financial health check", or "what's my net worth".
 ---
 
 # YNAB Finance

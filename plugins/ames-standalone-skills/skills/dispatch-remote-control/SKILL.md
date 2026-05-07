@@ -1,13 +1,15 @@
 ---
 name: dispatch-remote-control
 description: >-
-  Use when Oliver asks for a "remote session", "remote Code session", "new
+  Starts a new Claude Code session with remote-control activated so Oliver
+  can drive it from his phone or a secondary device.
+when_to_use: >-
+  Oliver asks for a "remote session", "remote Code session", "new
   remote-controllable session", "start a Claude Code session with remote
   access", "dispatch a remote Code session", "session I can drive from my
   phone", "remote handoff session", or any variant of starting a Claude Code
-  session that he can control from a phone or secondary device. Trigger on
-  any request to start a Code session where remote access or remote control
-  is the goal.
+  session he can control from a phone or secondary device.
+disable-model-invocation: true
 ---
 
 # Dispatch Remote-Controllable Code Session

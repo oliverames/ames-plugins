@@ -1,14 +1,16 @@
 ---
 name: verify-live
 description: >-
-  Verify documentation against live system state before rewriting. Triggers
-  when asked to "rewrite my notes about [system]", "update this doc",
-  "audit these notes", "refresh the docs for [server]", "are these notes
-  still accurate", "check if these notes match", "reformat this README",
-  or any task that involves modifying documentation about a server, API,
-  service, or configuration. Forces an SSH or API check against the
-  actual system before any rewrite, so updates cite live evidence
-  rather than perpetuating stale content.
+  Verifies documentation against live system state before rewriting.
+  Forces an SSH or API check against the actual system before any
+  rewrite, so updates cite live evidence rather than perpetuating stale
+  content.
+when_to_use: >-
+  Triggers when asked to "rewrite my notes about [system]", "update this
+  doc", "audit these notes", "refresh the docs for [server]", "are these
+  notes still accurate", "check if these notes match", "reformat this
+  README", or any task that involves modifying documentation about a
+  server, API, service, or configuration.
 ---
 
 # Verify Live State Before Rewriting Documentation

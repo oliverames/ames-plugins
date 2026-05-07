@@ -1,15 +1,17 @@
 ---
 name: 1password-vault
 description: >-
-  Use when working with API keys, secrets, tokens, credentials, SSH keys, or
-  1Password. Triggers for: "vault this key", "store credential", "audit for
-  secrets", "scan for API keys", "secure my MCP config", "rotate this token",
-  "add to 1Password", "check for exposed credentials", "op://", "read from
-  vault", "look up my password", or any task involving credential storage,
-  retrieval, rotation, or security auditing. Also use when setting up new
-  services that need API keys, when reviewing .env files, or when the user
-  mentions their credentials repo. If you encounter a plaintext API key or
-  secret during any task, consult this skill before proceeding.
+  Manages credential storage, retrieval, rotation, and security auditing via
+  1Password (vault and `op` CLI). Covers API keys, secrets, tokens, SSH keys,
+  and `.env` file review. Consult before handling any plaintext API key or
+  secret encountered during a task.
+when_to_use: >-
+  Triggers for: "vault this key", "store credential", "audit for secrets",
+  "scan for API keys", "secure my MCP config", "rotate this token", "add to
+  1Password", "check for exposed credentials", "op://", "read from vault",
+  "look up my password". Also use when setting up new services that need API
+  keys, when reviewing .env files, or when the user mentions their
+  credentials repo.
 ---
 
 # 1Password Vault Management

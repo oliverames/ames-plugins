@@ -1,13 +1,16 @@
 ---
 name: readme-style
 description: >-
-  Use when creating or updating README.md files for Oliver's public repositories.
-  Apply this skill any time you are about to write or edit a README — even if
-  the user just says "document this", "add a README", or you're creating a new
-  public-facing project. Also triggers for "write a README", "update the README",
-  "improve README", "make the README better", "brand the repo", "add docs to
-  this repo", or "make this look professional on GitHub". Provides Oliver's
-  personal brand identity, structure conventions, and quality bar for GitHub READMEs.
+  Provides Oliver's personal brand identity, structure conventions, and
+  quality bar for GitHub READMEs. Public READMEs serve as marketing pages
+  and should feel professional, strategic, and branded.
+when_to_use: >-
+  Creating or updating README.md files for Oliver's public repositories.
+  Apply any time you are about to write or edit a README — even if the
+  user just says "document this", "add a README", or you're creating a new
+  public-facing project. Also triggers for "write a README", "update the
+  README", "improve README", "make the README better", "brand the repo",
+  "add docs to this repo", or "make this look professional on GitHub".
 ---
 
 # README Style Guide

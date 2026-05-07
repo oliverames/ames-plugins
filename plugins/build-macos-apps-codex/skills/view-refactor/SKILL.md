@@ -1,6 +1,14 @@
 ---
 name: view-refactor
-description: Refactor macOS SwiftUI views and scenes with strong defaults for small dedicated subviews, stable sidebar and selection structure, explicit command and toolbar ownership, scene-aware state, and narrow AppKit escape hatches. Use when cleaning up a macOS view file, splitting oversized scene roots, removing iOS-centric patterns, or tightening mixed SwiftUI/AppKit architecture.
+description: >-
+  Refactor macOS SwiftUI views and scenes with strong defaults for small
+  dedicated subviews, stable sidebar and selection structure, explicit
+  command and toolbar ownership, scene-aware state, and narrow AppKit
+  escape hatches.
+when_to_use: >-
+  Cleaning up a macOS view file, splitting oversized scene roots,
+  removing iOS-centric patterns, or tightening mixed SwiftUI/AppKit
+  architecture.
 ---
 
 # View Refactor

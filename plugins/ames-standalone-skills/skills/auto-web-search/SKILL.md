@@ -1,13 +1,14 @@
 ---
 name: auto-web-search
 description: >-
-  Behavioral skill that triggers automatic web searches when stuck on a problem.
-  Activates when Claude encounters an error it cannot resolve, an unfamiliar API,
-  a deprecation warning, a version mismatch, or any situation where general
-  knowledge is insufficient. Also triggers for "search for a fix", "look this up",
-  "find the docs", "why is this failing", or when the user asks Claude to be more
-  resourceful about finding answers. This skill should run in the background of
-  every coding session.
+  Behavioral skill that triggers automatic web searches when stuck on a
+  problem. Should run in the background of every coding session.
+when_to_use: >-
+  Activates when Claude encounters an error it cannot resolve, an unfamiliar
+  API, a deprecation warning, a version mismatch, or any situation where
+  general knowledge is insufficient. Also triggers for "search for a fix",
+  "look this up", "find the docs", "why is this failing", or when the user
+  asks Claude to be more resourceful about finding answers.
 ---
 
 # Auto Web Search on Stuck Problems

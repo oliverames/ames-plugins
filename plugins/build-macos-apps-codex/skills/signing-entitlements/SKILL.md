@@ -1,6 +1,11 @@
 ---
 name: signing-entitlements
-description: Inspect signing, entitlements, hardened runtime, and Gatekeeper issues for macOS apps. Use when asked to diagnose code signing failures, missing entitlements, sandbox problems, notarization prerequisites, or trust-policy launch errors.
+description: >-
+  Inspect signing, entitlements, hardened runtime, and Gatekeeper issues
+  for macOS apps.
+when_to_use: >-
+  Asked to diagnose code signing failures, missing entitlements, sandbox
+  problems, notarization prerequisites, or trust-policy launch errors.
 ---
 
 # Signing & Entitlements

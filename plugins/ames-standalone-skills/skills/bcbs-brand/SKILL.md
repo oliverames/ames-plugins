@@ -1,13 +1,14 @@
 ---
 name: bcbs-brand
 description: >
-  Apply Blue Cross and Blue Shield of Vermont (BCBS VT) brand and
-  writing standards to drafting, brand-linting, letterhead and memo
-  .docx builds, customer-support triage, and employee benefits
-  questions. Triggers: "BCBS VT", "Blue Cross VT", "brand-lint this",
-  "check brand voice", "create a memo", "build a letterhead doc",
-  "draft a press release", "triage a ticket", "my Blue Cross benefits",
-  "remote work policy", "campaign plan", "content calendar".
+  Applies Blue Cross and Blue Shield of Vermont (BCBS VT) brand and writing
+  standards to drafting, brand-linting, letterhead and memo .docx builds,
+  customer-support triage, and employee benefits questions.
+when_to_use: >
+  Triggers: "BCBS VT", "Blue Cross VT", "brand-lint this", "check brand
+  voice", "create a memo", "build a letterhead doc", "draft a press
+  release", "triage a ticket", "my Blue Cross benefits", "remote work
+  policy", "campaign plan", "content calendar".
 version: 1.9.0
 ---
 

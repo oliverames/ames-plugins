@@ -1,11 +1,15 @@
 ---
 name: generate-image
 description: >-
-  Use when the user asks to "generate an image", "create an image", "make a picture of",
-  "draw", "design", "illustrate", "edit this image", "modify this photo", "change the
-  background", or needs any kind of image generation or editing. Also triggers for
-  "create a logo", "make a thumbnail", "generate artwork", "mockup", or visual asset
-  creation. Uses Google Gemini's native image generation (text-to-image and image editing).
+  Creates and edits images using Google Gemini's native image generation
+  (text-to-image and image editing). Supports reference images and
+  resolution control up to 4K.
+when_to_use: >-
+  User asks to "generate an image", "create an image", "make a picture of",
+  "draw", "design", "illustrate", "edit this image", "modify this photo",
+  "change the background", or needs any kind of image generation or
+  editing. Also triggers for "create a logo", "make a thumbnail", "generate
+  artwork", "mockup", or visual asset creation.
 allowed-tools: Bash
 ---
 

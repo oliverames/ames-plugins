@@ -1,13 +1,17 @@
 ---
 name: claude-code-headless
 description: >-
-  Use when the user asks to "interact with Claude Code", "check Claude Code
-  status", "dispatch a task to Claude Code", "run something in Claude Code",
-  "check installed plugins", "manage Claude Code settings", "continue a
-  Claude Code session", "read Claude Code memory", or needs to programmatically
-  control, inspect, or configure a local Claude Code instance. Also triggers
-  for "headless Claude Code", "Claude Code CLI", "what plugins are installed",
-  "update Claude Code settings", "launch Claude Code to do X".
+  Operator guide for programmatically controlling, inspecting, or
+  configuring a local Claude Code instance from another context (Cowork,
+  scripts, automation). Covers status checks, plugin inventory, settings
+  management, session continuation, and memory reads.
+when_to_use: >-
+  User asks to "interact with Claude Code", "check Claude Code status",
+  "dispatch a task to Claude Code", "run something in Claude Code", "check
+  installed plugins", "manage Claude Code settings", "continue a Claude
+  Code session", "read Claude Code memory". Also triggers for "headless
+  Claude Code", "Claude Code CLI", "what plugins are installed", "update
+  Claude Code settings", "launch Claude Code to do X".
 ---
 
 # Claude Code Headless

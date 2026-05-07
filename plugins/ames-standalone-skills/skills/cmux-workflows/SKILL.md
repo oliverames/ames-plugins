@@ -1,14 +1,18 @@
 ---
 name: cmux-workflows
 description: >-
-  Use when running inside cmux and performing tasks that benefit from workspace management,
-  progress tracking, browser automation, or multi-pane workflows. Triggers when the user
-  asks to "show progress", "open a browser", "split the pane", "open markdown", "use cmux",
-  "show status", "notify me when done", or when performing batch operations, long-running
-  tasks, or web lookups that benefit from cmux's built-in browser. Also triggers when the
-  user mentions "cmux", "sidebar", "workspace", or "pane". Use this proactively for any
-  batch operation (archiving emails, processing files, deploying) where a progress bar and
-  completion notification would improve the user's experience — even if they don't ask for it.
+  Workspace management, progress tracking, browser automation, and
+  multi-pane workflows for tasks running inside cmux. Use proactively for
+  any batch operation (archiving emails, processing files, deploying)
+  where a progress bar and completion notification would improve the
+  user's experience.
+when_to_use: >-
+  Running inside cmux. Triggers when the user asks to "show progress",
+  "open a browser", "split the pane", "open markdown", "use cmux", "show
+  status", "notify me when done", or when performing batch operations,
+  long-running tasks, or web lookups that benefit from cmux's built-in
+  browser. Also triggers when the user mentions "cmux", "sidebar",
+  "workspace", or "pane".
 allowed-tools: Bash
 ---
 

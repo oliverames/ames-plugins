@@ -1,14 +1,22 @@
 ---
 name: bcbs-meeting-notes
 description: >
-  Use when Oliver provides a SmartTranscribe transcript or recording from a
-  BCBS VT meeting and wants it processed into structured notes. Triggers on:
-  "process this meeting", "write up notes", "meeting notes for [file]",
-  "turn this transcript into notes", "process the transcript", or when a
-  .md file from SmartTranscribe is handed over. Also triggers after
-  SmartTranscribe finishes if the user says "now process it" or "now do the
-  notes". Always invoke this skill for any BCBS meeting transcript — do not
-  just summarize ad hoc.
+  Processes a SmartTranscribe transcript or recording from a BCBS VT meeting
+  into structured notes, routes files to the right BCBS folder, and creates
+  Jira tasks from action items. Always invoke this skill for any BCBS
+  meeting transcript — do not just summarize ad hoc.
+when_to_use: >
+  Oliver provides a SmartTranscribe transcript or recording from a BCBS VT
+  meeting. Triggers on: "process this meeting", "write up notes", "meeting
+  notes for [file]", "turn this transcript into notes", "process the
+  transcript", or when a .md file from SmartTranscribe is handed over. Also
+  triggers after SmartTranscribe finishes if the user says "now process it"
+  or "now do the notes".
+paths:
+  - "**/BCBS/**"
+  - "**/bcbs-*/**"
+  - "**/Documents/BCBS/**"
+  - "**/*transcript*.md"
 version: 1.3.0
 ---
 

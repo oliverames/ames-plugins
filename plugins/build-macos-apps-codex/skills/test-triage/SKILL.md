@@ -1,6 +1,11 @@
 ---
 name: test-triage
-description: Triage failing macOS tests across Xcode and SwiftPM workflows. Use when asked to run macOS tests, narrow failing scopes, explain assertion or crash failures, or separate real test regressions from setup and environment problems.
+description: >-
+  Triage failing macOS tests across Xcode and SwiftPM workflows.
+when_to_use: >-
+  Asked to run macOS tests, narrow failing scopes, explain assertion or
+  crash failures, or separate real test regressions from setup and
+  environment problems.
 ---
 
 # Test Triage

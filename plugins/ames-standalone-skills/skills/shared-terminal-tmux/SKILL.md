@@ -1,15 +1,18 @@
 ---
 name: shared-terminal-tmux
 description: >-
-  Use when the user wants a shared interactive terminal that both Claude and the
-  user can see and write to in real time. Triggers for: "open a terminal we can
-  both use", "shared terminal", "can you see my terminal", "give me a terminal
-  you can drive", "I need to type a password and you watch", "interactive
-  handoff", "tmux bridge", "attach to my session", or any task that needs
-  human-in-the-loop interaction (password prompts, Touch ID confirmations, SSH
-  to a host that only accepts interactive auth, live debugging where Claude
-  dictates and the user executes). Also use when a Bash tool call can't proceed
-  because it would need to answer an interactive prompt.
+  Bridges a Terminal.app window and Claude's Bash tool onto the same tmux
+  pane so both Claude and the user can read and write in real time.
+  Enables human-in-the-loop interaction (passwords, Touch ID, SSH
+  interactive auth, live debugging).
+when_to_use: >-
+  User wants a shared interactive terminal both Claude and the user can
+  see. Triggers for: "open a terminal we can both use", "shared terminal",
+  "can you see my terminal", "give me a terminal you can drive", "I need
+  to type a password and you watch", "interactive handoff", "tmux bridge",
+  "attach to my session", or any task that needs human-in-the-loop
+  interaction. Also use when a Bash tool call can't proceed because it
+  would need to answer an interactive prompt.
 ---
 
 # Shared Terminal via tmux

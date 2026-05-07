@@ -1,6 +1,10 @@
 ---
 name: swiftpm-macos
-description: Build, run, and test pure SwiftPM-based macOS packages and executables. Use when the repo is package-first, when there is no Xcode project, or when Swift package workflows are the fastest path to diagnosis.
+description: >-
+  Build, run, and test pure SwiftPM-based macOS packages and executables.
+when_to_use: >-
+  Repo is package-first, there is no Xcode project, or Swift package
+  workflows are the fastest path to diagnosis.
 ---
 
 # SwiftPM for macOS

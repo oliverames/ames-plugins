@@ -1,8 +1,12 @@
 ---
 name: draft-comms
 description: >-
-  Use when the user provides meeting notes, transcripts, emails, or a list of
-  action items that require outreach. Triggers for "draft follow-ups", "write
+  Reads meeting notes, transcripts, emails, or action-item lists, identifies
+  every item requiring outreach, and drafts each message in Oliver's
+  personal voice (via the humanizer skill), saving to ~/Documents/drafts/.
+when_to_use: >-
+  User provides meeting notes, transcripts, emails, or a list of action
+  items that require outreach. Triggers for "draft follow-ups", "write
   these emails", "draft comms from my notes", "help me follow up on this
   meeting", or "draft messages from this transcript".
 ---

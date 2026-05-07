@@ -1,14 +1,15 @@
 ---
 name: macos-app-icons
 description: >-
-  Extract high-resolution app icons from macOS .app bundles, including from
-  Assets.car asset catalogs for icons up to 1024-2048px. Use when the user
-  needs an app's icon as an image file — even if they don't say "extract".
-  Triggers for "extract app icon", "get app icon", "app icon", "icns",
-  "Assets.car icon", "extract icon from app", "highest resolution icon",
-  "app bundle icon", "save icon as PNG", "I need the icon for [App]",
-  "get the icon out of the .app", or any request to pull an icon image
-  from a macOS application bundle.
+  Extracts high-resolution app icons from macOS .app bundles, including
+  from Assets.car asset catalogs for icons up to 1024-2048px.
+when_to_use: >-
+  User needs an app's icon as an image file — even if they don't say
+  "extract". Triggers for "extract app icon", "get app icon", "app icon",
+  "icns", "Assets.car icon", "extract icon from app", "highest resolution
+  icon", "app bundle icon", "save icon as PNG", "I need the icon for
+  [App]", "get the icon out of the .app", or any request to pull an icon
+  image from a macOS application bundle.
 ---
 
 # macOS App Icon Extraction

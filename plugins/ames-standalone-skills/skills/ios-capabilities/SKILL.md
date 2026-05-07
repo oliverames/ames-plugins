@@ -2,14 +2,17 @@
 name: ios-capabilities
 description: >-
   Reference for iOS/macOS app capabilities, permissions, entitlements, and
-  Info.plist keys. Use whenever adding a capability or permission to an iOS or
-  macOS app — even if the user doesn't use the exact terms. Triggers for "add
-  permission", "request camera access", "Info.plist key", "usage description",
-  "privacy permission", "iOS capability", "entitlement", "purpose string",
-  "NSLocationUsageDescription", "microphone permission", "camera permission",
-  "location access", "HealthKit", "HomeKit", "NFC", "Siri", "Face ID",
-  "Bluetooth permission", "push notifications entitlement", or any request to
-  enable a system feature that requires user consent or a capability entitlement.
+  Info.plist keys. Looks up the correct Info.plist keys, required
+  entitlements, and default purpose strings for any capability.
+when_to_use: >-
+  Use whenever adding a capability or permission to an iOS or macOS app —
+  even if the user doesn't use the exact terms. Triggers for "add
+  permission", "request camera access", "Info.plist key", "usage
+  description", "privacy permission", "iOS capability", "entitlement",
+  "purpose string", "NSLocationUsageDescription", "microphone permission",
+  "camera permission", "location access", "HealthKit", "HomeKit", "NFC",
+  "Siri", "Face ID", "Bluetooth permission", "push notifications
+  entitlement".
 ---
 
 # iOS Capabilities & Permissions Reference

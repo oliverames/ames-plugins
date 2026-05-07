@@ -14,6 +14,7 @@
       "version": "2.0.1",
       "description": "Third-party Claude Code skills curated by Oliver Ames that ship as bare SKILL.md files with no upstream marketplace. Currently includes humanizer (blader). SwiftUI Pro installs directly from the twostraws/SwiftUI-Agent-Skill marketplace; Apple platform dev skills converted from OpenAI's Codex plugins ship as their own top-level plugins (build-ios-apps-codex, build-macos-apps-codex).",
       "source": "./plugins/ames-community-skills",
+      "strict": true,
       "author": {
         "name": "Oliver Ames",
         "email": "oliverames@gmail.com",
@@ -35,6 +36,7 @@
       "version": "1.0.1",
       "description": "Development-focused MCP servers curated by Oliver Ames. Includes Apple Docs, Apple Notifier, macOS Automator, XcodeBuild, Sim Genie, and Sosumi for iOS/macOS development workflows.",
       "source": "./plugins/ames-dev-mcps",
+      "strict": true,
       "author": {
         "name": "Oliver Ames",
         "email": "oliverames@gmail.com",
@@ -62,6 +64,7 @@
       "version": "3.1.0",
       "description": "Day-to-day general-purpose MCP servers curated by Oliver Ames. Includes Drafts, Excel, Google Workspace, iMCP, MarkItDown, Pandoc, Peekaboo, and Tinyfish integrations.",
       "source": "./plugins/ames-general-mcps",
+      "strict": true,
       "author": {
         "name": "Oliver Ames",
         "email": "oliverames@gmail.com",
@@ -86,8 +89,9 @@
     {
       "name": "ames-standalone-skills",
       "version": "3.10.0",
-      "description": "Oliver's original Claude Code skills covering writing, development, automation, finance, and AI tools (32 skills).",
+      "description": "Oliver's original Claude Code skills covering writing, development, automation, finance, and AI tools (33 skills).",
       "source": "./plugins/ames-standalone-skills",
+      "strict": true,
       "author": {
         "name": "Oliver Ames",
         "email": "oliverames@gmail.com",
@@ -113,6 +117,7 @@
       "version": "1.0.1",
       "description": "iOS development skills converted from OpenAI's curated build-ios-apps Codex plugin (MIT). Ships 6 skills covering App Intents/Shortcuts, SwiftUI UI patterns, Liquid Glass adoption, performance auditing, view refactoring, and simulator debugging.",
       "source": "./plugins/build-ios-apps-codex",
+      "strict": true,
       "author": {
         "name": "Oliver Ames",
         "email": "oliverames@gmail.com",
@@ -137,6 +142,7 @@
       "version": "1.0.1",
       "description": "macOS development skills and commands converted from OpenAI's curated build-macos-apps Codex plugin (MIT). Ships 11 skills plus 3 commands covering building, running, debugging, SwiftUI and AppKit patterns, signing, packaging, notarization, SwiftPM, telemetry, and window management.",
       "source": "./plugins/build-macos-apps-codex",
+      "strict": true,
       "author": {
         "name": "Oliver Ames",
         "email": "oliverames@gmail.com",

@@ -153,6 +153,7 @@ for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
         "version": meta["version"],
         "description": meta.get("description", ""),
         "source": f"./plugins/{plugin_dir.name}",
+        "strict": True,
     }
     for field in OPTIONAL_PROPAGATED:
         if field in meta:
