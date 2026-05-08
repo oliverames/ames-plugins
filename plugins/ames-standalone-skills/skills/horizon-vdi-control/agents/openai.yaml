@@ -1,0 +1,4 @@
+interface:
+  display_name: "Horizon VDI Control"
+  short_description: "Operate Omnissa Horizon VDI sessions with Computer Use."
+  default_prompt: "Use Horizon VDI Control when controlling a Windows VDI through Omnissa Horizon Client with Computer Use."
