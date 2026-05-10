@@ -53,7 +53,7 @@ try:
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
     from docx.shared import Pt, RGBColor
-    from lxml import etree
+    from lxml import etree  # type: ignore[import-not-found]
 except ImportError:
     print("Error: python-docx / lxml not installed.")
     print("Run: pip install python-docx lxml")
