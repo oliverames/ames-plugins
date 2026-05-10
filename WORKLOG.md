@@ -1,5 +1,40 @@
 # Worklog
 
+## 2026-05-09 — bcbs-brand: V2 narrative cleanup, OneDrive paths, Pyright fix (commits 73a52e2 + 36cfb30)
+
+**What changed**: Closed the rename trail on the BCBS strategy memo. After the BCBS-side rename rounds in `~/Documents/BCBS` renamed `BCBS Digital Infrastructure Strategy Memo - V2.docx` to `BCBS Digital Infrastructure Strategy Memo.docx`, the `bcbs-brand` skill source still carried the old name in 16 places across 7 files. Sweep landed in sync commit `73a52e2`:
+
+- `data/letterhead/scripts/build-exemplar-memo.py`: hardcoded `DEFAULT_SOURCE` path (CRITICAL — `build-letterhead.sh` calls this script bare for the maintenance regeneration workflow, so the runtime path was actually broken), error message, CLI help, plus 6 narrative comments through the docstring and code
+- `SKILL.md`: 4 narrative references including the user-quote example in the named-references rule, the visual-verify section, and the table entry for `build-exemplar-memo.py`
+- `data/letterhead/scripts/build-letterhead.sh`, `clone-exemplar.py`, `style-proposal-report.py`, `markdown-shape.md`: user-quote examples and narrative descriptions
+- `bcbs-imagerelay-sync/SKILL.md`: fuzzy-match algorithm example swapped from the old V2 filename to `2026 Medicare 101 Social Media Plan - Revised 2026-04-23` to preserve the algorithmic teaching point about kebab→spaced normalization with suffix preservation
+
+OneDrive references also dropped — Oliver uninstalled OneDrive, so the dual-path reference in `bcbs-brand/SKILL.md` line 381 and the Source frontmatter of both `data/brand/authoritative-*.md` files now point only at the canonical `~/Documents/BCBS/...` paths. Confirmed each alternative path exists on disk before swapping (`Proposal Report Portrait Template.dotx`, `2025-10-17 Blue Cross Vermont Brand Style Guide.pdf`, `Writing and Tone Style Guide.pdf`).
+
+Separate fix commit `36cfb30`: Pyright `reportAttributeAccessIssue` on `style-proposal-report.py:56` for the `from lxml import etree` import. Pre-existing diagnostic surfaced when the docstring V2 edit caused re-analysis. Root cause: `lxml.etree` is a C extension and Pyright lacks bundled type info. Fixed with one-line `# type: ignore[import-not-found]` matching the convention already used by the sibling `build-exemplar-memo.py:42`.
+
+**Decisions made**:
+- Distinguished broken pointers (file paths that no longer resolve) from narrative shorthand (terminology that named a design). User-quote examples like "clone the V2 strategy memo" got updated because no one would say that anymore post-rename. The fuzzy-match teaching example in `bcbs-imagerelay-sync` got swapped to a different real filename rather than updated in place — the algorithmic point depends on a non-trivial suffix structure, so dropping V2 would have degenerated the example.
+- `.backups/` directories, `.smart-transcribe-runs/` telemetry, JSONL session transcripts, and `~/Developer/Projects/ames-claude-backup/` deliberately untouched — their entire purpose is to be immutable historical snapshots.
+- Pyright fix as per-line suppression rather than installing `lxml-stubs` or adding a `pyrightconfig.json`. Per-line is the most surgical, requires no dependency change, and matches the directory's existing convention.
+
+**Left off at**: All cleanup committed and verified clean. Sync commit `73a52e2` did not include a version bump — `ames-standalone-skills` plugin still at `3.12.0`, `bcbs-brand` skill still at `1.9.0`. Consider patch-bumping to `3.12.1` / `1.9.1` on the next ./sync if the Pyright fix or these narrative edits warrant marking a release.
+
+**Open questions**: None NEW from this work.
+
+**Carried forward** (still open from 2026-04-25 entry below): sync-count auto-regen, publish script, postpublish hooks, `bcbs-wrap-up` cache version mismatch, legacy Asana-tagged items in BCBS notes triage, `ames-connectors` LICENSE, `codex-doctor --only-enabled` flag, the `--no-tight-bullets` escape hatch question, the `cp:revision` reset question.
+
+**Verification**:
+- `grep "\bV2\b"` across `bcbs-brand/`, `bcbs-imagerelay-sync/`, and BCBS memory caches at `~/.claude/projects/-Users-oliverames-Documents-BCBS/memory/` (excluding `.backups/`): zero hits
+- `grep "OneDrive-Personal"` across all of `plugins/`: zero hits
+- All 4 modified Python scripts compile (`python3 -m py_compile`)
+- `build-letterhead.sh` shell syntax: `bash -n` clean
+- All canonical alternative paths verified to exist on disk before swapping references
+- Pyright diagnostic `reportAttributeAccessIssue` on `style-proposal-report.py:56`: suppressed via the same `# type: ignore[import-not-found]` pattern already used in `build-exemplar-memo.py:42`
+- Both `36cfb30` and `73a52e2` ED25519-signed via 1Password (vault required user-present unlock both times — the agent rejected two retry attempts each before finally signing)
+
+---
+
 ## 2026-05-07 — smart-transcribe 9-issue triage + Cohere removal (commit 60491b1, v3.11.2)
 
 **What changed**: Two-pass overhaul of the `smart-transcribe` skill from a single session. Pass 1 was a triage of 9 issues that surfaced during yesterday's BCBS 6-file (~915 MB) stress test; pass 2 was a complete removal of the Cohere Transcribe (local) engine after persistent reliability problems.
