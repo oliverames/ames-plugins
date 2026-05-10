@@ -1,35 +1,35 @@
 #!/usr/bin/env python3
 """
 Regenerate data/letterhead/assets/exemplar-proposal-report-memo.docx
-from the canonical BCBS Proposal Report memo exemplar (V2 memo).
+from the canonical BCBS Proposal Report memo exemplar (the strategy memo).
 
 The exemplar is the gold-standard "memo in Proposal Report Portrait family"
 that clone-exemplar.py / build-letterhead.sh use as pandoc's --reference-doc
 for memo-style outputs. It carries:
 
-- The graphic header band (preserved byte-for-byte from V2 because word/media
-  and word/header1.xml are copied untouched by zipfile round-trip).
+- The graphic header band (preserved byte-for-byte from the source memo because
+  word/media and word/header1.xml are copied untouched by zipfile round-trip).
 - The Independent Licensee footer.
 - Letter page size with 1" top, 1" left/right, 0.5" bottom margins and
-  0.5" header distance — matching V2 verbatim.
+  0.5" header distance — matching the source memo verbatim.
 - Paragraph styles Title (15pt bold navy #00355E), Subtitle (8pt italic gray
   #595959), Heading1 (ALL-CAPS navy on light-blue band), FirstParagraph
   (9pt black body), BlockText (callout box, pale-blue #EBF4FA fill,
   navy #00355E left border). These are what pandoc emits.
-- Normal with 9pt default run size so body paragraphs render at V2's actual
-  body size, not the 10pt default.
+- Normal with 9pt default run size so body paragraphs render at the source's
+  actual body size, not the 10pt default.
 
 The body content is a minimal sanitized skeleton so the file is useful when
 opened in Word for reference, but ships no BCBS-specific material. The header
 banner title (which lives as real text in header1.xml, **twice** — once in
 <wps:txbx> and once in the <mc:Fallback><v:textbox> legacy-Word construct),
 the docProps/core.xml metadata (title/subject/creator), and the ListParagraph
-bullet indent (V2 ships with 720-twip indent and a level-0 numbering entry
-that has no ind pPr, producing huge bullet tabs) are all sanitized / fixed
-here.
+bullet indent (the source ships with 720-twip indent and a level-0 numbering
+entry that has no ind pPr, producing huge bullet tabs) are all sanitized /
+fixed here.
 
-Source is the private V2 memo on Oliver's disk; the script sanitizes before
-bundling, so the output can safely live in the public ames-claude
+Source is the private strategy memo on Oliver's disk; the script sanitizes
+before bundling, so the output can safely live in the public ames-claude
 marketplace.
 """
 from __future__ import annotations
@@ -52,7 +52,7 @@ def w(tag: str) -> str:
 DEFAULT_SOURCE = Path(
     "/Users/oliverames/Documents/BCBS/Projects/"
     "Digital Infrastructure Strategy/"
-    "BCBS Digital Infrastructure Strategy Memo - V2.docx"
+    "BCBS Digital Infrastructure Strategy Memo.docx"
 )
 
 DEFAULT_TARGET = (
@@ -118,7 +118,7 @@ STYLE_FRAGMENTS = {
 
 
 def ensure_body_replaced(document_xml: bytes) -> bytes:
-    """Strip the V2 body and replace with the sanitized skeleton."""
+    """Strip the source body and replace with the sanitized skeleton."""
     tree = etree.fromstring(document_xml)
     body = tree.find(w("body"))
     if body is None:
@@ -171,8 +171,8 @@ def ensure_styles_patched(styles_xml: bytes) -> bytes:
 
 BANNER_PLACEHOLDER = "PROPOSAL MEMO"
 
-# Any string that appears in header1.xml as banner text on V2 and must be
-# scrubbed before shipping. Keep exact so we don't over-replace.
+# Any string that appears in header1.xml as banner text on the source and
+# must be scrubbed before shipping. Keep exact so we don't over-replace.
 BANNER_SOURCE_STRINGS = (
     "Digital Infrastructure Strategy",
 )
@@ -220,10 +220,10 @@ def sanitize_core(core_xml: bytes) -> bytes:
 
 
 def sanitize_app(app_xml: bytes) -> bytes:
-    """Reset stale page/word counters that V2 carried in docProps/app.xml.
+    """Reset stale page/word counters that the source carried in docProps/app.xml.
 
     Pandoc rewrites app.xml with fresh counts on per-memo builds, but the
-    bundled exemplar opened standalone in Word would otherwise show V2's
+    bundled exemplar opened standalone in Word would otherwise show the source's
     "Pages: 6, Words: 2635, Characters: 15021" — misleading because the
     exemplar body is ~1 page of placeholder content. Word recalculates
     these counters on first save, so zeros are fine as a starting state.
@@ -246,7 +246,7 @@ def sanitize_app(app_xml: bytes) -> bytes:
 def fix_bullet_indent(styles_xml: bytes) -> bytes:
     """Patch ListParagraph from 720-twip indent to 360 left with 180 hanging.
 
-    V2 (and reference-proposal-report.docx) ship with a 0.5" left indent on
+    The source memo (and reference-proposal-report.docx) ship with a 0.5" left indent on
     ListParagraph AND level-0 numbering entries that lack pPr/ind, so bullets
     render with a huge tab between the dash and the text. Pulling the style
     indent in to 360 with a 180-twip hanging gives the visually tight bullet
@@ -301,7 +301,7 @@ def fix_numbering_indent(numbering_xml: bytes) -> bytes:
 
 def build(source: Path, target: Path) -> None:
     if not source.exists():
-        raise SystemExit(f"source V2 memo not found at {source}")
+        raise SystemExit(f"source memo not found at {source}")
 
     target.parent.mkdir(parents=True, exist_ok=True)
 
@@ -339,7 +339,7 @@ def main() -> int:
         "--source",
         type=Path,
         default=DEFAULT_SOURCE,
-        help=f"V2 memo on disk (default: {DEFAULT_SOURCE})",
+        help=f"strategy memo on disk (default: {DEFAULT_SOURCE})",
     )
     parser.add_argument(
         "--target",

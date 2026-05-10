@@ -4,7 +4,7 @@ Build a BCBS memo .docx by cloning a Word exemplar and letting pandoc fill
 the body from markdown.
 
 This is the right tool when Oliver names a specific reference file
-("use the Gap Analysis Memo", "clone the V2 strategy memo"). The exemplar
+("use the Gap Analysis Memo", "clone the strategy memo"). The exemplar
 carries all the non-style visuals — the graphic header band, page
 dimensions, footer, fonts — and pandoc's --reference-doc mechanism
 preserves them automatically. Named references override the skill's default
@@ -28,7 +28,7 @@ When --tight-bullets is supplied, every level-0 abstractNum entry in
 word/numbering.xml is rewritten to left=360, hanging=180. Pandoc appends
 its own numbering entries for lists it sees in the markdown, at the
 Word-default left=720 hanging=360, which looks loose in a memo. The flag
-enforces the tighter V2-style bullet indent across both exemplar-provided
+enforces the tighter strategy-memo bullet indent across both exemplar-provided
 and pandoc-appended entries.
 
 Returns non-zero if pandoc is missing, the exemplar doesn't look like a
@@ -98,7 +98,7 @@ def force_tight_bullets(output: Path) -> None:
     """Rewrite every level-0 abstractNum ind to left=360 hanging=180.
 
     Pandoc appends new abstractNum entries for lists it finds in the markdown,
-    at the Word-default left=720 hanging=360 — looser than the V2 memo bullet.
+    at the Word-default left=720 hanging=360 — looser than the strategy memo bullet.
     This pass closes that gap so every bullet in the output indents tightly,
     regardless of whether it's mapped to an exemplar-provided numbering entry
     or a pandoc-appended one.

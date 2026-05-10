@@ -54,8 +54,8 @@ mcp: markitdown → convert_to_markdown(uri="file:///path/to/desktop/file.docx")
 Matching signals to check, in order:
 
 1. **Name similarity** — strip hyphens and lowercase both sides for a fuzzy
-   compare (e.g., `BCBS-Digital-Infrastructure-Strategy-Memo---V2` matches
-   `BCBS Digital Infrastructure Strategy Memo - V2`).
+   compare (e.g., `2026-Medicare-101-Social-Media-Plan---Revised-2026-04-23`
+   matches `2026 Medicare 101 Social Media Plan - Revised 2026-04-23`).
 2. **Content headings** — the first H1 in the file usually matches the local
    file's title or the document's main topic.
 3. **File size ballpark** — local file should be within ~20% of the desktop

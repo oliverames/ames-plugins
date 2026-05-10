@@ -6,7 +6,7 @@
 #
 # Pick based on what the user asked for:
 #   - If Oliver named a specific reference file ("use the Gap Analysis Memo",
-#     "clone the V2 strategy memo") → use --exemplar=PATH. Named references
+#     "clone the strategy memo") → use --exemplar=PATH. Named references
 #     ALWAYS override the skill default; never silently substitute.
 #   - If Oliver described a memo style without naming a file → use
 #     --template=memo, which points at the bundled Proposal Report memo

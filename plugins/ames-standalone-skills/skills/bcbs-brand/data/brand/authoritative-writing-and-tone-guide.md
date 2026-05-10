@@ -2,7 +2,7 @@
 
 > **This is the canonical source of truth for writing voice, tone, grammar, word list, and letter/email format.** Where this file conflicts with any other `data/brand/` file, this file wins.
 >
-> **Source:** `~/Library/CloudStorage/OneDrive-Personal/Documents/BCBS/Reference/Writing-and-Tone-Style-Guide.pdf` (31 pages, originally August 2021, revised November 2021). Authored by Sean Sheehan.
+> **Source:** `~/Documents/BCBS/Reference/Writing and Tone Style Guide.pdf` (31 pages, originally August 2021, revised November 2021). Authored by Sean Sheehan.
 >
 > **Authority:** Blue Cross VT internal style guide. Adapted with substantial edits from Mailchimp's open style guide, used under a Creative Commons Attribution-NonCommercial 4.0 International license.
 

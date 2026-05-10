@@ -68,7 +68,7 @@ Two files under `data/brand/` are the canonical sources of truth, sourced verbat
   outward-facing reports and standalone proposals.
 
 - **Named references override skill defaults.** If Oliver names a specific
-  existing document ("use the Gap Analysis Memo", "clone the V2 strategy
+  existing document ("use the Gap Analysis Memo", "clone the strategy
   memo", "match that onboarding letter"), clone THAT file via
   `build-letterhead.sh --exemplar=PATH`. Do not silently substitute the
   default template for a named reference — the named file already carries the
@@ -76,7 +76,7 @@ Two files under `data/brand/` are the canonical sources of truth, sourced verbat
 
 - **Visual-verify before delivering any `.docx`.** Render a thumbnail and
   compare to the canonical reference for the chosen path. The pandoc-built
-  default and the V2 memo exemplar look noticeably different at a glance —
+  default and the memo exemplar look noticeably different at a glance —
   catch the misroute on the first build, not after the user notices.
 
   ```bash
@@ -84,7 +84,7 @@ Two files under `data/brand/` are the canonical sources of truth, sourced verbat
   open "/tmp/output.docx.png"
   ```
 
-  Reference for memo path: `~/Documents/BCBS/Projects/Digital Infrastructure Strategy/BCBS Digital Infrastructure Strategy Memo - V2.docx`
+  Reference for memo path: `~/Documents/BCBS/Projects/Digital Infrastructure Strategy/BCBS Digital Infrastructure Strategy Memo.docx`
   (render its thumbnail the same way and compare side-by-side).
 
 ## Canonical markdown shape for BCBS `.docx` output
@@ -377,12 +377,12 @@ Three references are available. Pick via the template decision tree above.
 | File | Role | Contents |
 |------|------|----------|
 | `data/letterhead/assets/reference-proposal-report.docx` | **DEFAULT** (reports/proposals) | Formal template with the Proposal Report header band (BCBS logo + title area). Use for reports, proposals, strategy documents, formal internal documents, and polished `.docx` outputs that aren't memos. Built by `style-proposal-report.py` from the .dotx below. Covers every styleId pandoc emits (`Title`, `Subtitle`, `Author`, `Date`, `Heading1-4`, `BodyText`, `FirstParagraph`, `Compact`, `Caption`, `IntenseQuote`, and the `Table` table style). |
-| `data/letterhead/assets/exemplar-proposal-report-memo.docx` | **Memo exemplar** | Memo variant of the Proposal Report family, sanitized and safe to ship. Carries the graphic header banner (with `PROPOSAL MEMO` placeholder text — rewrite per-memo via `--banner-title`), 15pt navy Title, 8pt gray Subtitle, 9pt Normal body, 0.5" bottom margin, and the augmented pandoc-expected styles (Title, Subtitle, FirstParagraph, BlockText). Built by `build-exemplar-memo.py` from the private V2 memo at `~/Documents/BCBS/Projects/Digital Infrastructure Strategy/BCBS Digital Infrastructure Strategy Memo - V2.docx`. |
-| `data/letterhead/assets/proposal-report-template.dotx` | Source | Authoritative Blue Cross VT Proposal Report Portrait Template (Word .dotx). Copy of the canonical file at `/Users/oliverames/Library/CloudStorage/OneDrive-Personal/Documents/BCBS/Templates/Proposal Report Portrait Template.dotx` and `~/Documents/BCBS/Templates/Proposal Report Portrait Template.dotx`. Do not edit directly; regenerate the reference docx via `style-proposal-report.py`. |
+| `data/letterhead/assets/exemplar-proposal-report-memo.docx` | **Memo exemplar** | Memo variant of the Proposal Report family, sanitized and safe to ship. Carries the graphic header banner (with `PROPOSAL MEMO` placeholder text — rewrite per-memo via `--banner-title`), 15pt navy Title, 8pt gray Subtitle, 9pt Normal body, 0.5" bottom margin, and the augmented pandoc-expected styles (Title, Subtitle, FirstParagraph, BlockText). Built by `build-exemplar-memo.py` from the private strategy memo at `~/Documents/BCBS/Projects/Digital Infrastructure Strategy/BCBS Digital Infrastructure Strategy Memo.docx`. |
+| `data/letterhead/assets/proposal-report-template.dotx` | Source | Authoritative Blue Cross VT Proposal Report Portrait Template (Word .dotx). Copy of the canonical file at `~/Documents/BCBS/Templates/Proposal Report Portrait Template.dotx`. Do not edit directly; regenerate the reference docx via `style-proposal-report.py`. |
 | `data/letterhead/assets/reference.docx` | Simple fallback | Simple Blue Cross VT pandoc reference for plain/simple documents only when Oliver explicitly asks for that style. Built by `style-reference-doc.py`. |
 | `data/letterhead/scripts/build-letterhead.sh` | Build entry point | Top-level builder. Accepts `--template={default,memo,simple}`, `--exemplar=PATH` for a user-named reference file, and `--banner-title="..."` (memo/exemplar paths only). Delegates memo/exemplar builds to `clone-exemplar.py`. |
 | `data/letterhead/scripts/clone-exemplar.py` | Pandoc + banner rewrite + bullet tighten | Invoked by build-letterhead.sh for memo and exemplar builds. Runs `pandoc --reference-doc=<exemplar>`. Optional flags: `--banner-title="..."` rewrites header1.xml's banner text in both the `wps:txbx` and `mc:Fallback` `v:textbox` copies; `--tight-bullets` rewrites every level-0 numbering entry to `left=360 hanging=180` so pandoc-appended bullet entries don't render at the looser Word-default 720/360. `build-letterhead.sh` auto-passes `--tight-bullets` for memo and exemplar paths because the Proposal Report family expects tight bullets; pass `--exemplar=PATH` directly to `clone-exemplar.py` (bypassing build-letterhead.sh) if you want to opt out for a non-memo exemplar. Warns if the exemplar is missing pandoc-expected styles (Title, Subtitle, Heading1, FirstParagraph). |
-| `data/letterhead/scripts/build-exemplar-memo.py` | Regenerate memo exemplar | Clones V2, sanitizes `document.xml`, `header1.xml` (banner text → `PROPOSAL MEMO`), and `docProps/core.xml` metadata; augments `styles.xml` with Title/Subtitle/FirstParagraph/BlockText; fixes ListParagraph indent (720 → 360/180) and numbering level-0 `ind`. Re-run when V2 changes or the sanitization rules change. |
+| `data/letterhead/scripts/build-exemplar-memo.py` | Regenerate memo exemplar | Clones the source memo, sanitizes `document.xml`, `header1.xml` (banner text → `PROPOSAL MEMO`), and `docProps/core.xml` metadata; augments `styles.xml` with Title/Subtitle/FirstParagraph/BlockText; fixes ListParagraph indent (720 → 360/180) and numbering level-0 `ind`. Re-run when the source changes or the sanitization rules change. |
 | `data/letterhead/scripts/style-proposal-report.py` | Regenerate default | Python+lxml script that converts the .dotx to .docx, strips the placeholder body (keeping the header banner and margins), **preserves the template's Normal and Heading1 styles untouched** (Heading1 is the BCBS blue-band signature), **upserts every other pandoc-expected paragraph styleId** by styleId (so Word doesn't silently fall back to Normal), injects a `Table` table-type style with BCBS gray gridlines and a bold-navy header row, and writes the Independent Licensee footer. Re-run after any brand-palette change. |
 | `data/letterhead/scripts/style-reference-doc.py` | Regenerate simple fallback | Python script that styles `reference.docx` with Blue Cross VT colors, fonts, and margins. |
 

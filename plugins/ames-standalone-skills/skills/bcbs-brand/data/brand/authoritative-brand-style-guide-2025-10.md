@@ -2,7 +2,7 @@
 
 > **This is the canonical source of truth for visual identity, color, typography, logos, and brand structure.** Where this file conflicts with any other `data/brand/` file, this file wins.
 >
-> **Source:** `~/Library/CloudStorage/OneDrive-Personal/Documents/BCBS/Reference/2025-10 Blue Cross Vermont Brand Style Guide.pdf` (13 pages, updated October 2025). Also available in the internal Brand Resource Center.
+> **Source:** `~/Documents/BCBS/Reference/2025-10-17 Blue Cross Vermont Brand Style Guide.pdf` (13 pages, updated October 2025). Also available in the internal Brand Resource Center.
 >
 > **Authority:** Blue Cross VT Brand and Engagement Strategies team. This guide is informed by and sits under the Blue Cross Blue Shield Association's brand standards.
 

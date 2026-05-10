@@ -29,7 +29,7 @@ TOUCH Heading1 — the template wins.
 For every other style we either:
   - upsert a paragraph style whose size, color, and font match the two
     reference documents in ~/Documents/BCBS (Jira One-Sheet, Digital
-    Infrastructure Strategy Memo V2), OR
+    Infrastructure Strategy Memo), OR
   - inject a table-type style via raw XML, because python-docx's
     paragraph-style API can't describe table borders / firstRow
     conditional formatting.

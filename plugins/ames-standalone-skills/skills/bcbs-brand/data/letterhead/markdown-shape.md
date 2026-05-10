@@ -26,7 +26,7 @@ Do not use both a YAML `title:` and an inline `# Title` — pick one.
 ## Section headings
 
 Use a single `#` per section. The reference memo
-(`BCBS Digital Infrastructure Strategy Memo - V2.docx`) and the Jira
+(`BCBS Digital Infrastructure Strategy Memo.docx`) and the Jira
 One-Sheet both use only one level of heading: `EXECUTIVE SUMMARY`,
 `DECISIONS NEEDED`, etc. Each `# Heading` renders on a light-blue shading
 band in all caps, which is the BCBS visual signature.
