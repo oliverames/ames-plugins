@@ -61,8 +61,8 @@
     },
     {
       "name": "ames-general-mcps",
-      "version": "3.1.1",
-      "description": "Day-to-day general-purpose MCP servers curated by Oliver Ames. Includes Drafts, Excel, Google Workspace, iMCP, MarkItDown, Pandoc, Peekaboo, and Tinyfish integrations.",
+      "version": "3.2.0",
+      "description": "Day-to-day general-purpose MCP servers curated by Oliver Ames. Includes Drafts, Excel, Google Workspace, iMCP, MarkItDown, Merriam-Webster Collegiate (Dictionary + Thesaurus), Pandoc, Peekaboo, and Tinyfish integrations.",
       "source": "./plugins/ames-general-mcps",
       "strict": true,
       "author": {
@@ -82,6 +82,10 @@
         "pandoc",
         "peekaboo",
         "markitdown",
+        "merriam-webster",
+        "dictionary",
+        "thesaurus",
+        "editorial",
         "productivity"
       ],
       "category": "productivity"

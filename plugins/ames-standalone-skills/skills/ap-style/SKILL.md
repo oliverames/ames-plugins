@@ -258,9 +258,10 @@ AP is the default register, not the final word. Override when the audience deman
 
 ## When you're not sure
 
-1. Check Oliver's `data/ap/` notes (this skill's gitignored folder) for excerpts and house-specific rulings.
-2. Check apstylebook.com (Oliver has a subscription).
-3. If still unsure, flag it explicitly: `"I applied AP rule X here, but the Stylebook may have a more specific entry — worth a check."` Don't invent a rule.
+1. **Look it up in Merriam-Webster Collegiate** (via the `merriam-webster` MCP server in `ames-general-mcps`). AP defers to Webster's Collegiate for spelling and word meaning, so `define`, `synonyms`, and `spell` from that server are the right first stop for word-level questions.
+2. Check Oliver's `data/ap/` notes (this skill's gitignored folder) for Stylebook excerpts and house-specific rulings.
+3. Check apstylebook.com (Oliver has a subscription).
+4. If still unsure, flag it explicitly: `"I applied AP rule X here, but the Stylebook may have a more specific entry — worth a check."` Don't invent a rule.
 
 ## Recent AP updates worth knowing
 

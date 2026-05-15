@@ -1,7 +1,7 @@
 <h1 align="center">ames-general-mcps</h1>
 
 <p align="center">
-  <strong>Seven MCP servers for day-to-day productivity work</strong>
+  <strong>Nine MCP servers for day-to-day productivity work</strong>
 </p>
 
 <p align="center">
@@ -10,8 +10,10 @@
   <code>Google Workspace</code> &bull;
   <code>iMCP</code> &bull;
   <code>MarkItDown</code> &bull;
+  <code>Merriam-Webster</code> &bull;
   <code>Pandoc</code> &bull;
-  <code>Peekaboo</code>
+  <code>Peekaboo</code> &bull;
+  <code>Tinyfish</code>
 </p>
 
 <p align="center">
@@ -21,7 +23,7 @@
 
 ---
 
-A Claude Code plugin bundling seven MCP servers for the things you do *outside* of writing code: drafting in Drafts, editing spreadsheets, reading Gmail and Calendar, tapping local macOS data via iMCP, converting documents with MarkItDown and Pandoc, and taking screenshots with Peekaboo. Paired with [`ames-dev-mcps`](../ames-dev-mcps/), which covers iOS/macOS development tools.
+A Claude Code plugin bundling nine MCP servers for the things you do *outside* of writing code: drafting in Drafts, editing spreadsheets, reading Gmail and Calendar, tapping local macOS data via iMCP, converting documents with MarkItDown and Pandoc, taking screenshots with Peekaboo, looking up words and synonyms in Merriam-Webster Collegiate, and running visual web tasks via Tinyfish. Paired with [`ames-dev-mcps`](../ames-dev-mcps/), which covers iOS/macOS development tools.
 
 ## Why this exists
 
@@ -50,14 +52,20 @@ The `google-workspace` server requires OAuth credentials; see below.
 | `google-workspace` | Gmail, Calendar, Drive, Docs, Sheets | `npx` | `GOOGLE_WORKSPACE_OAUTH_CLIENT_ID`, `GOOGLE_WORKSPACE_OAUTH_CLIENT_SECRET` |
 | `iMCP` | Calendar, Contacts, Messages, Location, Reminders | local binary | none |
 | `markitdown` | Convert HTML/PDF/Word/images to Markdown | `uvx` | none |
+| `merriam-webster` | Collegiate Dictionary + Thesaurus lookups for editorial work | `uv run --script` (vendored Python) | `MW_DICTIONARY_KEY`, `MW_THESAURUS_KEY` |
 | `pandoc` | Convert between 40+ document formats | `uvx` | none |
 | `peekaboo` | Screenshots plus vision-based UI analysis | `npx` | none |
+| `agent-tinyfish-ai` | Visual web automation via Tinyfish hosted agent | HTTP | none |
 
 See [.mcp.json](.mcp.json) for exact invocations.
 
 ### Google Workspace OAuth
 
 Credentials resolve from your host's local runtime config (`settings.json` `env` block or a plugin-local `.env`) and are never committed to the repo. See the [Google Workspace MCP docs](https://github.com/aaronsb/google-workspace-mcp) for setup.
+
+### Merriam-Webster
+
+Free API keys from [dictionaryapi.com](https://dictionaryapi.com/) (1,000 queries/day per key under noncommercial-use terms). Two keys are required: one each for the Collegiate Dictionary and Collegiate Thesaurus references. See [`servers/merriam-webster/README.md`](servers/merriam-webster/README.md) for what the server exposes; pairs with the [`ap-style`](https://github.com/oliverames/ames-plugins/tree/main/plugins/ames-standalone-skills/skills/ap-style) skill for editorial workflows.
 
 ## Related
 

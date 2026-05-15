@@ -48,6 +48,18 @@
         "markitdown-mcp"
       ]
     },
+    "merriam-webster": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--script",
+        "${CLAUDE_PLUGIN_ROOT}/servers/merriam-webster/server.py"
+      ],
+      "env": {
+        "MW_DICTIONARY_KEY": "${MW_DICTIONARY_KEY}",
+        "MW_THESAURUS_KEY": "${MW_THESAURUS_KEY}"
+      }
+    },
     "agent-tinyfish-ai": {
       "url": "https://agent.tinyfish.ai/mcp"
     }
