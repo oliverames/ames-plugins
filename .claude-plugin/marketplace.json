@@ -11,8 +11,8 @@
   "plugins": [
     {
       "name": "ames-community-skills",
-      "version": "2.0.1",
-      "description": "Third-party Claude Code skills curated by Oliver Ames that ship as bare SKILL.md files with no upstream marketplace. Currently includes humanizer (blader). SwiftUI Pro installs directly from the twostraws/SwiftUI-Agent-Skill marketplace; Apple platform dev skills converted from OpenAI's Codex plugins ship as their own top-level plugins (build-ios-apps-codex, build-macos-apps-codex).",
+      "version": "2.1.0",
+      "description": "Third-party Claude Code skills curated by Oliver Ames that ship as bare SKILL.md files with no upstream marketplace. Currently includes humanizer (blader) and six utility skills from Osaurus (content-summarizer, creative-brainstormer, data-visualizer, debug-assistant, productivity-coach, research-analyst). SwiftUI Pro installs directly from the twostraws/SwiftUI-Agent-Skill marketplace; Apple platform dev skills converted from OpenAI's Codex plugins ship as their own top-level plugins (build-ios-apps-codex, build-macos-apps-codex).",
       "source": "./plugins/ames-community-skills",
       "strict": true,
       "author": {
