@@ -1,5 +1,29 @@
 # Worklog
 
+## 2026-05-15 (late evening) — Pick up sibling-session collateral: 6 Osaurus skills + finish ames-claude URL rename (commits 81b889f + ff89b35)
+
+**What changed**: Two follow-up commits closing out items left open by the earlier evening sessions. (1) Committed the 6 untracked Osaurus community skills that had appeared in `plugins/ames-community-skills/skills/` during the day's parallel-session activity (`content-summarizer`, `creative-brainstormer`, `data-visualizer`, `debug-assistant`, `productivity-coach`, `research-analyst`). Each shipped only as `SKILL.md`; ran `./gen-codex-skill-yaml` (no `--force`) to generate the matching `agents/openai.yaml` files alongside, picking up the plugin's `brand_color #ea580c`. Bumped `ames-community-skills` 2.0.1 → 2.1.0 and updated the description to drop the stale "Currently includes humanizer (blader)" line in favor of naming all 7 skills and crediting Osaurus. (2) Mechanically `sed`-replaced `github.com/oliverames/ames-claude` → `github.com/oliverames/ames-plugins` across all 10 plugin manifests that still pointed at the old URL (6 Claude-side + 4 Codex-side; build-ios/macos plugins don't carry a Codex manifest). The marketplace rename earlier today updated the `name` field and bumped to v4.0.0 but missed every plugin's `homepage`, `repository`, and `interface.websiteURL`; the URLs still worked via GitHub's auto-redirect but were no longer canonical. Patch-bumped all 6 plugins and marketplace `metadata.version` 4.0.0 → 4.0.1.
+
+**Decisions made**:
+- **Two separate commits, not one.** The skill addition and the URL fix are different concerns with different blast radii. Bundling would obscure the rename-completion in a content-add commit history.
+- **`ames-community-skills` got both bumps in sequence** (2.0.1 → 2.1.0 for the skills, then 2.1.0 → 2.1.1 for the URL cleanup). Not amended onto the first commit because 2.1.0 was already pushed; amending would have required force-pushing already-public history.
+- **Patch bump policy applied to URL cleanup.** Per the 2026-04-21 metadata-enrichment precedent, any plugin manifest metadata change earns a patch bump. URL cleanup is metadata. All 6 plugins bumped.
+- **Did not extend ames-plugins `.gitignore` defensively.** The repo doesn't snapshot upstream sources, so the iCloud `* [2-9]` conflict-copy pattern from `ames-connectors` doesn't have an obvious scope here. Will add when there's actual evidence of need.
+
+**Verification**:
+- `./sync --check-codex` passes with 0 warnings in both repos (the cache-lag warnings from earlier in the evening cleared after `codex-refresh`).
+- `python3 -c "import json; json.load(open(f))"` on all 10 edited manifests parses cleanly (no sed-induced JSON corruption).
+- `git check-ignore -v` against synthetic `* 3`/`* 5`/`* 9` paths confirms ames-connectors' extended gitignore pattern (separate commit `510b979` in that repo).
+- `grep -rln "ames-claude"` across both repos' current files returns only `WORKLOG.md` historical entries — every actionable reference is now canonical.
+
+**Open questions resolved**:
+- "6 brand-new untracked skill directories in `plugins/ames-community-skills/skills/`" (from previous entry) — committed in `81b889f`.
+- "Parallel logo agent will likely overwrite my SVG placeholders in `ames-dev-mcps/assets/` and `ames-general-mcps/assets/`" — did not happen. All 4 plugin assets/ directories still contain only `icon.svg`; manifests still reference `./assets/icon.svg`; no manifest update needed.
+
+**Left off at**: Both repos clean and pushed. All current-state files canonical to `ames-plugins`. Adjacent `ames-connectors` work (URL hygiene + gitignore pattern extension) covered in that repo's own WORKLOG. Lytho icon at 512x512 remains the lone unresolved cosmetic concern from the morning's icon-upgrade arc — no public source exists above the 500px quality floor.
+
+---
+
 ## 2026-05-15 (evening) — Codex marketplace deep enrichment: brand identity + per-skill openai.yaml + generator (commit 62a03fb)
 
 **What changed**: Pushed Codex marketplace compatibility from "structurally working" to "feature-complete relative to documented Codex marketplace surface". The four ames-plugins Codex manifests (`ames-community-skills`, `ames-dev-mcps`, `ames-general-mcps`, `ames-standalone-skills`) gained `interface.composerIcon` and `interface.brandColor`. Generic SVG icons live at `plugins/<name>/assets/icon.svg` as a placeholder for the parallel logo agent that's working on official MCP-bearing plugin logos. Added `gen-codex-skill-yaml`: reads each `SKILL.md` frontmatter under Codex-eligible plugins, emits an `agents/openai.yaml` carrying `interface.display_name` (kebab→Title Case with abbreviation overrides for YNAB/BCBS/MCP/iOS/macOS/etc.), `interface.short_description` (first sentence, capped at 160 chars), `interface.brand_color` (inherited from the plugin manifest), and `policy.allow_implicit_invocation: false` when SKILL.md sets `disable-model-invocation: true`. Idempotent unless `--force` is passed. Ran the generator across all 35 Codex-relevant skills (1 in `ames-community-skills`, 34 in `ames-standalone-skills`); four explicit-only skills (`go`, `wrap-up`, `bcbs-wrap-up`, `dispatch-remote-control`) correctly emitted the policy block. Documented every addition in `CLAUDE.md`: new layout paths, `gen-codex-skill-yaml` in the script table, Codex `interface` field guidance under plugin conventions, the `agents/openai.yaml` convention under skill conventions.
