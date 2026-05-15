@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Report-only Codex marketplace doctor for ames-claude.
+"""Report-only Codex marketplace doctor for ames-plugins.
 
 This script validates Codex-facing files and live install state without editing
 anything. Claude Code files remain the source of truth; this only checks the
@@ -26,8 +26,8 @@ ROOT = Path(__file__).resolve().parent
 PLUGINS_DIR = ROOT / "plugins"
 MARKETPLACE = ROOT / ".agents" / "plugins" / "marketplace.json"
 CODEX_CONFIG = Path.home() / ".codex" / "config.toml"
-CODEX_CACHE = Path.home() / ".codex" / "plugins" / "cache" / "ames-claude"
-CODEX_MARKETPLACE_ROOT = Path.home() / ".codex" / ".tmp" / "marketplaces" / "ames-claude"
+CODEX_CACHE = Path.home() / ".codex" / "plugins" / "cache" / "ames-plugins"
+CODEX_MARKETPLACE_ROOT = Path.home() / ".codex" / ".tmp" / "marketplaces" / "ames-plugins"
 
 INSTALLATION_VALUES = {"AVAILABLE", "INSTALLED_BY_DEFAULT", "NOT_AVAILABLE"}
 IGNORED_TREE_NAMES = {".DS_Store", "__pycache__"}
@@ -366,7 +366,7 @@ def check_cache(plugins, reporter, require_enabled=False):
 
     enabled = parse_enabled_plugins()
     for name, version in expected.items():
-        key = f"{name}@ames-claude"
+        key = f"{name}@ames-plugins"
         is_enabled = enabled.get(key, False) if enabled else True
         if enabled and require_enabled and not is_enabled:
             reporter.error(f"{key} is not enabled in Codex config")
@@ -385,14 +385,14 @@ def check_cache(plugins, reporter, require_enabled=False):
             check_cache_content(next(p for p in plugins if p["name"] == name), reporter, strict=require_enabled)
 
     for name in sorted(set(cached) - set(expected)):
-        reporter.warn(f"stale Codex cache entry under ames-claude: {name} ({', '.join(cached[name])})")
+        reporter.warn(f"stale Codex cache entry under ames-plugins: {name} ({', '.join(cached[name])})")
 
     for key, is_enabled in sorted(enabled.items()):
-        if not key.endswith("@ames-claude"):
+        if not key.endswith("@ames-plugins"):
             continue
         plugin_name = key.rsplit("@", 1)[0]
         if is_enabled and plugin_name not in expected:
-            reporter.warn(f"enabled Codex config references plugin no longer in ames-claude: {key}")
+            reporter.warn(f"enabled Codex config references plugin no longer in ames-plugins: {key}")
         elif not is_enabled and plugin_name in expected:
             reporter.note(f"{key} is installed but disabled in Codex config")
 
@@ -423,7 +423,7 @@ def check_live_mcp(plugins, reporter, timeout):
     expected = []
     enabled = parse_enabled_plugins()
     for plugin in plugins:
-        key = f"{plugin['name']}@ames-claude"
+        key = f"{plugin['name']}@ames-plugins"
         if enabled and not enabled.get(key, False):
             continue
         expected.extend(plugin["mcp_names"])
@@ -439,13 +439,13 @@ def check_live_mcp(plugins, reporter, timeout):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Validate the ames-claude Codex marketplace mirror")
+    parser = argparse.ArgumentParser(description="Validate the ames-plugins Codex marketplace mirror")
     parser.add_argument("--live", action="store_true", help="run live `codex mcp list` visibility checks")
     parser.add_argument("--no-live", action="store_true", help="skip live `codex mcp list` visibility checks")
     parser.add_argument(
         "--require-enabled",
         action="store_true",
-        help="fail if any Codex-compatible ames-claude plugin is not enabled locally",
+        help="fail if any Codex-compatible ames-plugins plugin is not enabled locally",
     )
     parser.add_argument("--timeout", type=int, default=15, help="seconds to wait for live Codex checks")
     parser.add_argument("-v", "--verbose", action="store_true", help="print successful checks")
@@ -453,7 +453,7 @@ def main(argv=None):
     if args.live and args.no_live:
         parser.error("--live and --no-live cannot be used together")
 
-    print("codex-doctor: validating ames-claude Codex marketplace mirror")
+    print("codex-doctor: validating ames-plugins Codex marketplace mirror")
     reporter = Reporter(verbose=args.verbose)
     plugins = validate_marketplace(reporter)
     check_cache(plugins, reporter, require_enabled=args.require_enabled)

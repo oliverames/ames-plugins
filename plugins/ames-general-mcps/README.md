@@ -31,12 +31,12 @@ Split out of the older `ames-preferred-mcps` umbrella plugin alongside [`ames-de
 
 ## Quick start
 
-This plugin lives in the [`ames-claude`](https://github.com/oliverames/ames-claude) marketplace:
+This plugin lives in the [`ames-plugins`](https://github.com/oliverames/ames-plugins) marketplace:
 
 ```bash
 # In Claude Code
-/plugin marketplace add oliverames/ames-claude
-/plugin install ames-general-mcps@ames-claude
+/plugin marketplace add oliverames/ames-plugins
+/plugin install ames-general-mcps@ames-plugins
 ```
 
 The `google-workspace` server requires OAuth credentials; see below.
@@ -62,7 +62,7 @@ Credentials resolve from your host's local runtime config (`settings.json` `env`
 ## Related
 
 - [`ames-dev-mcps`](../ames-dev-mcps/), the sibling bundle for iOS/macOS development
-- [`ames-claude` marketplace](https://github.com/oliverames/ames-claude), the full set of six plugins
+- [`ames-plugins` marketplace](https://github.com/oliverames/ames-plugins), the full set of six plugins
 
 ---
 

@@ -12,7 +12,7 @@ Reference for CoWork agents interacting with a local Claude Code installation. F
 | `/Users/oliverames/.claude/settings.json` → `env` object | No | No | Contains all API keys. Never read or modify this field. |
 | `/Users/oliverames/.claude/plugins/installed_plugins.json` | Yes | With care | Plugin registry. Safe to read. Edits must be valid JSON; malformed JSON will break plugin loading. |
 | `/Users/oliverames/.claude/hooks/*.js` | Yes | No | Hook scripts. Read to understand behavior. Never modify directly — configure hooks via `settings.json` instead. |
-| `/Users/oliverames/.claude/plugins/cache/ames-claude/**` | Yes | No | Plugin cache. Read-only. Content is managed by sync-skills. |
+| `/Users/oliverames/.claude/plugins/cache/ames-plugins/**` | Yes | No | Plugin cache. Read-only. Content is managed by sync-skills. |
 | `/Users/oliverames/.claude/projects/**` (project memory) | Yes | With care | Per-project memory files. Safe to read. Edits should be plain text additions, not destructive replacements. |
 | `CLAUDE.md` files in project directories | Yes | Yes | Project-scoped instructions. Safe to read and update. |
 | `/Users/oliverames/.claude/sessions/**` | Yes | No | Session logs. Read-only. Do not modify. |

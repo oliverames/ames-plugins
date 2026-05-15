@@ -40,7 +40,7 @@ Decide the shipping path based on what you changed:
 
 - **Inside a git repo with a remote and uncommitted changes** — invoke `commit-commands:commit-push-pr` to commit, push, and open a PR.
 - **Inside a git repo but the branch is `main`/`master` with unpushed commits** — commit + push only (no PR); confirm with user first if anything looks risky.
-- **Plugin or skill changes in `~/Developer/Projects/ames-claude`** — run `./sync` first to regenerate `marketplace.json`, THEN commit + push. The marketplace won't update without sync.
+- **Plugin or skill changes in `~/Developer/Projects/ames-plugins`** — run `./sync` first to regenerate `marketplace.json`, THEN commit + push. The marketplace won't update without sync.
 - **Outside a git repo or local-only config files** — just report what changed and where. No git action.
 
 ## Phase 0 — pre-flight (quick checks before Phase 1)

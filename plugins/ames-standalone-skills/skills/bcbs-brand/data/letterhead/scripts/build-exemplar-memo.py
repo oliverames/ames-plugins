@@ -29,7 +29,7 @@ entry that has no ind pPr, producing huge bullet tabs) are all sanitized /
 fixed here.
 
 Source is the private strategy memo on Oliver's disk; the script sanitizes
-before bundling, so the output can safely live in the public ames-claude
+before bundling, so the output can safely live in the public ames-plugins
 marketplace.
 """
 from __future__ import annotations

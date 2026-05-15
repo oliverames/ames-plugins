@@ -24,7 +24,7 @@ Reference for `/Users/oliverames/.claude/` — the Claude Code user data directo
 │   ├── installed_plugins.json        — v2 registry of all installed plugins
 │   ├── cache/                        — Extracted plugin content, keyed by source/name/version
 │   │   ├── claude-plugins-official/  — Official Anthropic plugins
-│   │   ├── ames-claude/              — Personal plugins from ames-claude repo
+│   │   ├── ames-plugins/              — Personal plugins from ames-plugins repo
 │   │   ├── apple-hig-skills/         — Apple HIG skills plugin
 │   │   └── anthropic-agent-skills/   — Anthropic agent skills
 │   └── .install-manifests/           — Per-plugin install manifests (file hashes for integrity)
@@ -140,7 +140,7 @@ Full path: `/Users/oliverames/.claude/plugins/installed_plugins.json`
 | `version` | string | Semver string (e.g., `"1.0.3"`) or 12-character git commit hash (e.g., `"6b70f99f769f"`). |
 | `installedAt` | string | ISO 8601 timestamp of initial install. |
 | `lastUpdated` | string | ISO 8601 timestamp of most recent update. |
-| `gitCommitSha` | string | Full 40-character SHA of the git commit the plugin was built from. Absent for locally-installed plugins (e.g., `ames-claude`). |
+| `gitCommitSha` | string | Full 40-character SHA of the git commit the plugin was built from. Absent for locally-installed plugins (e.g., `ames-plugins`). |
 
 ### Version formats
 
@@ -177,7 +177,7 @@ Layout:
 | Source ID | Origin |
 |-----------|--------|
 | `claude-plugins-official` | Official Anthropic plugin registry |
-| `ames-claude` | Personal plugins from `github.com/oliverames/ames-claude` |
+| `ames-plugins` | Personal plugins from `github.com/oliverames/ames-plugins` |
 | `apple-hig-skills` | Apple HIG skills (third-party registry) |
 | `anthropic-agent-skills` | Anthropic agent skills registry |
 
@@ -287,12 +287,12 @@ Hooks log their activity to `/Users/oliverames/.claude/hooks-logs/` (auto-create
 
 Base path: `/Users/oliverames/.claude/skills/`
 
-**Currently empty.** All 26 skills are delivered via the `ames-standalone-skills` plugin (installed in `~/.claude/plugins/cache/ames-claude/ames-standalone-skills/<version>/skills/`). Skills are accessed through the plugin system, not as standalone directories here.
+**Currently empty.** All 26 skills are delivered via the `ames-standalone-skills` plugin (installed in `~/.claude/plugins/cache/ames-plugins/ames-standalone-skills/<version>/skills/`). Skills are accessed through the plugin system, not as standalone directories here.
 
 ### Skill structure (inside plugin cache)
 
 ```
-~/.claude/plugins/cache/ames-claude/ames-standalone-skills/<version>/skills/<skill-name>/
+~/.claude/plugins/cache/ames-plugins/ames-standalone-skills/<version>/skills/<skill-name>/
 ├── SKILL.md                          — Required: skill definition with YAML frontmatter
 └── <supporting files>/               — Optional: scripts, reference data, assets
 ```
@@ -313,4 +313,4 @@ The body of SKILL.md contains the full skill instructions in markdown — inject
 
 32 skills in `ames-standalone-skills`: 1password-vault, ai-pattern-remover, apple-music-rip, apple-notes-formatting, apple-workout-generator, audible-library, bcbs-brand, bcbs-meeting-notes, bcbs-wrap-up, build-ios-apps-codex, build-macos-apps-codex, claude-code-headless, cmux-workflows, create-shortcut, draft-comms, file-organization, generate-image, gmcf-masters-swim, humanizer, ios-capabilities, jelly, macos-app-icons, obsidian-notes, oliver-tone, raw-plist, readme-style, smart-transcribe, swiftui-pro, testflight-deployment, wrap-up, xcodegen-project, ynab-finance.
 
-Source: `plugins/ames-standalone-skills/skills/` in the `ames-claude` repo. Edit there, then run `sync-skills` to publish and install.
+Source: `plugins/ames-standalone-skills/skills/` in the `ames-plugins` repo. Edit there, then run `sync-skills` to publish and install.

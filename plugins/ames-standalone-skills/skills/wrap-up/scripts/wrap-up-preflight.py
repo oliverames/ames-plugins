@@ -189,14 +189,14 @@ def fallback_toml_keys(path: Path) -> dict[str, Any] | None:
 
 def find_ames_claude(home: Path) -> str | None:
     candidates = [
-        home / "Developer" / "Projects" / "ames-claude",
+        home / "Developer" / "Projects" / "ames-plugins",
         home
         / "Library"
         / "Mobile Documents"
         / "com~apple~CloudDocs"
         / "Developer"
         / "Projects"
-        / "ames-claude",
+        / "ames-plugins",
     ]
     for candidate in candidates:
         if candidate.exists():
@@ -283,7 +283,7 @@ def warnings(command_paths: dict[str, str | None], root: str | None, ames_claude
     if not root:
         notes.append("Current directory is not inside a git repo.")
     if not ames_claude:
-        notes.append("Could not locate ames-claude source repo.")
+        notes.append("Could not locate ames-plugins source repo.")
     for cmd in ["validate-skill"]:
         if not command_paths.get(cmd):
             notes.append(f"Optional command not found: {cmd}.")
@@ -307,7 +307,7 @@ def print_markdown(data: dict[str, Any]) -> None:
         print(f"- current dirty files: {current['dirty_count']}")
     ames = data["git"]["ames_claude"]
     if ames:
-        print(f"- ames-claude dirty files: {ames['dirty_count']}")
+        print(f"- ames-plugins dirty files: {ames['dirty_count']}")
     missing = [cmd for cmd, path in data["commands"].items() if not path]
     print(f"- missing optional/required commands: {', '.join(missing) if missing else 'none'}")
     if data["warnings"]:

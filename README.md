@@ -1,4 +1,4 @@
-<h1 align="center">ames-claude</h1>
+<h1 align="center">ames-plugins</h1>
 
 <p align="center">
   <strong>Personal plugin marketplace for Claude Code and Codex</strong>
@@ -28,7 +28,7 @@ A single repo that ships Oliver Ames' personal plugin catalog to two AI coding a
 
 Running two agents without duplicating content is a real problem. Claude Code and Codex both adopted a plugin/skill model in early 2026, but they publish incompatible marketplace manifests at different paths (`.claude-plugin/` vs `.agents/plugins/`) and different schemas. Most marketplaces ship only one. That forces users to either pick an agent or maintain parallel forks.
 
-ames-claude takes the additive route. One tree, two manifest namespaces, identical skill and MCP content underneath. Skills are portable by spec (the SKILL.md format is shared across hosts per Anthropic's Agent Skills and OpenAI's Codex Skills). Only the plugin and marketplace manifests differ, and both sit in the same repo. The cost is a small amount of duplicated JSON; the benefit is a single source of truth for an otherwise split ecosystem.
+ames-plugins takes the additive route. One tree, two manifest namespaces, identical skill and MCP content underneath. Skills are portable by spec (the SKILL.md format is shared across hosts per Anthropic's Agent Skills and OpenAI's Codex Skills). Only the plugin and marketplace manifests differ, and both sit in the same repo. The cost is a small amount of duplicated JSON; the benefit is a single source of truth for an otherwise split ecosystem.
 
 Claude Code and Codex support are both maintained paths. Claude Code remains the source-of-truth authoring target, and Codex support is additive: Codex-specific manifests, MCP wrappers, cache refresh, and live MCP visibility checks live beside the Claude files without reshaping Claude's contract.
 
@@ -41,8 +41,8 @@ Claude Code and Codex support are both maintained paths. Claude Code remains the
 ```json
 {
   "extraKnownMarketplaces": {
-    "ames-claude": {
-      "source": { "source": "github", "repo": "oliverames/ames-claude" },
+    "ames-plugins": {
+      "source": { "source": "github", "repo": "oliverames/ames-plugins" },
       "autoUpdate": true
     },
     "ames-connectors": {
@@ -51,13 +51,13 @@ Claude Code and Codex support are both maintained paths. Claude Code remains the
     }
   },
   "enabledPlugins": {
-    "ames-standalone-skills@ames-claude": true,
-    "ames-dev-mcps@ames-claude": true,
-    "ames-general-mcps@ames-claude": true,
+    "ames-standalone-skills@ames-plugins": true,
+    "ames-dev-mcps@ames-plugins": true,
+    "ames-general-mcps@ames-plugins": true,
     "ames-ynab@ames-connectors": true,
-    "ames-community-skills@ames-claude": true,
-    "build-ios-apps-codex@ames-claude": true,
-    "build-macos-apps-codex@ames-claude": true
+    "ames-community-skills@ames-plugins": true,
+    "build-ios-apps-codex@ames-plugins": true,
+    "build-macos-apps-codex@ames-plugins": true
   }
 }
 ```
@@ -67,25 +67,25 @@ Restart Claude Code. The marketplace registers, plugins install, and `autoUpdate
 **Interactive install.** Or run:
 
 ```
-/plugin marketplace add oliverames/ames-claude
+/plugin marketplace add oliverames/ames-plugins
 /plugin marketplace add oliverames/ames-connectors
-/plugin install ames-standalone-skills@ames-claude
-/plugin install ames-dev-mcps@ames-claude
-/plugin install ames-general-mcps@ames-claude
+/plugin install ames-standalone-skills@ames-plugins
+/plugin install ames-dev-mcps@ames-plugins
+/plugin install ames-general-mcps@ames-plugins
 /plugin install ames-ynab@ames-connectors
-/plugin install ames-community-skills@ames-claude
-/plugin install build-ios-apps-codex@ames-claude
-/plugin install build-macos-apps-codex@ames-claude
+/plugin install ames-community-skills@ames-plugins
+/plugin install build-ios-apps-codex@ames-plugins
+/plugin install build-macos-apps-codex@ames-plugins
 ```
 
 ### Codex (supported)
 
 ```
-codex plugin marketplace add oliverames/ames-claude
+codex plugin marketplace add oliverames/ames-plugins
 ./codex-refresh
 ```
 
-`codex-refresh` upgrades the marketplace clone, enables the four Codex-compatible `ames-claude` plugins in `~/.codex/config.toml`, materializes missing plugin cache entries, and runs `./codex-doctor --live --require-enabled`. `build-ios-apps-codex` and `build-macos-apps-codex` are intentionally absent from the Codex side (see below).
+`codex-refresh` upgrades the marketplace clone, enables the four Codex-compatible `ames-plugins` plugins in `~/.codex/config.toml`, materializes missing plugin cache entries, and runs `./codex-doctor --live --require-enabled`. `build-ios-apps-codex` and `build-macos-apps-codex` are intentionally absent from the Codex side (see below).
 
 For a read-only check after any change:
 
@@ -225,7 +225,7 @@ Plus 6 skills in `build-ios-apps-codex`, 11 skills (+ 3 commands) in `build-maco
 The repo carries two parallel manifest namespaces under a shared plugin tree:
 
 ```
-ames-claude/
+ames-plugins/
 ├── .claude-plugin/marketplace.json        # Claude Code marketplace (authoritative)
 ├── .agents/plugins/marketplace.json       # Codex marketplace
 └── plugins/
@@ -253,7 +253,7 @@ ames-claude/
 - **Plugin and marketplace manifests** differ in location and schema; they live side by side in the same repo
 - **Claude Code's marketplace implementation** is not reshaped to satisfy Codex. Codex support stays additive and isolated in `.agents/` and `.codex-plugin/`
 - **`build-ios-apps-codex` and `build-macos-apps-codex`** are Claude Code only by design (converted-from-Codex skills can't round-trip cleanly, since they already exist upstream in `openai/plugins`)
-- **Third-party marketplaces that publish only one manifest format** can't be rewrapped by ames-claude. Install those from upstream wherever the author supports
+- **Third-party marketplaces that publish only one manifest format** can't be rewrapped by ames-plugins. Install those from upstream wherever the author supports
 
 ## Configuration
 
@@ -306,7 +306,7 @@ A complete snapshot of `~/.claude/settings.json`, documented here so this repo d
 | Marketplace | Source | Why it's installed |
 |-------------|--------|--------------------|
 | `claude-plugins-official` | [`anthropics/claude-plugins-official`](https://github.com/anthropics/claude-plugins-official) | Built-in default. Anthropic's official curated plugin directory |
-| `ames-claude` | [`oliverames/ames-claude`](https://github.com/oliverames/ames-claude) | This repo. Oliver's personal skill and workflow marketplace |
+| `ames-plugins` | [`oliverames/ames-plugins`](https://github.com/oliverames/ames-plugins) | This repo. Oliver's personal skill and workflow marketplace |
 | `ames-connectors` | [`oliverames/ames-connectors`](https://github.com/oliverames/ames-connectors) | Oliver's first-party MCP connector marketplace |
 | `claude-community` | [`anthropics/claude-plugins-community`](https://github.com/anthropics/claude-plugins-community) | Anthropic-stewarded community plugins |
 | `anthropic-agent-skills` | [`anthropics/skills`](https://github.com/anthropics/skills) | Anthropic's open-source Agent Skills (Claude API, document skills) |
@@ -355,7 +355,7 @@ Grouped by source marketplace. Each `plugin@marketplace` key in `enabledPlugins`
 | `mcp-server-dev` | Build MCP servers and apps |
 | `gopls-lsp` | Go language server |
 
-**`ames-claude` (6 of 6 available enabled):** `ames-standalone-skills`, `ames-dev-mcps`, `ames-general-mcps`, `ames-community-skills`, `build-ios-apps-codex`, `build-macos-apps-codex`. All plugins from this marketplace are currently enabled at the user level.
+**`ames-plugins` (6 of 6 available enabled):** `ames-standalone-skills`, `ames-dev-mcps`, `ames-general-mcps`, `ames-community-skills`, `build-ios-apps-codex`, `build-macos-apps-codex`. All plugins from this marketplace are currently enabled at the user level.
 
 **`ames-connectors` (1 of 2 available enabled):** `ames-ynab`. `ames-lytho` is available in the connector marketplace but not currently enabled at the user level.
 

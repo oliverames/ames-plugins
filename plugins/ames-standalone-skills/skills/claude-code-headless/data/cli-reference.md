@@ -389,7 +389,7 @@ claude plugin list
 claude plugin install my-plugin
 
 # Install from a local directory
-claude plugin install "/Users/oliverames/Library/Mobile Documents/com~apple~CloudDocs/Developer/projects/ames-claude"
+claude plugin install "/Users/oliverames/Library/Mobile Documents/com~apple~CloudDocs/Developer/projects/ames-plugins"
 
 # Remove a plugin
 claude plugin remove my-plugin

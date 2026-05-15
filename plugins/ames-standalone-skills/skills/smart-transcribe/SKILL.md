@@ -344,4 +344,4 @@ After each transcription, new terms are identified and presented to the user for
 
 ## Source
 
-Scripts at `${CLAUDE_PLUGIN_ROOT}/skills/smart-transcribe/scripts/`. Skill source: `plugins/ames-standalone-skills/skills/smart-transcribe/` in the ames-claude repo.
+Scripts at `${CLAUDE_PLUGIN_ROOT}/skills/smart-transcribe/scripts/`. Skill source: `plugins/ames-standalone-skills/skills/smart-transcribe/` in the ames-plugins repo.

@@ -343,9 +343,9 @@ For each touched git repo:
 5. Push only after verification passes. If push fails, report the exact failure
    and leave the local commit in place.
 
-### ames-claude Plugin Special Case
+### ames-plugins Plugin Special Case
 
-When the session changed `~/Developer/Projects/ames-claude` or its iCloud
+When the session changed `~/Developer/Projects/ames-plugins` or its iCloud
 resolved path:
 
 1. Keep `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and the

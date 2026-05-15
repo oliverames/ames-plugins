@@ -49,7 +49,7 @@ def read_json(path):
     except json.JSONDecodeError as exc:
         sys.exit(f"error: invalid JSON in {path}: {exc}")
 
-parser = argparse.ArgumentParser(description="Regenerate ames-claude marketplace manifests")
+parser = argparse.ArgumentParser(description="Regenerate ames-plugins marketplace manifests")
 parser.add_argument(
     "--check-codex",
     action="store_true",
@@ -57,7 +57,7 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-_header("sync", "ames-claude marketplaces")
+_header("sync", "ames-plugins marketplaces")
 
 # Read current Claude marketplace to preserve top-level metadata
 claude_current = read_json(CLAUDE_MARKETPLACE)

@@ -30,12 +30,12 @@ Split out of the older `ames-preferred-mcps` umbrella plugin alongside [`ames-ge
 
 ## Quick start
 
-This plugin lives in the [`ames-claude`](https://github.com/oliverames/ames-claude) marketplace:
+This plugin lives in the [`ames-plugins`](https://github.com/oliverames/ames-plugins) marketplace:
 
 ```bash
 # In Claude Code
-/plugin marketplace add oliverames/ames-claude
-/plugin install ames-dev-mcps@ames-claude
+/plugin marketplace add oliverames/ames-plugins
+/plugin install ames-dev-mcps@ames-plugins
 ```
 
 No environment variables are required. Every server uses public or local resources.
@@ -56,7 +56,7 @@ See [.mcp.json](.mcp.json) for exact invocations.
 ## Related
 
 - [`ames-general-mcps`](../ames-general-mcps/), the sibling bundle for day-to-day productivity servers
-- [`ames-claude` marketplace](https://github.com/oliverames/ames-claude), the full set of six plugins
+- [`ames-plugins` marketplace](https://github.com/oliverames/ames-plugins), the full set of six plugins
 
 ---
 

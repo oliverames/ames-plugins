@@ -1,4 +1,4 @@
-# ames-claude
+# ames-plugins
 
 Oliver's personal plugin marketplace for Claude Code and Codex. Ships 6 plugins, 51 skills, 14 MCP servers (split across `ames-dev-mcps` and `ames-general-mcps`). First-party API connectors (`ames-ynab`, `ames-lytho`) live in the separate [ames-connectors](https://github.com/oliverames/ames-connectors) marketplace as of 2026-04-21.
 
@@ -86,27 +86,27 @@ When bumping a plugin under dual-host, keep Claude and Codex plugin.json version
 
 ## Marketplace
 
-Registered in Claude Code as `ames-claude` pointing to `oliverames/ames-claude`. After any change: run `./sync`, commit, push. Claude Code will detect the update on next marketplace refresh.
+Registered in Claude Code as `ames-plugins` pointing to `oliverames/ames-plugins`. After any change: run `./sync`, commit, push. Claude Code will detect the update on next marketplace refresh.
 
-For Codex: run `./codex-refresh`. It registers or upgrades `oliverames/ames-claude`, enables Codex-compatible plugins, materializes missing cache entries, and runs `./codex-doctor --live --require-enabled` to check live MCP visibility.
+For Codex: run `./codex-refresh`. It registers or upgrades `oliverames/ames-plugins`, enables Codex-compatible plugins, materializes missing cache entries, and runs `./codex-doctor --live --require-enabled` to check live MCP visibility.
 
 ## Install paths
 
 | Host | Component | Location |
 |------|-----------|----------|
-| Claude Code | Plugin cache | `~/.claude/plugins/cache/ames-claude/<name>/<version>/` |
-| Claude Code | Marketplace cache | `~/.claude/plugins/marketplaces/ames-claude/` |
+| Claude Code | Plugin cache | `~/.claude/plugins/cache/ames-plugins/<name>/<version>/` |
+| Claude Code | Marketplace cache | `~/.claude/plugins/marketplaces/ames-plugins/` |
 | Claude Code | Plugin registry | `~/.claude/plugins/installed_plugins.json` |
 | Claude Code | User-level marketplace registration | `~/.claude/settings.json` `extraKnownMarketplaces` |
 | Claude Code | User-level enabled plugins | `~/.claude/settings.json` `enabledPlugins` |
-| Codex | Marketplace clone | `~/.codex/.tmp/marketplaces/ames-claude/` |
-| Codex | Plugin cache | `~/.codex/plugins/cache/ames-claude/<name>/<version>/` |
-| Codex | User-level marketplace registration | `~/.codex/config.toml` `[marketplaces.ames-claude]` |
-| Codex | User-level enabled plugins | `~/.codex/config.toml` `[plugins."<name>@ames-claude"]` |
+| Codex | Marketplace clone | `~/.codex/.tmp/marketplaces/ames-plugins/` |
+| Codex | Plugin cache | `~/.codex/plugins/cache/ames-plugins/<name>/<version>/` |
+| Codex | User-level marketplace registration | `~/.codex/config.toml` `[marketplaces.ames-plugins]` |
+| Codex | User-level enabled plugins | `~/.codex/config.toml` `[plugins."<name>@ames-plugins"]` |
 
 ## Gotchas
 
-- **Plugin name must not equal marketplace name** (`ames-claude`). Causes install collision.
+- **Plugin name must not equal marketplace name** (`ames-plugins`). Causes install collision.
 - **`marketplace.json` is auto-generated**; run `./sync`, never edit manually.
 - **MCP connector secrets**: plugin-spawned MCP servers don't inherit the `op run` environment. Secrets must be declared in `.mcp.json` via `${ENV_VAR}` (resolved from `settings.json` env block), or loaded from a plugin-local `.env` file by the server itself.
 - **Host-specific MCP shape**: Claude Code uses the flat root `.mcp.json`; Codex requires `{ "mcpServers": { ... } }` and reads the generated `.codex-plugin/mcp.json`.
@@ -114,4 +114,4 @@ For Codex: run `./codex-refresh`. It registers or upgrades `oliverames/ames-clau
 - **Do not disturb Claude to fix Codex**: if Codex needs a workaround, keep it in the Codex mirror/generator/install helper and verify with `./codex-refresh` or `./codex-doctor`; do not mutate the Claude marketplace contract.
 - **`build-ios-apps-codex` and `build-macos-apps-codex` are Claude Code only** by design. Their skills were converted from OpenAI's Codex plugins and cannot be republished to Codex (they already exist upstream in `openai/plugins` in their original form). Both are promoted to top-level plugins (rather than nested inside an umbrella plugin) so Claude Code's shallow auto-discovery finds each sub-skill directly.
 - **Version parity across manifests** is enforced by `./sync`, with the Claude Code plugin manifest as the source of truth.
-- **Codex CLI has no standalone plugin install command**: `codex plugin marketplace upgrade` refreshes the marketplace clone but may not materialize newly enabled plugin cache entries. Use `./codex-refresh`, which copies missing plugin versions from Codex's refreshed marketplace clone into `~/.codex/plugins/cache/ames-claude/` without overwriting existing cache directories.
+- **Codex CLI has no standalone plugin install command**: `codex plugin marketplace upgrade` refreshes the marketplace clone but may not materialize newly enabled plugin cache entries. Use `./codex-refresh`, which copies missing plugin versions from Codex's refreshed marketplace clone into `~/.codex/plugins/cache/ames-plugins/` without overwriting existing cache directories.

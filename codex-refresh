@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Refresh the local Codex install for the ames-claude marketplace.
+"""Refresh the local Codex install for the ames-plugins marketplace.
 
 Codex currently exposes marketplace add/upgrade commands, but not a standalone
 plugin install command. This helper keeps Oliver's local Codex config and cache
@@ -25,10 +25,10 @@ except ImportError:  # pragma: no cover, only used on Python < 3.11.
 ROOT = Path(__file__).resolve().parent
 HOME = Path.home()
 CODEX_CONFIG = HOME / ".codex" / "config.toml"
-CODEX_MARKETPLACE_ROOT = HOME / ".codex" / ".tmp" / "marketplaces" / "ames-claude"
-CODEX_CACHE = HOME / ".codex" / "plugins" / "cache" / "ames-claude"
-MARKETPLACE_NAME = "ames-claude"
-MARKETPLACE_SOURCE = "oliverames/ames-claude"
+CODEX_MARKETPLACE_ROOT = HOME / ".codex" / ".tmp" / "marketplaces" / "ames-plugins"
+CODEX_CACHE = HOME / ".codex" / "plugins" / "cache" / "ames-plugins"
+MARKETPLACE_NAME = "ames-plugins"
+MARKETPLACE_SOURCE = "oliverames/ames-plugins"
 IGNORED_TREE_NAMES = {".DS_Store", "__pycache__"}
 
 
@@ -159,7 +159,7 @@ def enable_plugins(plugins):
         backup_config()
         CODEX_CONFIG.write_text("\n".join(lines) + "\n")
     else:
-        print("  Codex config already enables all ames-claude Codex plugins", flush=True)
+        print("  Codex config already enables all ames-plugins Codex plugins", flush=True)
 
 
 def materialize_cache(plugins):
@@ -186,13 +186,13 @@ def materialize_cache(plugins):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Refresh ames-claude in Codex")
+    parser = argparse.ArgumentParser(description="Refresh ames-plugins in Codex")
     parser.add_argument("--no-enable", action="store_true", help="do not edit ~/.codex/config.toml")
     parser.add_argument("--no-live", action="store_true", help="skip live `codex mcp list` verification")
     parser.add_argument("--skip-doctor", action="store_true", help="skip the final codex-doctor run")
     args = parser.parse_args(argv)
 
-    print("codex-refresh: syncing local Codex install for ames-claude", flush=True)
+    print("codex-refresh: syncing local Codex install for ames-plugins", flush=True)
     ensure_marketplace()
     plugins = marketplace_plugins()
     if not args.no_enable:

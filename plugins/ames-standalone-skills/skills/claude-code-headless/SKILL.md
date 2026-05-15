@@ -58,7 +58,7 @@ Examples:
 |---|---|
 | `/Users/oliverames` | `-Users-oliverames` |
 | `/Users/oliverames/Developer/my-app` | `-Users-oliverames-Developer-my-app` |
-| `/Users/oliverames/Library/Mobile Documents/com~apple~CloudDocs/Developer/projects/ames-claude` | `-Users-oliverames-Library-Mobile-Documents-com-apple-CloudDocs-Developer-projects-ames-claude` |
+| `/Users/oliverames/Library/Mobile Documents/com~apple~CloudDocs/Developer/projects/ames-plugins` | `-Users-oliverames-Library-Mobile-Documents-com-apple-CloudDocs-Developer-projects-ames-plugins` |
 
 Note: spaces become hyphens, tildes stay as-is.
 
