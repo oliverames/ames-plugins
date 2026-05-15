@@ -36,7 +36,9 @@
       "Save this note to Drafts.",
       "Convert this file with MarkItDown.",
       "Take a screenshot with Peekaboo."
-    ]
+    ],
+    "brandColor": "#10b981",
+    "composerIcon": "./assets/icon.svg"
   },
   "license": "MIT"
 }

@@ -37,7 +37,9 @@
       "Look up this Apple API in Apple Docs.",
       "Build and run the app in the simulator.",
       "Notify me when the build finishes."
-    ]
+    ],
+    "brandColor": "#6366f1",
+    "composerIcon": "./assets/icon.svg"
   },
   "license": "MIT"
 }

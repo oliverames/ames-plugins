@@ -30,7 +30,9 @@
     "defaultPrompt": [
       "Humanize this draft.",
       "Remove AI tells from this paragraph."
-    ]
+    ],
+    "brandColor": "#ea580c",
+    "composerIcon": "./assets/icon.svg"
   },
   "license": "MIT"
 }

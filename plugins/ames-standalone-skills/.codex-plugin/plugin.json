@@ -35,7 +35,9 @@
       "Transcribe this recording and clean it up.",
       "Generate an Apple Watch workout from this plan.",
       "Draft this note in Oliver's tone."
-    ]
+    ],
+    "brandColor": "#3b82f6",
+    "composerIcon": "./assets/icon.svg"
   },
   "license": "MIT"
 }
