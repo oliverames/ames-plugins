@@ -6,8 +6,8 @@
 
 <p align="center">
   <code>6 plugins</code> &bull;
-  <code>51 skills</code> &bull;
-  <code>14 MCP servers</code> &bull;
+  <code>59 skills</code> &bull;
+  <code>15 MCP servers</code> &bull;
   <code>dual-host</code>
 </p>
 
@@ -101,16 +101,16 @@ Custom first-party MCP connectors moved to [ames-connectors](https://github.com/
 
 | Plugin | Hosts | Version | Summary |
 |--------|-------|---------|---------|
-| [`ames-standalone-skills`](plugins/ames-standalone-skills/) | Claude + Codex | 3.10.0 | Oliver's original skill pack (33 skills) |
-| [`ames-dev-mcps`](plugins/ames-dev-mcps/) | Claude + Codex | 1.0.1 | 6 development-focused MCP servers for iOS/macOS workflows |
-| [`ames-general-mcps`](plugins/ames-general-mcps/) | Claude + Codex | 3.1.0 | 8 day-to-day general-purpose MCP servers |
+| [`ames-standalone-skills`](plugins/ames-standalone-skills/) | Claude + Codex | 3.14.0 | Oliver's original skill pack (35 skills) |
+| [`ames-dev-mcps`](plugins/ames-dev-mcps/) | Claude + Codex | 1.0.2 | 6 development-focused MCP servers for iOS/macOS workflows |
+| [`ames-general-mcps`](plugins/ames-general-mcps/) | Claude + Codex | 3.2.0 | 9 day-to-day general-purpose MCP servers |
 | [`ames-community-skills`](plugins/ames-community-skills/) | Claude + Codex | 2.1.1 | 7 third-party skills (humanizer by blader + 6 from Osaurus) |
-| [`build-ios-apps-codex`](plugins/build-ios-apps-codex/) | **Claude only** | 1.0.1 | 6 iOS dev skills converted from OpenAI's Codex plugin |
-| [`build-macos-apps-codex`](plugins/build-macos-apps-codex/) | **Claude only** | 1.0.1 | 11 macOS dev skills + 3 commands converted from OpenAI's Codex plugin |
+| [`build-ios-apps-codex`](plugins/build-ios-apps-codex/) | **Claude only** | 1.0.2 | 6 iOS dev skills converted from OpenAI's Codex plugin |
+| [`build-macos-apps-codex`](plugins/build-macos-apps-codex/) | **Claude only** | 1.0.2 | 11 macOS dev skills + 3 commands converted from OpenAI's Codex plugin |
 
 ### `ames-standalone-skills`
 
-Oliver's original Claude Code skills covering writing, development, automation, finance, and Apple platform work. 33 skills organized by theme (see [Skills catalog](#skills-catalog)).
+Oliver's original Claude Code skills covering writing, development, automation, finance, and Apple platform work. 35 skills organized by theme (see [Skills catalog](#skills-catalog)).
 
 ### `ames-dev-mcps`
 
@@ -136,6 +136,7 @@ Day-to-day general-purpose MCP servers (formerly `ames-preferred-mcps`):
 | `google-workspace` | Gmail, Calendar, Drive, Docs, Sheets, Tasks, Meet |
 | `iMCP` | Apple event bridge (calendars, reminders) |
 | `markitdown` | Convert files to Markdown |
+| `merriam-webster` | Collegiate Dictionary + Thesaurus lookups for editorial work |
 | `pandoc` | Universal document conversion |
 | `peekaboo` | macOS UI automation and screen capture |
 | `agent-tinyfish-ai` | Tinyfish AI agent (OAuth-protected HTTP MCP) |
@@ -168,11 +169,12 @@ Both plugins originated in [openai/plugins](https://github.com/openai/plugins) a
 
 ## Skills catalog
 
-33 skills in `ames-standalone-skills`, grouped by theme:
+35 skills in `ames-standalone-skills`, grouped by theme:
 
 **Writing and communications**
 - [`oliver-tone`](plugins/ames-standalone-skills/skills/oliver-tone/) — Apply Oliver's writing voice to drafts, emails, blog posts, announcements
 - [`draft-comms`](plugins/ames-standalone-skills/skills/draft-comms/) — Turn meeting notes, transcripts, or action lists into follow-up messages
+- [`ap-style`](plugins/ames-standalone-skills/skills/ap-style/) — Apply Associated Press Stylebook conventions to news writing, press releases, and editorial copy
 - [`readme-style`](plugins/ames-standalone-skills/skills/readme-style/) — Apply Oliver's README conventions (used to author this very file)
 - [`resume-style`](plugins/ames-standalone-skills/skills/resume-style/) — Ames-inspired resume typography and layout
 - [`obsidian-notes`](plugins/ames-standalone-skills/skills/obsidian-notes/) — Format Markdown notes to match Oliver's vault style
@@ -209,6 +211,7 @@ Both plugins originated in [openai/plugins](https://github.com/openai/plugins) a
 - [`auto-web-search`](plugins/ames-standalone-skills/skills/auto-web-search/) — Automatic web search when stuck on a problem
 - [`file-organization`](plugins/ames-standalone-skills/skills/file-organization/) — Oliver's file naming and organization conventions
 - [`dispatch-remote-control`](plugins/ames-standalone-skills/skills/dispatch-remote-control/) — Start a Claude Code session with remote-control access
+- [`horizon-vdi-control`](plugins/ames-standalone-skills/skills/horizon-vdi-control/) — Drive Windows VDI sessions inside Omnissa Horizon Client via Computer Use
 - [`verify-live`](plugins/ames-standalone-skills/skills/verify-live/) — Verify documentation against live system state before rewriting
 
 **Context and integrations**
@@ -219,12 +222,12 @@ Plus 6 skills in `build-ios-apps-codex`, 11 skills (+ 3 commands) in `build-maco
 
 ## MCP servers catalog
 
-14 MCP servers split across two plugins:
+15 MCP servers split across two plugins:
 
 | Plugin | Server count | Details |
 |--------|--------------|---------|
 | `ames-dev-mcps` | 6 development-focused servers | See [plugin table](#ames-dev-mcps) above |
-| `ames-general-mcps` | 8 day-to-day servers | See [plugin table](#ames-general-mcps) above |
+| `ames-general-mcps` | 9 day-to-day servers | See [plugin table](#ames-general-mcps) above |
 
 ## Architecture
 
