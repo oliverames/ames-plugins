@@ -1,5 +1,42 @@
 # Worklog
 
+## 2026-05-15 — marketplace rename: ames-claude → ames-plugins (commits 4e13531 + 26cc584)
+
+**What changed**: Renamed the marketplace identity end-to-end. GitHub repo `oliverames/ames-claude` → `oliverames/ames-plugins` via `gh repo rename` (auto-redirect intact). Both manifests carry the new `name`; Codex `interface.displayName` flipped from "Oliver's Plugins" to "Ames Plugins". `metadata.version` bumped 3.6.0 → 4.0.0 to signal breaking identity change. Local working dir `Projects/ames-claude` and the path-encoded memory dir `~/.claude/projects/-Users-...Projects-ames-claude/` both renamed in lockstep to preserve session memory continuity.
+
+Replaced 387 references across the machine using `ames-claude(?!-backup)` negative-lookahead pattern to preserve the separate `ames-claude-backup` repo (which Oliver intentionally kept named for its scope). Breakdown: 188 refs across 19 files in the renamed repo; 199 refs across 70 files spanning `Scripts/`, sibling repos (`ames-connectors`, `lytho-mcp-server`, `ames-unifi-mcp`, `ynab-mcp-server`, `ames-claude-backup`), live memory files in `~/.claude/projects/*/memory/`, `~/.codex/memories/*`, user-level `CLAUDE.md` files (3 locations), and `Developer/CLAUDE.md` (the iCloud workspace anchor that loads into every session).
+
+User-level config flipped: `~/.claude/settings.json` (5 plugin keys + `extraKnownMarketplaces` block) and `~/.codex/config.toml` (marketplace block via `codex plugin marketplace remove ames-claude` + `add oliverames/ames-plugins`, plus restoration of 6 `@ames-connectors` plugin entries that Codex collateral-pruned during the marketplace remove). Codex cache repopulated via `./codex-refresh`; 4 host-level orphan dirs (Claude cache + marketplace clone + .bak; Codex cache) purged. Live Cowork session state (`rpm/manifest.json`) updated for 3 plugins (`ames-general-mcps`, `ames-community-skills`, `ames-standalone-skills`) so the active pairing sees the new marketplace identity.
+
+Six git repos committed and pushed: ames-plugins (4e13531 rename + 26cc584 v4.0.0 bump), ames-connectors (f061a84), lytho-mcp-server (d1678f0), ames-unifi-mcp (c204464), ynab-mcp-server (86237f5), ames-claude-backup (74ebb0e).
+
+**Decisions made**:
+- `ames-claude-backup` repo name preserved per Oliver's explicit choice — its scope is `~/.claude/` config snapshots, not the marketplace.
+- Local directory rename done DURING the session (rather than deferred to post-restart as initially planned) after Oliver asked to proceed. macOS handles renamed CWD via inode; the Bash tool re-resolves on each call and the shell auto-recovers to `$HOME`.
+- WORKLOG updates in sibling repos staged per Oliver's choice ("update WORKLOGs too") to keep terminology consistent across the workspace, rather than preserving historical naming accuracy.
+- `metadata.version` bump to 4.0.0 included because marketplace identity rename is the textbook case for a major bump.
+- Codex auto-pruned ALL `@*` plugin entries with `ames-*` prefix during the marketplace remove (6 connector entries removed as collateral); restored by hand in `~/.codex/config.toml` via direct Edit since `codex plugin enable` doesn't exist as a CLI subcommand.
+
+**Left off at**: Rename functionally complete. All renamed repos clean and pushed. `~/.claude/plugins/cache/ames-plugins/` will materialize on next Claude Code session start (marketplace clone already exists at `~/.claude/plugins/marketplaces/ames-plugins/`, auto-cloned during the session by Claude Code's settings.json poll).
+
+**Open questions**:
+- **NEW**: 5 Apple Notes still reference `ames-claude` — one note title is `🧰 ames-claude marketplace`. Flagged for Oliver to decide whether to rename in-place via the apple-notes-formatting skill.
+- **NEW**: 4 plist preferences (`com.cogito.app`, `com.apple.appkit.xpc.openAndSavePanelService`, `com.raycast-x.macos`, `com.jetbrains.air`) hold the literal string `ames-claude` in recent-files / window-restore state. Self-heal on next file save/open in those apps.
+- **NEW**: Cowork session state outside the manifest (~20 `claude-code-sessions/local_*.json` files, 10+ `rpm/plugin_*/skills/*` mirrors) still has stale refs. Refreshes on next Cowork pairing; intentionally untouched.
+
+**Carried forward** (still open from prior entries): sync-count auto-regen, publish script polish, postpublish hooks, `bcbs-wrap-up` cache version mismatch, legacy Asana-tagged items in BCBS notes triage, `ames-connectors` LICENSE, `codex-doctor --only-enabled` flag, the `--no-tight-bullets` escape hatch question, the `cp:revision` reset question.
+
+**Verification**:
+- Final `rg "ames-claude(?!-backup)" -P` sweep across all live config (`~/.claude/settings.json`, `~/.codex/config.toml`, `~/.claude/CLAUDE.md`, `~/CLAUDE.md`, `~/.codex/AGENTS.md`, `Developer/CLAUDE.md`): zero matches
+- Final `rg` across this repo (excluding `.git/`): zero matches
+- `python3 -m json.tool` on both marketplace manifests: parse clean
+- Version parity check: Claude `4.0.0` ↔ Codex `4.0.0`, all 4 Codex plugins match Claude versions
+- `gh repo view oliverames/ames-plugins`: resolves
+- `./codex-refresh`: passes with 0 warnings (4 Codex plugins cached, 14 MCP servers live)
+- All 6 touched repos: `git status` clean, no unpushed rename commits
+
+---
+
 ## 2026-05-09 — bcbs-brand: V2 narrative cleanup, OneDrive paths, Pyright fix (commits 73a52e2 + 36cfb30)
 
 **What changed**: Closed the rename trail on the BCBS strategy memo. After the BCBS-side rename rounds in `~/Documents/BCBS` renamed `BCBS Digital Infrastructure Strategy Memo - V2.docx` to `BCBS Digital Infrastructure Strategy Memo.docx`, the `bcbs-brand` skill source still carried the old name in 16 places across 7 files. Sweep landed in sync commit `73a52e2`:
