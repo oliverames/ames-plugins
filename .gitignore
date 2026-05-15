@@ -19,6 +19,10 @@ secrets.json
 **/evals/workspace/
 **/smart-transcribe-workspace/
 
+# AP Stylebook personal notes (proprietary; keep README only)
+plugins/ames-standalone-skills/skills/ap-style/data/ap/*
+!plugins/ames-standalone-skills/skills/ap-style/data/ap/README.md
+
 # iCloud conflict files
 .!*.md
 
