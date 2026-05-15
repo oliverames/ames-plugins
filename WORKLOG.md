@@ -1,5 +1,34 @@
 # Worklog
 
+## 2026-05-15 (evening) — Codex marketplace deep enrichment: brand identity + per-skill openai.yaml + generator (commit 62a03fb)
+
+**What changed**: Pushed Codex marketplace compatibility from "structurally working" to "feature-complete relative to documented Codex marketplace surface". The four ames-plugins Codex manifests (`ames-community-skills`, `ames-dev-mcps`, `ames-general-mcps`, `ames-standalone-skills`) gained `interface.composerIcon` and `interface.brandColor`. Generic SVG icons live at `plugins/<name>/assets/icon.svg` as a placeholder for the parallel logo agent that's working on official MCP-bearing plugin logos. Added `gen-codex-skill-yaml`: reads each `SKILL.md` frontmatter under Codex-eligible plugins, emits an `agents/openai.yaml` carrying `interface.display_name` (kebab→Title Case with abbreviation overrides for YNAB/BCBS/MCP/iOS/macOS/etc.), `interface.short_description` (first sentence, capped at 160 chars), `interface.brand_color` (inherited from the plugin manifest), and `policy.allow_implicit_invocation: false` when SKILL.md sets `disable-model-invocation: true`. Idempotent unless `--force` is passed. Ran the generator across all 35 Codex-relevant skills (1 in `ames-community-skills`, 34 in `ames-standalone-skills`); four explicit-only skills (`go`, `wrap-up`, `bcbs-wrap-up`, `dispatch-remote-control`) correctly emitted the policy block. Documented every addition in `CLAUDE.md`: new layout paths, `gen-codex-skill-yaml` in the script table, Codex `interface` field guidance under plugin conventions, the `agents/openai.yaml` convention under skill conventions.
+
+Adjacent operational work in the same session: re-ran `./codex-refresh` against the now-current marketplace clone (v3.13.0 cache → v3.13.1) so `codex-doctor` returns zero warnings, and walked through the same fix in `ames-connectors` (forced marketplace upgrade + cache materialization; all 5 MCP servers visible to Codex post-fix).
+
+**Decisions made**:
+- **Pure-skills plugins get generic placeholder SVGs, MCP-bearing plugins wait for the logo agent.** `ames-community-skills` and `ames-standalone-skills` got purpose-built SVGs (community badge, 5-point star) since they have no external brand to honor. `ames-dev-mcps` and `ames-general-mcps` got SVG placeholders too, but the parallel logo agent will likely overwrite these with proper logos for the bundled MCP server identities; the manifests will pick up the new files automatically since paths stay stable.
+- **Brand colors selected per-plugin from a cohesive palette**: orange (`#ea580c`) for community, indigo (`#6366f1`) for dev tooling, emerald (`#10b981`) for general productivity, Oliver's signature blue (`#3b82f6`) for standalone skills.
+- **Inherit brand color from plugin manifest, not declare per-skill.** Each skill's `agents/openai.yaml` reads `interface.brandColor` from its parent plugin's `.codex-plugin/plugin.json` at generation time. Re-run `gen-codex-skill-yaml --force` after changing a plugin's brand color to flow it through.
+- **`policy.allow_implicit_invocation: false` is the Codex-native form of `disable-model-invocation: true`.** The SKILL.md flag is a Claude Code convention; without an explicit openai.yaml, Codex would happily invoke `go` or `wrap-up` implicitly on a fuzzy match. The generator bridges the two semantics.
+- **Generator stays idempotent.** Existing `openai.yaml` files are skipped without `--force` so manual tweaks survive regeneration.
+
+**Verification**:
+- `./sync --check-codex` passes in both repos with 0 warnings.
+- `./codex-refresh` reports all 4 plugins cached at marketplace versions.
+- `codex-doctor --require-enabled --live` confirms all expected MCP servers visible to running Codex.
+- Generator dry-run + real-run cross-checked; sample outputs verified for explicit-only skills (`go`, `wrap-up`) and implicit-OK skills (`ynab-finance`, `humanizer`); abbreviation handling sanity-checked (YNAB stays uppercase, BCBS stays uppercase).
+
+**Left off at**: Both repos clean and pushed (via the `publish` script's auto-commit, which absorbed staged work into commits `62a03fb` and `f935748` rather than my explicit `git commit`). README and CLAUDE.md updated to document the new surface.
+
+**Open questions**:
+- **NEW**: Parallel logo agent will likely overwrite my SVG placeholders in `ames-dev-mcps/assets/` and `ames-general-mcps/assets/`. The manifests reference `./assets/icon.svg`; if they switch to `icon.png`, the manifests need a one-line update. Watch for the agent's next commit.
+- **NEW**: `~/.codex/config.toml` `approvals_reviewer = "guardian_subagent"` was changed to `"auto_review"` earlier today on grounds that `guardian_subagent` is not in the documented enum. If it turns out to be an internal alias for managed-guardian behavior, may need to revert.
+- **NEW**: 6 brand-new untracked skill directories in `plugins/ames-community-skills/skills/` (`content-summarizer`, `creative-brainstormer`, `data-visualizer`, `debug-assistant`, `productivity-coach`, `research-analyst`) — appeared during this session, presumably from a sibling agent's work. Not mine; left untracked.
+- **Carried (still open)**: 5 Apple Notes still reference `ames-claude`; 4 plist preferences hold the literal string `ames-claude`; Cowork session state has stale refs. All three carry from this morning's rename entry; self-healing or low-priority.
+
+---
+
 ## 2026-05-15 — marketplace rename: ames-claude → ames-plugins (commits 4e13531 + 26cc584)
 
 **What changed**: Renamed the marketplace identity end-to-end. GitHub repo `oliverames/ames-claude` → `oliverames/ames-plugins` via `gh repo rename` (auto-redirect intact). Both manifests carry the new `name`; Codex `interface.displayName` flipped from "Oliver's Plugins" to "Ames Plugins". `metadata.version` bumped 3.6.0 → 4.0.0 to signal breaking identity change. Local working dir `Projects/ames-claude` and the path-encoded memory dir `~/.claude/projects/-Users-...Projects-ames-claude/` both renamed in lockstep to preserve session memory continuity.
