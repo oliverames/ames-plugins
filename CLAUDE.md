@@ -1,13 +1,13 @@
 # ames-plugins
 
-Oliver's personal plugin marketplace for Claude Code and Codex. Ships 6 plugins, 51 skills, 14 MCP servers (split across `ames-dev-mcps` and `ames-general-mcps`). First-party API connectors (`ames-ynab`, `ames-lytho`) live in the separate [ames-connectors](https://github.com/oliverames/ames-connectors) marketplace as of 2026-04-21.
+Oliver's personal plugin marketplace for Claude Code and Codex. Ships 6 plugins, 57 skills, 14 MCP servers (split across `ames-dev-mcps` and `ames-general-mcps`). First-party API connectors (`ames-ynab`, `ames-lytho`) live in the separate [ames-connectors](https://github.com/oliverames/ames-connectors) marketplace as of 2026-04-21.
 
 ## Structure
 
 ```
 plugins/<name>/                             Plugins (each has .claude-plugin/plugin.json)
 plugins/ames-standalone-skills/skills/      Original skills (30)
-plugins/ames-community-skills/skills/       Curated third-party skills (1: humanizer)
+plugins/ames-community-skills/skills/       Curated third-party skills (7: humanizer + 6 from Osaurus)
 plugins/build-ios-apps-codex/skills/        iOS skills converted from OpenAI's Codex plugin (6)
 plugins/build-macos-apps-codex/skills/      macOS skills converted from OpenAI's Codex plugin (11)
 .claude-plugin/marketplace.json             Claude Code marketplace manifest
@@ -53,7 +53,7 @@ Codex work must be additive. Do not change Claude Code's `.claude-plugin/marketp
 | `ames-standalone-skills` | Claude + Codex | 33 original skills covering writing, dev, Apple workflows, finance, automation, BCBS VT work |
 | `ames-dev-mcps` | Claude + Codex | 6 development-focused MCP servers (Apple Docs, Apple Notifier, macOS Automator, XcodeBuildMCP, Sim Genie, Sosumi) |
 | `ames-general-mcps` | Claude + Codex | 8 day-to-day general-purpose MCP servers (Drafts, Excel, Google Workspace, iMCP, MarkItDown, Pandoc, Peekaboo, Tinyfish) |
-| `ames-community-skills` | Claude + Codex | Third-party skills without upstream marketplaces (currently 1: humanizer by blader) |
+| `ames-community-skills` | Claude + Codex | Third-party skills without upstream marketplaces (currently 7: humanizer by blader + content-summarizer, creative-brainstormer, data-visualizer, debug-assistant, productivity-coach, research-analyst by Osaurus) |
 | `build-ios-apps-codex` | Claude only | 6 iOS dev skills converted from OpenAI's `build-ios-apps` Codex plugin (MIT) |
 | `build-macos-apps-codex` | Claude only | 11 macOS dev skills + 3 commands converted from OpenAI's `build-macos-apps` Codex plugin (MIT) |
 

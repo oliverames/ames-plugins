@@ -104,7 +104,7 @@ Custom first-party MCP connectors moved to [ames-connectors](https://github.com/
 | [`ames-standalone-skills`](plugins/ames-standalone-skills/) | Claude + Codex | 3.10.0 | Oliver's original skill pack (33 skills) |
 | [`ames-dev-mcps`](plugins/ames-dev-mcps/) | Claude + Codex | 1.0.1 | 6 development-focused MCP servers for iOS/macOS workflows |
 | [`ames-general-mcps`](plugins/ames-general-mcps/) | Claude + Codex | 3.1.0 | 8 day-to-day general-purpose MCP servers |
-| [`ames-community-skills`](plugins/ames-community-skills/) | Claude + Codex | 2.0.1 | Third-party skills without upstream marketplaces |
+| [`ames-community-skills`](plugins/ames-community-skills/) | Claude + Codex | 2.1.1 | 7 third-party skills (humanizer by blader + 6 from Osaurus) |
 | [`build-ios-apps-codex`](plugins/build-ios-apps-codex/) | **Claude only** | 1.0.1 | 6 iOS dev skills converted from OpenAI's Codex plugin |
 | [`build-macos-apps-codex`](plugins/build-macos-apps-codex/) | **Claude only** | 1.0.1 | 11 macOS dev skills + 3 commands converted from OpenAI's Codex plugin |
 
@@ -144,9 +144,15 @@ Some servers depend on locally installed apps or additional credentials.
 
 ### `ames-community-skills`
 
-A wrapper for third-party skills that ship as bare `SKILL.md` files with no upstream marketplace of their own. Currently one skill:
+A wrapper for third-party skills that ship as bare `SKILL.md` files with no upstream marketplace of their own. Currently 7 skills:
 
 - [`humanizer`](plugins/ames-community-skills/skills/humanizer/) — Remove signs of AI-generated writing from text. Originally by [blader](https://github.com/blader/humanizer).
+- [`content-summarizer`](plugins/ames-community-skills/skills/content-summarizer/) — Extract key points and create structured summaries. By [Osaurus](https://github.com/Osaurus).
+- [`creative-brainstormer`](plugins/ames-community-skills/skills/creative-brainstormer/) — Generate ideas, overcome creative blocks, and explore possibilities. By Osaurus.
+- [`data-visualizer`](plugins/ames-community-skills/skills/data-visualizer/) — Render charts and graphs from data inline or from file attachments. By Osaurus.
+- [`debug-assistant`](plugins/ames-community-skills/skills/debug-assistant/) — Systematic debugging and problem-solving approach. By Osaurus.
+- [`productivity-coach`](plugins/ames-community-skills/skills/productivity-coach/) — Task management, prioritization, and goal achievement. By Osaurus.
+- [`research-analyst`](plugins/ames-community-skills/skills/research-analyst/) — In-depth research with fact-checking and balanced analysis. By Osaurus.
 
 When an upstream author publishes their own marketplace (as [twostraws](https://github.com/twostraws/SwiftUI-Agent-Skill) did with SwiftUI Pro), that upstream is preferred and the skill leaves this plugin.
 
@@ -209,7 +215,7 @@ Both plugins originated in [openai/plugins](https://github.com/openai/plugins) a
 - [`1password-vault`](plugins/ames-standalone-skills/skills/1password-vault/) — Store, retrieve, and rotate credentials in 1Password
 - [`gmcf-masters-swim`](plugins/ames-standalone-skills/skills/gmcf-masters-swim/) — Daily GMCF masters swim workout lookup
 
-Plus 6 skills in `build-ios-apps-codex`, 11 skills (+ 3 commands) in `build-macos-apps-codex`, and 1 in `ames-community-skills` (humanizer).
+Plus 6 skills in `build-ios-apps-codex`, 11 skills (+ 3 commands) in `build-macos-apps-codex`, and 7 in `ames-community-skills` (humanizer plus 6 from Osaurus).
 
 ## MCP servers catalog
 
