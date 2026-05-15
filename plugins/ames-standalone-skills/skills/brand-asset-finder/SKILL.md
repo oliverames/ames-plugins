@@ -42,6 +42,31 @@ organization's CDN bucket name anywhere (e.g. `orgname-bulk.s3.amazonaws.com` on
 recipient page), probe it directly — official SVG, AI, and EPS files are often stored
 in year- or program-named folders and may be publicly accessible even when not linked.
 
+### 1b. App Store via the iTunes Search API (vendors with an iOS or Mac app)
+
+If the asset owner ships an iOS or Mac app, the App Store is the fastest path to a
+1024×1024 PNG — no media kit, no auth, no rate limiting. Apple requires developers
+to upload a 1024×1024 marketing icon and serves any size you ask for in the URL.
+
+Lookup:
+
+```bash
+curl -s "https://itunes.apple.com/lookup?id=<APP_ID>" | jq -r '.results[0].artworkUrl512'
+```
+
+The returned URL ends in `/512x512bb.jpg`. **Replace `/512x512bb.jpg` with
+`/1024x1024bb.png`** to get the 1024px PNG. Apple serves it directly — same CDN,
+no token, no transform stripping needed.
+
+Find the App ID by searching `apps.apple.com` for the vendor name; the numeric ID
+is the last path segment (e.g. `apps.apple.com/us/app/ynab/id1010865877` → ID
+`1010865877`).
+
+Caveat: App Store icons are the vendor's brand mark, which may differ from how
+the vendor presents themselves on their website. If the goal is brand identity
+parity (e.g. a plugin browser showing the same icon as the App Store), this is
+exactly right. If the goal is a media-kit-style horizontal wordmark, keep going.
+
 ### 2. Search news and press coverage about recipients — do this before giving up
 
 Search for press releases, news articles, and announcements about recipients of the
