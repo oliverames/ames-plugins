@@ -60,15 +60,13 @@ def ensure_marketplace():
     if not shutil.which("codex"):
         sys.exit("error: codex CLI is not on PATH")
 
-    data = load_toml(CODEX_CONFIG)
-    marketplaces = data.get("marketplaces", {})
-    if MARKETPLACE_NAME in marketplaces:
-        run(["codex", "plugin", "marketplace", "upgrade", MARKETPLACE_NAME])
-    else:
-        result = run(["codex", "plugin", "marketplace", "add", MARKETPLACE_SOURCE], check=False)
-        if result.returncode != 0:
-            print("  ! add failed; trying upgrade in case the marketplace is already registered", flush=True)
-            run(["codex", "plugin", "marketplace", "upgrade", MARKETPLACE_NAME])
+    # Register the marketplace (idempotent; prints "already added" when registered).
+    # Then always pull the latest marketplace revision. Branching on `MARKETPLACE_NAME
+    # in marketplaces` was unreliable on Python < 3.11 where `tomllib` is missing —
+    # `load_toml` returned `{}`, so the upgrade arm was never taken and the clone
+    # silently stayed pinned to whatever revision it had on first fetch.
+    run(["codex", "plugin", "marketplace", "add", MARKETPLACE_SOURCE], check=False)
+    run(["codex", "plugin", "marketplace", "upgrade", MARKETPLACE_NAME])
 
     if not CODEX_MARKETPLACE_ROOT.exists():
         sys.exit(f"error: Codex marketplace clone not found at {CODEX_MARKETPLACE_ROOT}")
