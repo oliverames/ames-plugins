@@ -5,12 +5,12 @@
   },
   "metadata": {
     "description": "Oliver's personal Claude Code plugins and skills",
-    "version": "4.0.0"
+    "version": "4.0.1"
   },
   "plugins": [
     {
       "name": "ames-community-skills",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "source": {
         "source": "local",
         "path": "./plugins/ames-community-skills"
@@ -23,7 +23,7 @@
     },
     {
       "name": "ames-dev-mcps",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "source": {
         "source": "local",
         "path": "./plugins/ames-dev-mcps"
@@ -36,7 +36,7 @@
     },
     {
       "name": "ames-general-mcps",
-      "version": "3.1.0",
+      "version": "3.1.1",
       "source": {
         "source": "local",
         "path": "./plugins/ames-general-mcps"
@@ -49,7 +49,7 @@
     },
     {
       "name": "ames-standalone-skills",
-      "version": "3.13.1",
+      "version": "3.13.2",
       "source": {
         "source": "local",
         "path": "./plugins/ames-standalone-skills"

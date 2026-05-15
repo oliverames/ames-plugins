@@ -1,14 +1,14 @@
 {
   "name": "build-macos-apps-codex",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "macOS development skills and commands converted from OpenAI's curated build-macos-apps Codex plugin (MIT). Ships 11 skills plus 3 commands covering building, running, debugging, SwiftUI and AppKit patterns, signing, packaging, notarization, SwiftPM, telemetry, and window management.",
   "author": {
     "name": "Oliver Ames",
     "email": "oliverames@gmail.com",
     "url": "https://github.com/oliverames"
   },
-  "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/build-macos-apps-codex",
-  "repository": "https://github.com/oliverames/ames-claude",
+  "homepage": "https://github.com/oliverames/ames-plugins/tree/main/plugins/build-macos-apps-codex",
+  "repository": "https://github.com/oliverames/ames-plugins",
   "license": "MIT",
   "keywords": [
     "macos",

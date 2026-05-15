@@ -1,14 +1,14 @@
 {
   "name": "ames-standalone-skills",
-  "version": "3.13.1",
+  "version": "3.13.2",
   "description": "Oliver's original Claude Code skills covering writing, development, automation, finance, and AI tools (34 skills).",
   "author": {
     "name": "Oliver Ames",
     "email": "oliverames@gmail.com",
     "url": "https://github.com/oliverames"
   },
-  "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-standalone-skills",
-  "repository": "https://github.com/oliverames/ames-claude",
+  "homepage": "https://github.com/oliverames/ames-plugins/tree/main/plugins/ames-standalone-skills",
+  "repository": "https://github.com/oliverames/ames-plugins",
   "keywords": [
     "skills",
     "writing",
@@ -30,7 +30,7 @@
     "capabilities": [
       "Skills"
     ],
-    "websiteURL": "https://github.com/oliverames/ames-claude#ames-standalone-skills",
+    "websiteURL": "https://github.com/oliverames/ames-plugins#ames-standalone-skills",
     "defaultPrompt": [
       "Transcribe this recording and clean it up.",
       "Generate an Apple Watch workout from this plan.",

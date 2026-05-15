@@ -1,14 +1,14 @@
 {
   "name": "build-ios-apps-codex",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "iOS development skills converted from OpenAI's curated build-ios-apps Codex plugin (MIT). Ships 6 skills covering App Intents/Shortcuts, SwiftUI UI patterns, Liquid Glass adoption, performance auditing, view refactoring, and simulator debugging.",
   "author": {
     "name": "Oliver Ames",
     "email": "oliverames@gmail.com",
     "url": "https://github.com/oliverames"
   },
-  "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/build-ios-apps-codex",
-  "repository": "https://github.com/oliverames/ames-claude",
+  "homepage": "https://github.com/oliverames/ames-plugins/tree/main/plugins/build-ios-apps-codex",
+  "repository": "https://github.com/oliverames/ames-plugins",
   "license": "MIT",
   "keywords": [
     "ios",

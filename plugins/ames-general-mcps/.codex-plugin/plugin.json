@@ -1,14 +1,14 @@
 {
   "name": "ames-general-mcps",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Day-to-day general-purpose MCP servers curated by Oliver Ames. Includes Drafts, Excel, Google Workspace, iMCP, MarkItDown, Pandoc, Peekaboo, and Tinyfish integrations.",
   "author": {
     "name": "Oliver Ames",
     "email": "oliverames@gmail.com",
     "url": "https://github.com/oliverames"
   },
-  "homepage": "https://github.com/oliverames/ames-claude/tree/main/plugins/ames-general-mcps",
-  "repository": "https://github.com/oliverames/ames-claude",
+  "homepage": "https://github.com/oliverames/ames-plugins/tree/main/plugins/ames-general-mcps",
+  "repository": "https://github.com/oliverames/ames-plugins",
   "keywords": [
     "mcp",
     "drafts",
@@ -31,7 +31,7 @@
     "capabilities": [
       "MCP Servers"
     ],
-    "websiteURL": "https://github.com/oliverames/ames-claude#ames-general-mcps",
+    "websiteURL": "https://github.com/oliverames/ames-plugins#ames-general-mcps",
     "defaultPrompt": [
       "Save this note to Drafts.",
       "Convert this file with MarkItDown.",
