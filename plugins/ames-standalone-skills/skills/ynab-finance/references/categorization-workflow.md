@@ -52,6 +52,49 @@ If a tool result overflowed and was saved to disk, parse the JSON file (Python o
 
 A failed batch with "transaction does not exist in this budget" on most entries is the signature of fabricated IDs — verify against the source data file before retrying.
 
+### Always re-query for IDs immediately before applying an update
+
+Two related failure modes both have the same fix:
+
+**Stale-snapshot bug.** You ran `review_unapproved` once, captured the IDs in `ready_to_approve`, then categorized N transactions from `needs_category_first`. Those N transactions moved from `needs_category_first` into `ready_to_approve`. If your approval batch was built from the original snapshot, those N are silently excluded. **Fix**: re-run `review_unapproved` between Pass 1 (categorize) and Pass 2 (approve), and build the approval batch from the fresh snapshot.
+
+**Remembered-ID bug.** Over a long session, transaction IDs accumulate in the context window. When asked to update a specific transaction by payee/amount/date description, it's tempting to reach into context memory and grab the ID. That ID might belong to a *different* transaction that's also in context. **Fix**: even when an ID seems to be in context, run a fresh `get_transactions(payeeId=..., sinceDate=...)` query right before calling `update_transaction`/`update_transactions`. The extra call is cheap; the wrong-transaction-update is expensive (silently corrupts data, requires a revert).
+
+Both failures look the same on the surface: the `update_transactions` call returns success, but the wrong rows changed. The cost is a verification pass later to spot the discrepancy. Re-querying just before the write closes the gap.
+
+## Amazon-transaction identification via Gmail (reusable pattern)
+
+YNAB Amazon transactions don't include item descriptions, so memos and categories often end up generic. Each Amazon transaction's `import_payee_name_original` field carries the order ID suffix (e.g. `AMAZON MKTPL*BJ3EI8X12` or `Amazon.com*BF8CM1PQ1`), which can be matched to a Gmail order confirmation to identify the item and route it to the right category.
+
+### Workflow
+
+1. `get_transactions(payeeId=<Amazon>, sinceDate=...)` to pull the YNAB transactions
+2. Gmail search:
+   - `from:auto-confirm@amazon.com after:YYYY/MM/DD before:YYYY/MM/DD` (order confirmations)
+   - `from:shipment-tracking@amazon.com after:YYYY/MM/DD before:YYYY/MM/DD` (shipment notices — useful when the order subject is truncated; shipment subjects often have a fuller item name)
+3. Match each YNAB charge to a Gmail order by:
+   - **Date**: Amazon usually ships 0-3 days before the YNAB charge posts
+   - **Amount**: exact match in the order confirmation body (or the shipment receipt body)
+   - **Order ID**: when multiple charges land on the same day, disambiguate using the order ID suffix from `import_payee_name_original`
+4. Subject lines like `Ordered: "Item description..."` are usually enough to write a clean memo. Fall back to `get_thread(messageFormat: FULL_CONTENT)` only if the subject is too truncated to identify the item.
+5. Propose memo + category for each, then apply via batch `update_transactions`.
+
+### When to use this pattern
+
+- During a monthly close, when a backlog of Amazon transactions sits unapproved and uncategorized
+- During a household budget review, when one person's category looks inflated and needs disaggregation
+- After a multi-shipment order, where Amazon bills each shipment separately and the charges look like unrelated mystery line items
+
+### Common matching gotchas
+
+- **Same amount, different orders**: Subscribe & Save items recur (e.g., two Bounty $44.21 charges 2 days apart). Use order ID suffix to disambiguate.
+- **Multi-shipment orders**: One Amazon order can split into 3-5 charges as items ship separately. The order confirmation email lists the total, but each charge is just one shipment's subtotal + tax.
+- **Returns**: Amazon refunds show as positive amounts (`amount > 0`); they typically land in the same category as the original purchase, which is correct YNAB behavior. Don't recategorize unless the original was wrong.
+
+### Reusable for non-Amazon vendors
+
+The same pattern works for any vendor that sends per-order email confirmations: Apple Store hardware, Amazon Fresh, Whole Foods, ButcherBox, etc. The key inputs are an `import_payee_name_original` carrying an order identifier and a vendor-side email with searchable headers. For aggregator-billed subs (Apple App Store) where the vendor doesn't email separately, this pattern won't help — fall back to on-device subscription management.
+
 ## Handling YNAB drift
 
 When historical transactions for a recurring payee + amount have drifted into a different category from their canonical home (e.g., Apple Services $27.63 Apple One charge ends up in "Oliver" personal instead of "🍏 Apple One"), include a recategorization step:
