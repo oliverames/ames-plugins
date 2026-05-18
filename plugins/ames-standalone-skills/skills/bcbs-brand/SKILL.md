@@ -251,7 +251,11 @@ hit an artificial one-page target.
 
 **Core principles:** Vermont-first always, nonprofit heart, plain language, empowering not paternalistic, warm but grounded, collaborative not competitive.
 
-**Key vocabulary:** "Vermonters" (not customers), "health plan" (not insurance policy), "health care" (two words; the activity) vs. "healthcare" (one word; the system), community, local, neighbors, well-being.
+**Key vocabulary:** "Vermonters" (broad public audience), "members" (those with our health plan, the default for member-facing copy), "customers" (broader stakeholder term including providers, vendors, and partners — never use for plan-holders), "consumer" (used in internal affordability-perception KPI tracking only, never in published copy), "health plan" (not insurance policy), "health care" (two words; the activity) vs. "healthcare" (one word; the system), community, local, neighbors, well-being.
+
+**Members vs customers (confirmed with Ashley Legacy 2026-05-18):** Default to "members" for anyone holding a BCBS VT plan. "Customers" is correct for broader stakeholders like providers and partners. Groups are technically members. "Consumers" appears in some internal Operating Plan KPI labels but should not appear in published copy. Never substitute "customers" for "members" when referring to plan-holders.
+
+**Hard platform exclusion: X (formerly Twitter).** BCBS VT does not have an active presence on X. Do not reference X in benchmarks, do not include X spend or engagement data from peer Blues plans, do not imply we post or boost on X. The platform is excluded from our channel strategy and benchmark borrowing alike.
 
 ## Writing Rules Quick Reference
 

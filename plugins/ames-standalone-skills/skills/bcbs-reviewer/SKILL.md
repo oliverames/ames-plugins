@@ -13,7 +13,7 @@ when_to_use: >
   notes", "run a review pass on this", "BCBS reviewer", "pre-flight this
   for review", "what would the Brand Lead flag", "review this response
   template".
-version: 1.2.0
+version: 1.3.0
 ---
 
 # BCBS VT Internal Reviewer
@@ -125,6 +125,86 @@ If the spirit of the reframe is good (e.g., lead with the positive), honor it wi
 This applies in both directions: don't downgrade approved precise claims to vague ones either, and don't upgrade approved vague claims to invented precise ones.
 
 Example flag: "On the 94 cents claim, the blog only quantifies admin ('less than 6 cents'); it doesn't say what percentage of the rest goes to care vs. reserves vs. taxes/fees. '94 cents pays for care our members need' is more specific than the source supports."
+
+### 10. Non-Social-Reader Register Check (Brand Lead, Director)
+Strategy and executive-facing docs get read by people outside the digital team. When prose assumes social-team context, it stalls non-digital readers and turns a strategy review into a translation exercise. Flag:
+- Telegraphic snippets used as sentences ("Speed beats polish on service posts.")
+- Social-team-native vocabulary used without definition ("register," "winners," "feeds," "demo")
+- Sentences that only parse if you already know the strategy
+
+This is distinct from #4 (audience-appropriate cuts). #4 is about what content belongs; #10 is about whether the same content reads to a non-social audience.
+
+Example flag: "This is hard to follow from a non-social lens. We need to explain the core channels in complete sentences, not introduce username-only channels as a tier."
+
+### 11. Acronym and Abbreviation Expansion (Brand Lead)
+Any acronym or social-team shorthand must be defined on first use in any doc that will be read by non-team audiences. Common offenders in BCBS VT strategy docs:
+- **SLA** — define as "service-level agreement" on first use, or replace with "expected response time"
+- **SHIP** — define as "State Health Insurance Assistance Program" on first use
+- **CS** — write out as "Customer Service" (also the proper department name)
+- **demo** — write out as "demographic" or restructure the sentence
+- **Platform initialisms** (X, FB-only, IG) — spell out on first use, except where the platform name is the proper noun
+
+Example flag: "What does SHIP mean? Define this on first use; non-Medicare readers won't know it."
+
+### 12. Cadence Realism vs. Aspiration (Brand Lead, Director)
+Any numeric cadence in a strategy doc ("1 short-form video per week," "2 community posts per week," "3 to 5 Threads posts per week") triggers a "verifiable capacity or aspirational?" check. Aspirational numbers in strategy docs become commitments once the doc is shared with leadership.
+
+Preferred framings:
+- "Target weekly mix is 1 carousel, 1 short-form video, 1 single-frame post; we build toward this, and not every week will hit all three, particularly on video."
+- "Build toward 1 short-form video per week by Q3, starting at 2 per month."
+- "A mix of carousels, short-form video, and single-frame posts; quantity adapts to capacity."
+
+Flag any cadence number without softening language unless capacity is genuinely verified.
+
+Example flag: "Do we feel confident this is achievable weekly? I caution over-promising vs. keeping it high level."
+
+### 13. Borrowed-Benchmark Adapt Pass (Brand Lead)
+When external case data is adapted (BCBS Tennessee mechanics, peer Blues benchmarks, BCBSA industry stats, Hootsuite reports), pass the borrowed specifics through a "does this apply to us?" filter before quoting. Cases where the adapt pass would have caught a real problem:
+- Spend benchmarks for platforms we don't use (BCBS Tennessee's "$75 per X post" when we don't post on X)
+- Tactics we can't execute (age-segmented retargeting where we lack the paid capability)
+- Audiences we don't have (Medicare Advantage member counts when we no longer offer MA)
+
+Treat external case quotes as draft data: the source is honest, but adapt it before it becomes our number.
+
+Example flag: "BCBS Tennessee's mechanics include X spend — pull that out; we don't post on X."
+
+### 14. Risky-Concept Staging (Brand Lead, Director)
+Concepts that could be misread as commitments need explicit staging language. Without it, reviewers read them as active plans and start asking resourcing questions. Specifically:
+- Brand-to-brand banter with brands that could be customers (Ben and Jerry's, ski resorts) — needs staging or removal
+- New platforms framed as primary (Threads, Pinterest) when the team capacity isn't proven there — needs staging
+- Cultural commentary or controversial topics — needs staging or removal
+- Influencer or paid-partner concepts that haven't been costed — needs staging
+
+Staging framings: "consider for later phases," "active evaluation in late 2026," "a future-state opportunity once X matures."
+
+Example flag: "These brands can also be our customers/members. Let's chat this through more before including, or stage it as a future consideration."
+
+### 15. Negative-Framing Detection (Brand Lead)
+Strategy and member-facing copy reads stronger when it describes what we will do, not what we won't. Watch for:
+- "Beats higher-volume schedules" → "performs better at deliberate cadence"
+- "Comment on a partner's post when resharing adds nothing" → "comment when we have something specific to add"
+- "Hot streaks of campaign output" → reframe to the steady-cadence positive
+
+The pattern is "X beats Y" or "we don't do Z" used as the lead. Flag these and offer the positive reframe.
+
+Example flag: "Let's reword this to be what it achieves, not what it doesn't achieve."
+
+### 16. Section-Shape Integrity (Brand Lead, Director)
+Each section should deliver what its heading promises. Strategy docs drift where the prose under a heading is actually about a different concept. Common drift patterns:
+- "Governance" sections that describe content tactics
+- "Measurement" sections that describe aspirations rather than what gets measured
+- "Channel Strategy" sections that mostly describe content rather than channels
+
+Read each heading, then check whether the body delivers it. If not, either rewrite the body to match, or rewrite the heading to match the body.
+
+Example flag: "This doesn't explain Governance. Let's define what the goal of this section is in a sentence or two."
+
+### 17. VT-Specific Data Preference (Brand Lead, Director)
+When industry or national data is used (BCBSA outlook, Hootsuite benchmarks, peer Blues case studies), check whether BCBS VT has its own research on that topic. VT-specific data lands harder than general industry data because it speaks to our members directly. Connect with Joanna and the Brand Strategy team for VT member research, perception studies, and market analyses before citing national stats.
+
+Use general data as a foundation, but lead with VT data where we have it.
+
+Example flag: "I would connect with Joanna for snippets related to VT as we have done research and have insights specific to our members and non-members."
 
 ## Output Format
 

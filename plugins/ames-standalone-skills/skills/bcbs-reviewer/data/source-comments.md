@@ -240,3 +240,63 @@ Cross-channel social caption drafted to amplify the approved blog "How is the Co
 
 **Brand Lead (Ashley Legacy, on share-back protocol mid-thread):** "I think we can just take her final note and then leave it to just us....the more we share back, the more it will continue to be edited."
 *Pattern: Review-cycle share-back limits. Each draft share-back to peers and stakeholders invites another round of edits, even from friendly reviewers. Once a reviewer signals satisfaction with a specific change, stop sharing the post back. Internal-team revisions stay internal. The pattern compounds because friendly reviewers continue finding small things to refine if they keep seeing drafts. Reduce visibility surface to reduce editing opportunity. Most applicable when the post is approved by the manager, the reviewer is a peer (not in the formal approval chain), and the remaining edits are clarity or preference rather than red flags. Pairs with the red-flag-vs-preference triage pattern: triage handles WHAT to take; share-back protocol handles WHO keeps seeing iterations.*
+
+---
+
+## 2026-05-13 to 2026-05-15 Social Media Strategy 2026 Doc Review
+
+A 77-comment, 148-tracked-edit review of the BCBS VT Social Media Strategy 2026 doc, conducted by Ashley Legacy across three sessions over three days. The review progressed from comments to active prose rewrites, signaling investment rather than rejection. The patterns below recur enough across the comment corpus to merit dedicated checklist treatment (now items 10–17 in `SKILL.md`).
+
+**Brand Lead (Ashley Legacy, on non-social-reader register, multiple comments):**
+- "This is hard to follow from a non-social lens. We need to explain our focus on the core channels and listing channels."
+- "For non-social readers, this needs more simplified language on what we are trying to portray."
+- "Sorry to keep reiterating but let's focus on complete sentences thoughts vs. short snippets when trying to explain our why."
+
+*Pattern: Non-social-reader register check. Strategy and executive-facing docs need to read for non-digital-team audiences. Flag telegraphic snippets used as sentences, social-team vocabulary without definition ("register," "winners," "feeds"), and any sentence that only parses if you already know the strategy. Distinct from audience-appropriate cuts (which is about content scope) — this is about register and translation.*
+
+**Brand Lead (Ashley Legacy, on undefined acronyms):**
+- "As we chatted in the content meeting, let's us more basic lingo here =)" (on "SLA")
+- "What is this?" (on "SHIP")
+- "We don't use X so should be removed from reference." (on "X")
+
+*Pattern: Acronym and abbreviation expansion. Any acronym or social-team shorthand must be defined on first use in any doc read by non-team audiences. Common offenders: SLA, SHIP, CS, "demo," platform initialisms. Define or replace at first use.*
+
+**Brand Lead (Ashley Legacy, on cadence realism, multiple comments):**
+- "Do we feel confident this is achievable weekly? I caution over-promising vs. keeping it high level."
+- "Does this feel realistic? We also have Snow Days in the winter to consider."
+- "Given where we are this feels a tad aggressive. Thoughts on lower rate to start?"
+
+*Pattern: Cadence realism vs. aspiration. Any numeric cadence in a strategy doc triggers a "verifiable capacity or aspirational?" check. Aspirational numbers in strategy docs become commitments once the doc is shared. Preferred framing: "build toward X by Q3, starting at Y" or "target mix is X, Y, Z; not every week will hit all three." Flag any cadence number without softening language unless capacity is genuinely verified.*
+
+**Brand Lead (Ashley Legacy, on borrowed benchmarks):**
+- "We don't use X so should be removed from reference." (on borrowed BCBS Tennessee paid-spend benchmark that included "$75 per X post")
+
+*Pattern: Borrowed-benchmark adapt pass. When external case data is adapted (BCBS Tennessee mechanics, peer Blues benchmarks, BCBSA stats), pass the borrowed specifics through a "does this apply to us?" filter. Scrub references to platforms we don't use, tactics we can't execute, audiences we don't have. The source is honest; adapt it before it becomes our number.*
+
+**Brand Lead (Ashley Legacy, on risky-concept staging):**
+- "I am not sure we are here yet — and we need to be cautious as these brands can also be our customers/members. Let's chat this one through more before including." (on brand-to-brand banter with Ben and Jerry's, Cabot, etc.)
+- "As noted above, we really aren't here as a brand and need to balance the brands being customers/members. I don't see these are priority and suggest removal from our content focus." (on a Threads tonal register)
+
+*Pattern: Risky-concept staging. Concepts that could be misread as commitments need explicit staging language. Without staging, reviewers read brand-to-brand banter, new-platform-as-primary framings, or controversial topics as active plans and start asking resourcing questions. Staging framings: "consider for later phases," "active evaluation in late 2026," "a future-state opportunity once X matures."*
+
+**Brand Lead (Ashley Legacy, on negative framing):**
+- "Let's reword this to be what it achieves not what it doesn't achieve." (on "beat hot streaks of campaign output")
+- "This feels negative — what are we trying to say here as a discipline tactic." (on "Comment on a partner's post when resharing adds nothing")
+
+*Pattern: Negative-framing detection. Strategy and member-facing copy reads stronger when it describes what we will do, not what we won't. Flag "X beats Y" or "we don't do Z" used as the lead.*
+
+**Brand Lead (Ashley Legacy, on section-shape drift):**
+- "This doesn't explain Governance. Let's define what the goal of this section is in a sentence or two."
+- "This feels too specific to the channel vs. a governance for approvals. Let's broaden this governance to Approval Timeframes and make it about all channels expectations for how we get approvals through not specific to one."
+
+*Pattern: Section-shape integrity. Each section should deliver what its heading promises. Strategy docs drift where prose under a heading is actually about a different concept. Read each heading, then check whether the body delivers it.*
+
+**Brand Lead (Ashley Legacy, on VT-data preference):**
+- "I would connect with Joanna for snippets related to VT as we have done research and have insights specific to our members/non members."
+
+*Pattern: VT-specific data preference. When industry or national data is used (BCBSA outlook, Hootsuite benchmarks), check whether BCBS VT has its own research on that topic. VT-specific data lands harder. Lead with VT data where we have it; use general data as foundation.*
+
+**Resolution pattern:** Across this review, Ashley's behavior progressed from session 1 (flagging structural and resourcing questions) to session 3 (rewriting prose in place — Engagement metric paragraph, Sentence rhythm passage, closing paragraph). Reading her rewrite-in-place behavior as endorsement-of-substance + frustration-with-register (not rejection) was load-bearing for calibrating Oliver's response. Active rewrites mean "this is good, let me help land it" — different from "this is broken, start over."
+
+**Brand Lead (Ashley Legacy, on members vs customers, Teams chat 2026-05-18):** "members is if we are talking about those with our health plan; customers includes providers, etc. Typically we say members. Groups are a little tricky as they can be referenced in both but they are members."
+*Pattern: Members vs customers scope. "Members" is the default for anyone holding a BCBS VT plan. "Customers" is correct for broader stakeholders like providers and partners. Groups are technically members. Older overgeneralizations ("never customers") are too absolute — the rule is "never customers for plan-holders." Now codified in `bcbs-brand` SKILL.md.*
