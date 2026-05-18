@@ -108,14 +108,15 @@ The `category_drift:was_X` flag from `review_unapproved` surfaces these candidat
 
 ## Handling `match_broken`
 
-`match_broken` transactions cannot be fixed via the YNAB API. The matched-transaction reference is stale and needs YNAB's reconciliation UI to resolve.
+`match_broken` means a transaction's `matched_transaction_id` field references a stale or deleted record. **That field is read-only via the YNAB API** — there is no `update_transaction` input for it. **But the rest of the transaction is fully mutable**: `categoryId`, `memo`, `approved`, `flagColor`, `cleared` all work normally via the API.
 
-**Action:** Do NOT call `update_transactions` to approve these. Tell the user to fix in YNAB's web or iOS app:
+**Action:** Get explicit user sign-off on what the transaction is (the broken link points at something — verify before approving), then proceed normally with `update_transactions`. The cosmetic match-broken state will persist in YNAB's UI until the user clears it manually, but it does NOT block approval or recategorization in the audit workflow.
 
-- For `manually_entered + match_broken + scheduled_transaction_realized` (typical pattern for installment payments): delete the manually-entered duplicate, keep the scheduled-realized version
-- For `match_broken` on a transfer pair: reconcile the pair manually so YNAB re-links them
+Common patterns:
 
-Leaving these unapproved in the batch is correct — they should remain visible in the unapproved queue until the user resolves them.
+- **Manually-entered installment with a stale scheduled template** (e.g., an Apple Watch payment that auto-imports + has a scheduled-template realization): verify with the user what the charge is, then `update_transactions({ id, approved: true })`. The user can untangle the scheduled template in YNAB web UI later — or leave the cosmetic flag alone if it's not bothering them.
+- **`manually_entered + match_broken + scheduled_transaction_realized` together**: often a true duplicate. Verify with the user. If duplicate, delete the manually-entered side; if not, approve.
+- **`match_broken` on a transfer pair**: rare. Pull both sides via `get_transactions(accountId=X)` for both linked accounts, verify the transfer is real, then approve. See "Common audit patterns → Transfer-pair cleared-state diagnostic" in SKILL.md.
 
 ## Handling new payees
 
@@ -129,12 +130,19 @@ Watch for:
 
 ## Splitting transactions
 
-The MCP doesn't support split transactions in update calls (as of v1.7.0). When a single charge needs to be split across multiple categories (e.g., a grocery run that includes household items, or kids' clothing for both Henry and Emmett):
+`update_transaction` and `update_transactions` do not accept a `subtransactions` field — YNAB's API only allows splits at create-time. To convert an existing single-category transaction into a split (e.g., a $100 check covering passport fees for two kids), use the **delete + recreate workaround**:
 
-1. Categorize to the most-dominant category for now
-2. Tell the user to split in YNAB's UI
+1. Capture the original transaction's fields: `account_id`, `date`, `amount`, `payee_id`/`payee_name`, `cleared`, `import_id`
+2. `delete_transaction(transactionId)` — YNAB soft-deletes and retains the `import_id` reservation, so the bank can't re-import the deleted record as a phantom
+3. `create_transaction({ accountId, date, amount, payeeId, cleared, approved, importId: "<new-marker>", subtransactions: [{amount, categoryId, memo}, ...] })` — supply a NEW `importId` (e.g., `"split-<date>-<context>"`) so the new record has its own deduplication anchor
 
-Don't try to work around this with adjusting amounts — it would break reconciliation.
+The subtransaction amounts must sum to the parent amount (negative for outflow splits). Each subtransaction can carry its own `categoryId`, `payeeId`, `payeeName`, and `memo`.
+
+**Direct-split-at-create is always preferred** when you control the transaction lifecycle. The delete + recreate path is the recovery move for transactions that already exist as singles in YNAB.
+
+**Cleared status note**: if the original was `cleared` (bank-confirmed), set the new one to `cleared` too so reconciliation math stays consistent. If `uncleared`, leave the new one `uncleared` and let the bank resolve.
+
+**Don't try to work around splitting by adjusting amounts** — that would break reconciliation against the bank statement.
 
 ## Verification before approving large batches
 

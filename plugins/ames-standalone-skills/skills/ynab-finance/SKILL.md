@@ -66,7 +66,7 @@ Pay attention to the `flags` field on each transaction:
 | Flag | Meaning | Action |
 |------|---------|--------|
 | `manually_entered` | Not from bank import; was hand-keyed | Confirm it's intentional |
-| `match_broken` | Has a stale match reference | **Cannot be fixed via API** — tell user to resolve in YNAB web/iOS UI |
+| `match_broken` | Has a stale match reference | API CAN approve, recategorize, and edit memo. Only the stale `matched_transaction_id` field is API-immutable (no schema input for it). Get user sign-off before approving — the broken link points at something, verify what. UI cleanup of the link is a separate cosmetic step the user owns. |
 | `no_prior_amount_match` | First time this amount has appeared for this payee | Flag for user review before approving |
 | `category_drift:was_X` | Payee was previously in a different category | Ask if recategorization was intentional |
 | `new_payee` | No transaction history for this payee | Confirm payee and category before approving |
@@ -92,6 +92,51 @@ When the cleaned `payee_name` is truncated, ambiguous, or doesn't ring a bell, l
 - **City + state** (always the last two components)
 
 Example: `Ls Onion Rive` is truncated and useless. But `AplPay LS ONION RIVEMONTPELIER VT` reveals the merchant was in Montpelier VT via Apple Pay — enough context to ask the user "I see two ~$16 charges at L.S. Onion River in Montpelier; what was this?"
+
+## Common audit patterns
+
+### Pending returns
+
+When a purchase will be refunded but the refund hasn't posted yet:
+
+1. Set `flag_color: "yellow"` and add a memo like `"Pending return — <item description>"` via `update_transactions`
+2. Optionally recategorize to a `💰 Reimbursements` holding category (or leave in the original category)
+3. When the refund posts (positive activity from the same merchant), it offsets automatically — the category nets out once both sides land
+
+The yellow flag survives across reconciliation passes and is easy to spot when scanning the budget for unresolved items.
+
+### Manual entry for non-imported transactions (Venmo, checks, cash)
+
+Some payment methods don't auto-import: Venmo from a linked bank account, personal checks, cash. When the user has just made such a payment but it hasn't appeared in YNAB:
+
+1. `create_transaction({ accountId: <source>, date: <today>, amount: -<dollars>, payeeName: "<descriptive>", categoryId: <target>, memo: "<context>", cleared: "uncleared", approved: true })`
+2. Leave `importId` unset — the bank will reuse its own import_id when it eventually syncs, and YNAB matches on payee + amount + date
+3. The transaction stays `uncleared` until the bank confirms, then YNAB promotes it to `cleared`
+
+This keeps the audit's budget math accurate immediately rather than waiting 1-2 business days for the bank sync.
+
+### Transfer-pair cleared-state diagnostic
+
+A transfer between two on-budget accounts (or to an off-budget loan) creates two linked records: an outflow on the source and an inflow on the destination. Each side has independent `cleared` state:
+
+| Outflow side | Inflow side | Diagnosis |
+|---|---|---|
+| `cleared` | `cleared` | Healthy — both confirmed |
+| `cleared` | `uncleared` | Common: source bank confirmed but destination account hasn't synced yet. Loan accounts often lag weeks. Leave to clear naturally, or manually mark inflow `cleared` if you're confident. |
+| `uncleared` | `cleared` | Rare. Source-side sync issue. Investigate. |
+| `uncleared` | `uncleared` | Transfer in flight. Wait. |
+
+Before deleting an "uncleared transfer" as a phantom, pull `get_transactions(accountId=<destination>)` and confirm the prior-month history. If every prior month shows a matching cleared transfer of the same amount + cadence and the uncleared one is the only one with that date+amount, it's legitimate — not a duplicate. Deleting it would orphan a real payment record.
+
+### Payee-category drift from auto-categorization
+
+Some merchants are systematically miscategorized by YNAB's auto-categorizer because they bill multiple distinct products under one payee:
+
+- **Apple / Apple Services**: bills iCloud+, Apple One, Apple Care, individual app subscriptions, device installments all under one payee. The dollar amount is the only reliable disambiguator. Encourage the user to save a per-amount decoder table to auto-memory (e.g., `$29.99 → iCloud+`, `$27.63 → Apple One`, `$45.33 → Apple Watch payment`) so future audits don't re-derive it.
+- **City of <town>**: collects property taxes AND water/sewer charges under one payee. `import_payee_name_original` is the canonical disambiguator — example: cleaned `payee_name` of "City of Montpelier" with raw `import_payee_name_original` of `External Withdrawal CITY OF MONTPELI - PROP TAX` reveals it's property tax, even though YNAB's auto-cat may have routed it to Water/Sewer.
+- **Amazon**: bundles unrelated items per shipment; use the Amazon-via-Gmail workflow (`references/categorization-workflow.md`) to identify each charge by matching order ID suffixes.
+
+When a user-specific decoder is needed, encourage saving it to auto-memory so future audits load it automatically.
 
 ### Gmail receipt verification
 
