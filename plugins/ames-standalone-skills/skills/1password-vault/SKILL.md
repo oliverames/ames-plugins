@@ -495,6 +495,56 @@ op document create /path/to/cert.p12 \
   --file-name "cert.p12"
 ```
 
+**PASSWORD category requires a primary password value (verified 2026-05-18).**
+Creating an item in the `PASSWORD` category via a JSON template fails validation
+unless the field with `purpose: PASSWORD` has a non-empty value:
+
+```
+Validation: ... Couldn't validate the item: "[ItemValidator] has found 1 errors,
+0 warnings: Errors:{1. Password item requires ps value}"
+```
+
+This is a create-time check only. Older PASSWORD-category items in the vault may
+still exist with an empty primary `password` field — they predate the validator.
+Mirroring an existing item's exact field shape for a new item is therefore
+misleading and will fail.
+
+**Working pattern** when the secret should be addressable as a named custom
+field (e.g. `client_secret` for OAuth Developer App credentials): put the value
+in BOTH the primary `password` field AND the labeled custom field. The
+`op://.../client_secret` reference still resolves for code that expects the
+named field, and the validator is satisfied.
+
+```bash
+python3 <<'PYEOF' | op item create --vault Development --format json -
+import json
+print(json.dumps({
+    "title": "Service OAuth Developer App - my-app",
+    "category": "PASSWORD",
+    "vault": {"name": "Development"},
+    "fields": [
+        # satisfies the validator
+        {"id": "password", "type": "CONCEALED", "purpose": "PASSWORD",
+         "value": "THE_CLIENT_SECRET"},
+        {"id": "notesPlain", "type": "STRING", "purpose": "NOTES",
+         "value": "What this credential is for."},
+        {"id": "application_name", "type": "STRING", "label": "application_name",
+         "value": "My App"},
+        {"id": "callback_uri", "type": "STRING", "label": "callback_uri",
+         "value": "my-app://oauth/callback"},
+        {"id": "client_id", "type": "STRING", "label": "client_id",
+         "value": "THE_CLIENT_ID"},
+        # duplicated so op://.../client_secret resolves by name
+        {"id": "client_secret", "type": "CONCEALED", "label": "client_secret",
+         "value": "THE_CLIENT_SECRET"}
+    ]
+}))
+PYEOF
+```
+
+If the credential does not need named-field addressability, simplify by using
+only the primary `password` field and dropping the duplicated custom field.
+
 ## Safety Rules
 
 - **Never output credential values** to the conversation. If the user asks to

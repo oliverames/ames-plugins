@@ -1,5 +1,57 @@
 # Worklog
 
+## 2026-05-18 (later still) — 1password-vault: document PASSWORD-category validator (folds into 3.14.1)
+
+**What changed**: Added a new subsection to `plugins/ames-standalone-skills/skills/1password-vault/SKILL.md` documenting a 1Password validator behavior discovered while vaulting OAuth credentials for the imagerelay-client native app (item `ntyqqlvczyhfrk3tbv7bpezv2e` in the Development vault).
+
+`op item create --vault Development --format json -` rejects PASSWORD-category items unless the field with `purpose: PASSWORD` carries a non-empty value (`"[ItemValidator] ... Errors:{1. Password item requires ps value}"`). Older PASSWORD items in the vault may still exist with an empty primary field — they predate the validator. Mirroring an old item's exact shape for a new one therefore misleads.
+
+The doc adds the working dual-field pattern: put the credential in BOTH the primary `password` field AND a labeled custom field (e.g. `client_secret`). The `op://.../client_secret` named-reference still resolves for downstream code, and the validator is satisfied.
+
+**Decisions made**:
+- **No separate version bump.** This is a content-only doc note to a skill that's already getting bumped to 3.14.1 for bcbs-meeting-notes. Folding both edits into a single 3.14.1 release rather than chaining 3.14.1 → 3.14.2 for the same plugin in the same session.
+- **Subsection placement**: inside the existing "`op item create` — Sensitive Values" section, after the File attachments block, before "## Safety Rules". Keeps create-time gotchas together.
+
+**Verification**:
+- Skill renders as valid Markdown; the new fenced JSON block parses (mentally; no automated parse, but the format matches the working template used to create item `ntyqqlvczyhfrk3tbv7bpezv2e`).
+- Pattern verified live before documenting: same template successfully created the imagerelay-client OAuth item; all four `op://` references (`application_name`, `callback_uri`, `client_id`, `client_secret`) resolved to expected values.
+
+**Left off at**: Folded into the 3.14.1 release alongside bcbs-meeting-notes.
+
+**Open questions**:
+- None new. (Carried items from bcbs entry below still apply.)
+
+---
+
+## 2026-05-18 (later) — bcbs-meeting-notes v1.5.0: hard Jira permission gate + recently-closed dedup pass
+
+**What changed**: Strengthened two soft edges in `bcbs-meeting-notes` (`plugins/ames-standalone-skills/skills/bcbs-meeting-notes/SKILL.md`, 1.4.0 → 1.5.0; plugin 3.14.0 → 3.14.1).
+
+(1) **Permission gate** (Step 4c). The skill already said "never auto-create" but didn't define what counts as confirmation. Tightened the accepted reply allowlist to `"create all"`, `"create 1, 3"`, `"skip"`, or per-item phrases like `"create 2, skip 1, reopen the closed match on 3"`. Explicitly rejected as confirmation: silence, `"sounds good"`, `"ok"`, tangential follow-ups, topic changes. When unclear, the skill is now told to ask rather than guess. Step 4d adds "Do not infer approval from enthusiasm, brevity, or context."
+
+(2) **Pre-flight duplicate check** (new Step 4a). Before any proposal list is assembled, the skill must run JQL searches against the destination project AND any parent workstream, covering both **open** tickets (`statusCategory != Done`) and **recently closed** tickets (`statusCategory = Done AND resolutiondate >= -90d`). Each action item is now classified into one of four buckets: already covered by an open ticket, recently completed (closed in last 90d — surfaced for Oliver's call), tactical-in-workstream (reference parent, skip), or genuinely new. Recently-closed matches go into a separate "Recently closed matches — please review" bucket in the proposal so old work isn't silently re-filed as a new ticket. Step 5 report now breaks Jira counts into: proposed / already covered / recently closed matches / created / skipped.
+
+**Decisions made**:
+- **Minor bump on skill (1.4.0 → 1.5.0)**, patch on plugin (3.14.0 → 3.14.1). The new pre-flight dedup pass is a genuinely new user-facing capability at the skill level. At the plugin level it's a content tweak to an existing skill — no new skills/commands/MCPs added — so patch is right per the version-bumping rules in `CLAUDE.md`.
+- **90-day window for the closed-ticket dedup search.** Chosen as the default; surfaced to Oliver in the summary so he can dial it (30 = tighter, fewer false positives; 180 = catches longer-lived workstreams). Advisor flagged this as an unexamined magic number, so it's documented explicitly rather than hidden in the skill text.
+- **No README/CLAUDE.md/AGENTS.md update.** README's one-liner is generic ("Structure BCBS VT transcripts into notes with action items") and still accurate. Skill count unchanged at 35. Behavior change is internal-to-skill, no public surface change.
+- **Step 4 restructured rather than appended.** Old structure was 4a (build list) / 4b (present) / 4c (create). New structure inserts the dedup pass as 4a and shifts the rest down to 4b/4c/4d. Considered keeping the old numbering and adding a "Step 3.5" but rejected — the dedup pass logically precedes proposal-building, so the renumbering matches the actual flow.
+
+**Verification**:
+- `validate-skill` (silent success, exit 0) on the modified SKILL.md.
+- Both marketplace.json files parse as valid JSON; both plugin.json files parse as valid JSON.
+- `./sync` ran clean with the expected output: 6 plugins in Claude marketplace, 4 in Codex, version 3.14.1 propagated to Codex plugin.json automatically.
+- `git diff --stat` confirms only the 5 expected files changed (+114 / -52, net +62 lines from the new Step 4a section).
+- `grep` for stale `4a/4b/4c/4d` references after the renumber: all 8 occurrences are internally consistent (flow overview at the top + section headers + 4b's reference to "results from 4a").
+
+**Left off at**: Local changes only — no commit yet, awaiting Oliver's go-ahead per his "only commit when explicitly asked" rule. 5 modified files, all expected. The skill is live for the next bcbs meeting transcript Oliver processes.
+
+**Open questions**:
+- **NEW**: Was the original behavior (creating tickets without confirmation, or creating duplicates) triggered by a specific incident? Advisor flagged that strengthening the wording reduces but doesn't eliminate the risk of the LLM ignoring instructions. If a specific meeting note showed the failure mode, worth checking whether the skill text was loaded at all or whether the create-issue tool fired before Step 4 even ran.
+- **Carried (still open)**: AP-style em-dash phrasing review. Apple Notes / plist refs to `ames-claude`. Same status as prior sessions.
+
+---
+
 ## 2026-05-18 — ynab-finance match_broken correction + audit patterns (commit 7801e8e, paired with ynab-mcp-server 2de53d2)
 
 **What changed**: Corrected a long-standing bug in `match_broken` guidance across two reference layers. The flag's description — both in `ames-standalone-skills/ynab-finance/SKILL.md` (flags table) and `references/categorization-workflow.md` (handling section), and mirrored in the upstream `ynab-mcp-server`'s `review_unapproved` tool description (index.js:1241) — claimed match_broken transactions "cannot be fixed via the YNAB API." Reality: only the stale `matched_transaction_id` field is API-immutable (no schema input for it on `update_transaction`/`update_transactions`); the transaction itself remains fully mutable (approve, recategorize, memo, flag color all work). Live API test during the 2026-05-18 May audit confirmed `update_transaction({ approved: true })` succeeds on a match_broken record (Apple Watch installment $45.33 on Apple Card). Corrected wording at both layers: matched_transaction_id is the read-only field; transaction itself remains mutable; broken match persists as a cosmetic flag until the user clears it in YNAB web/iOS UI.
